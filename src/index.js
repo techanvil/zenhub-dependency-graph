@@ -1,43 +1,114 @@
-main();
+import {
+  GET_WORKSPACE_QUERY,
+  GET_REPO_AND_PIPELINES,
+  GET_LINKED_ISSUES,
+} from "./queries.js";
 
-function main() {
-  // fetch data and render
-  // const resp = await fetch(
-  //   "https://raw.githubusercontent.com/erikbrinkman/d3-dag/main/examples/grafo.json"
-  // );
-  // const data = await resp.json();
-  const data = [
-    {
-      id: "0",
-      parentIds: [],
-    },
-    {
-      id: "1",
-      parentIds: ["0"],
-    },
-    {
-      id: "2",
-      parentIds: [],
-    },
-    {
-      id: "3",
-      parentIds: ["2"],
-    },
-    {
-      id: "4",
-      parentIds: ["3", "5"],
-    },
-    {
-      id: "5",
-      parentIds: [],
-    },
-    {
-      id: "6",
-      parentIds: ["4"],
-    },
-  ];
+const { workspaceName, epicIssueNumber, endpointUrl, zenhubApiKey } =
+  await fetch("./config.json").then((res) => res.json());
 
-  const dag = d3.dagStratify()(data);
+const graphData = await getGraphData();
+renderGraph(graphData);
+
+async function getGraphData() {
+  const {
+    viewer: {
+      searchWorkspaces: {
+        nodes: [{ id: workspaceId }],
+      },
+    },
+  } = await gqlQuery(GET_WORKSPACE_QUERY, "GetWorkSpace", {
+    workspaceName,
+  });
+
+  const {
+    workspace: {
+      defaultRepository: { id: repositoryId, ghId: repositoryGhId },
+      pipelinesConnection: { nodes: pipelines },
+    },
+  } = await gqlQuery(GET_REPO_AND_PIPELINES, "GetRepoAndPipelines", {
+    workspaceId,
+  });
+
+  const { linkedIssues } = await gqlQuery(
+    GET_LINKED_ISSUES,
+    "GetLinkedIssues",
+    {
+      workspaceId,
+      repositoryId,
+      repositoryGhId,
+      epicIssueNumber,
+      pipelineIds: pipelines.map((pipeline) => pipeline.id),
+    }
+  );
+
+  const d3GraphData = linkedIssues.nodes.map(
+    ({ number: id, blockingIssues }) => ({
+      id: `${id}`,
+      parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
+    })
+  );
+
+  console.log("workspace", workspaceId);
+  console.log("repository", repositoryId, repositoryGhId);
+  console.log("pipelines", pipelines);
+  console.log("linkedIssues", linkedIssues);
+  console.log("d3GraphData", d3GraphData);
+
+  return d3GraphData;
+}
+
+async function gqlQuery(query, operationName, variables) {
+  const options = {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${zenhubApiKey}`,
+    },
+    body: JSON.stringify({
+      operationName,
+      query,
+      variables,
+    }),
+  };
+
+  const res = await fetch(endpointUrl, options);
+  return (await res.json()).data;
+}
+
+function renderGraph(d3GraphData) {
+  // const data = [
+  //   {
+  //     id: "0",
+  //     parentIds: [],
+  //   },
+  //   {
+  //     id: "1",
+  //     parentIds: ["0"],
+  //   },
+  //   {
+  //     id: "2",
+  //     parentIds: [],
+  //   },
+  //   {
+  //     id: "3",
+  //     parentIds: ["2"],
+  //   },
+  //   {
+  //     id: "4",
+  //     parentIds: ["3", "5"],
+  //   },
+  //   {
+  //     id: "5",
+  //     parentIds: [],
+  //   },
+  //   {
+  //     id: "6",
+  //     parentIds: ["4"],
+  //   },
+  // ];
+
+  const dag = d3.dagStratify()(d3GraphData);
   const nodeRadius = 20;
   const layout = d3
     .sugiyama() // base layout
