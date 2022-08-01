@@ -1,3 +1,5 @@
+// Cribbed from the Codepen linked on https://github.com/erikbrinkman/d3-dag
+
 export function renderGraph(d3GraphData) {
   // const data = [
   //   {
