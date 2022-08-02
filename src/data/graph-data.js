@@ -1,7 +1,7 @@
 import {
   GET_WORKSPACE_QUERY,
-  GET_REPO_AND_PIPELINES,
-  GET_LINKED_ISSUES,
+  GET_REPO_AND_PIPELINES_QUERY,
+  GET_LINKED_ISSUES_QUERY,
 } from "./queries.js";
 
 export async function getGraphData(
@@ -27,12 +27,12 @@ export async function getGraphData(
       defaultRepository: { id: repositoryId, ghId: repositoryGhId },
       pipelinesConnection: { nodes: pipelines },
     },
-  } = await gqlQuery(GET_REPO_AND_PIPELINES, "GetRepoAndPipelines", {
+  } = await gqlQuery(GET_REPO_AND_PIPELINES_QUERY, "GetRepoAndPipelines", {
     workspaceId,
   });
 
   const { linkedIssues } = await gqlQuery(
-    GET_LINKED_ISSUES,
+    GET_LINKED_ISSUES_QUERY,
     "GetLinkedIssues",
     {
       workspaceId,

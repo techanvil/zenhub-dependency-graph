@@ -10,7 +10,7 @@ export const GET_WORKSPACE_QUERY = gql`
   }
 `;
 
-export const GET_REPO_AND_PIPELINES = gql`
+export const GET_REPO_AND_PIPELINES_QUERY = gql`
   query GetRepoAndPipelines($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       defaultRepository {
@@ -26,7 +26,7 @@ export const GET_REPO_AND_PIPELINES = gql`
   }
 `;
 
-export const GET_LINKED_ISSUES = gql`
+export const GET_LINKED_ISSUES_QUERY = gql`
   query GetLinkedIssues(
     $workspaceId: ID!
     $repositoryId: ID!
