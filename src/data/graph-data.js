@@ -47,6 +47,7 @@ export async function getGraphData(
     ({
       number: id,
       title,
+      htmlUrl,
       blockingIssues,
       pipelineIssue: {
         pipeline: { name: pipelineName },
@@ -54,6 +55,7 @@ export async function getGraphData(
     }) => ({
       id: `${id}`,
       title,
+      htmlUrl,
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
       pipelineName,
     })
