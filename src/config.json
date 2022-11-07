@@ -1,6 +1,0 @@
-{
-  "workspaceName": "ZenHub Dependency Graph",
-  "epicIssueNumber": 1,
-  "endpointUrl": "https://api.zenhub.com/public/graphql/",
-  "zenhubApiKey": ""
-}
