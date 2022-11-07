@@ -47,6 +47,12 @@ export const GET_LINKED_ISSUES_QUERY = gql`
         number
         title
         htmlUrl
+        assignees {
+          nodes {
+            login
+            # name
+          }
+        }
         blockingIssues {
           nodes {
             number

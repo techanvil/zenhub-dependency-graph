@@ -46,7 +46,7 @@ function getIntersection(dx, dy, cx, cy, w, h) {
 export function renderGraph(d3GraphData) {
   const dag = d3.dagStratify()(d3GraphData);
   const rectWidth = 60;
-  const rectHeight = 30;
+  const rectHeight = 35;
   const nodeWidth = rectWidth * 1.5;
   const nodeHeight = rectHeight * 2;
   const arrowSize = nodeHeight / 2.0;
@@ -276,6 +276,22 @@ export function renderGraph(d3GraphData) {
     .attr("alignment-baseline", "middle")
     .attr("fill", "black")
     .call(wrapLines, rectWidth - padding * 2, 3);
+
+  // Add assignees to nodes
+  nodes
+    // .append("a")
+    // .attr("href", (d) => d.data.htmlUrl)
+    .append("text")
+    .text((d) => d.data.assignees.join(", "))
+    .attr("x", -rectWidth / 2 + padding)
+    // .attr("y", -rectHeight / 2 + 6)
+    .attr("y", 5)
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 4)
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black")
+    .each(truncate);
 
   // Add issue number to nodes
   nodes
