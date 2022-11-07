@@ -17,6 +17,22 @@ const pipelineColors = {
   Approval: "#488f31",
 };
 
+const pipelineAbbreviations = {
+  Triage: "T",
+  Stalled: "S",
+  Backlog: "B",
+  "Acceptance Criteria": "AC",
+  "Acceptance Criteria Review": "ACR",
+  "Implementation Brief": "IB",
+  "Implementation Brief Review": "IBR",
+  "Execution Backlog": "EB",
+  Execution: "E",
+  "Code Review": "CR",
+  "Merge Review": "MR",
+  QA: "QA",
+  Approval: "A",
+};
+
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
     // Hit vertical edge of box1
@@ -61,9 +77,9 @@ export function renderGraph(d3GraphData) {
 
   const dag = d3.dagStratify()(d3GraphData);
   // const nodeRadius = 20;
-  const rectWidth = 40;
+  const rectWidth = 60;
   const rectHeight = 30;
-  const nodeWidth = rectWidth * 2;
+  const nodeWidth = rectWidth * 1.5;
   const nodeHeight = rectHeight * 2;
   const arrowSize = nodeHeight / 2.0;
   const layout = d3
@@ -210,7 +226,7 @@ export function renderGraph(d3GraphData) {
         (rectWidth + arrowSize / 3) / 2,
         (rectHeight + arrowSize / 3) / 2
       );
-      console.log({ target, start, end, dx, dy });
+      // console.log({ target, start, end, dx, dy });
       const scale = ((nodeHeight / 3) * 1.15) / Math.sqrt(dx * dx + dy * dy);
       // This is the angle of the last line segment
       const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
@@ -223,26 +239,103 @@ export function renderGraph(d3GraphData) {
   // .attr("stroke", "white")
   // .attr("stroke-width", 1.5);
 
-  // Add text to nodes
+  const padding = 3;
+
+  // Add issue number to nodes
   nodes
     .append("text")
     .text((d) => d.data.id)
+    .attr("x", -rectWidth / 2 + padding)
+    .attr("y", rectHeight / 2 - 5)
     .attr("font-weight", "bold")
     .attr("font-family", "sans-serif")
-    .attr("text-anchor", "middle")
+    .attr("font-size", 5)
+    .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
 
-  // nodes
-  //   .append("text")
-  //   .text((d) => d.data.title)
-  //   .attr("font-weight", "bold")
-  //   .attr("font-family", "sans-serif")
-  //   .attr("font-size", 7)
-  //   .attr("text-anchor", "middle")
-  //   .attr("alignment-baseline", "middle")
-  //   .attr("fill", "black")
-  //   .attr("transform", ({ x, y }) => {
-  //     return `translate(0, ${-nodeRadius * 0.4})`;
-  //   });
+  function wrapLines(text, width, maxLines) {
+    text.each(function () {
+      let text = d3.select(this),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1.1, // ems
+        x = text.attr("x"),
+        y = text.attr("y"),
+        dy = 0, //parseFloat(text.attr("dy")),
+        tspan = text
+          .text(null)
+          .append("tspan")
+          .attr("x", x)
+          .attr("y", y)
+          .attr("dy", dy + "em"),
+        lineCount = 1;
+
+      while ((word = words.pop())) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width) {
+          if (lineCount === maxLines) {
+            truncate.call(tspan.node());
+          } else {
+            lineCount++;
+            line.pop();
+            tspan.text(line.join(" "));
+            line = [word];
+            tspan = text
+              .append("tspan")
+              .attr("x", x)
+              .attr("y", y)
+              .attr("dy", ++lineNumber * lineHeight + dy + "em")
+              .text(word);
+          }
+        }
+      }
+    });
+  }
+
+  function truncate() {
+    // const padding = 3;
+    // const padding = 0;
+
+    const self = d3.select(this);
+
+    let textLength = self.node().getComputedTextLength(),
+      text = self.text();
+
+    while (textLength > rectWidth - 2 * padding && text.length > 0) {
+      text = text.slice(0, -1);
+      self.text(text + "\u2026");
+      textLength = self.node().getComputedTextLength();
+    }
+  }
+
+  // Add issue titles to nodes
+  nodes
+    .append("text")
+    .text((d) => d.data.title)
+    .attr("x", -rectWidth / 2 + padding)
+    .attr("y", -rectHeight / 2 + 6)
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 5)
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black")
+    .call(wrapLines, rectWidth - padding * 2, 3);
+
+  nodes
+    .append("text")
+    .text((d) => pipelineAbbreviations[d.data.pipelineName])
+    // .text((d) => d.data.pipelineName)
+    .attr("x", rectWidth / 2 - padding)
+    .attr("y", rectHeight / 2 - 5)
+    .attr("font-weight", "bold")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 5)
+    .attr("text-anchor", "end")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black");
+  // .call(wrapLines, rectWidth - padding * 2, 3);
 }
