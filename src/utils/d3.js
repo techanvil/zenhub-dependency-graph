@@ -39,7 +39,7 @@ const pipelineAbbreviations = {
 	QA: "QA",
 	Approval: "A",
 };
-  
+
 function getIntersection(dx, dy, cx, cy, w, h) {
 	if (Math.abs(dy / dx) < h / w) {
 	  // Hit vertical edge of box1
@@ -50,7 +50,7 @@ function getIntersection(dx, dy, cx, cy, w, h) {
 	}
 }
 
-export const generateGraph = ( graphData ) => {
+export const generateGraph = ( graphData, svgElement ) => {
 	const dag = dagStratify()( graphData );
 	const rectWidth = 60;
 	const rectHeight = 35;
@@ -120,20 +120,22 @@ export const generateGraph = ( graphData ) => {
 		}
 		});
 	}
-	const svg = document.createElement( 'svg' );
-	const svgSelection = d3.select(svg);
+	const svgSelection = d3.select(svgElement);
 	svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
 	const defs = svgSelection.append("defs"); // For gradients
 
+	/*
 	const steps = dag.size();
 	const interp = d3.interpolateRainbow;
 	const colorMap = new Map();
 	for (const [i, node] of dag.idescendants().entries()) {
 		colorMap.set(node.data.id, interp(i / steps));
 	}
+	*/
 
 	function getNodeColor(node) {
-		return pipelineColors[node.data.pipelineName] || colorMap.get(node.data.id);
+		return pipelineColors[node.data.pipelineName];
+		// return pipelineColors[node.data.pipelineName] || colorMap.get(node.data.id);
 	}
 
 	function getPipelineAbbreviation(node) {

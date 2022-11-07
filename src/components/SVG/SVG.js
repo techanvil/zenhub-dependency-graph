@@ -1,13 +1,12 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
 	Box,
 	FormControl,
 	Input,
 } from '@chakra-ui/react';
-import rd3 from 'react-d3-library';
 
 /**
  * Internal dependencies
@@ -23,6 +22,8 @@ export default function SVG() {
 	const [ workspace, setWorkspace ] = useState( null );
 	const [ epic, setEpic ] = useState( null );
 
+	const ref = useRef();
+
 	useEffect( () => {
 		if (
 			isEmpty( APIKey ) ||
@@ -32,15 +33,19 @@ export default function SVG() {
 			return;
 		}
 
-		getGraphData(
-			workspace,
-			epic,
-			'https://api.zenhub.com/public/graphql/',
-			APIKey,
-		).then( setGraphData );
-	}, [ APIKey, epic, workspace ] );
+		async function renderGraph() {
+			const graphData = await getGraphData(
+				workspace,
+				epic,
+				'https://api.zenhub.com/public/graphql/',
+				APIKey,
+			);
 
-	const RD3Component = rd3.Component;
+			generateGraph( graphData, ref.current );
+		}
+
+		renderGraph();
+	}, [ workspace, epic, APIKey ] );
 
 	return (
 		<Box>
@@ -50,7 +55,7 @@ export default function SVG() {
 			<FormControl>
 				<Input placeholder="Epic Issue Number" onChange={ ( e ) => setEpic( parseInt( e.target.value ) ) } />
 			</FormControl>
-			{ ! isEmpty( graphData ) && <RD3Component data={ generateGraph( graphData ) } /> }
+			<svg ref={ref} />
 		</Box>
 	);
 }
