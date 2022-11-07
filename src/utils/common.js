@@ -5,8 +5,8 @@
  *
  * @return {boolean} If the variable is set
  */
- export const isSet = ( variable ) => {
-	return variable !== undefined && variable !== null && variable !== false;
+export const isSet = (variable) => {
+  return variable !== undefined && variable !== null && variable !== false;
 };
 
 /**
@@ -16,6 +16,6 @@
  *
  * @return {boolean} If the variable is empty
  */
-export const isEmpty = ( variable ) => {
-	return ! isSet( variable ) || variable?.length === 0;
+export const isEmpty = (variable) => {
+  return !isSet(variable) || variable?.length === 0;
 };
