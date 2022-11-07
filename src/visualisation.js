@@ -265,7 +265,7 @@ export function renderGraph(d3GraphData) {
   // Add issue titles to nodes
   nodes
     .append("a")
-    .attr("xlink:href", (d) => d.data.htmlUrl)
+    .attr("href", (d) => d.data.htmlUrl)
     .append("text")
     .text((d) => d.data.title)
     .attr("x", -rectWidth / 2 + padding)
@@ -280,7 +280,7 @@ export function renderGraph(d3GraphData) {
   // Add issue number to nodes
   nodes
     .append("a")
-    .attr("xlink:href", (d) => d.data.htmlUrl)
+    .attr("href", (d) => d.data.htmlUrl)
     .append("text")
     .text((d) => d.data.id)
     .attr("x", -rectWidth / 2 + padding)
