@@ -1,5 +1,6 @@
 {
   "name": "zenhub-dependency-graph",
+  "homepage": "https://techanvil.github.io/zenhub-dependency-graph",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
