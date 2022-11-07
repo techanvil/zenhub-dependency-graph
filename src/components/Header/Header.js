@@ -6,20 +6,14 @@ import {
 	Button,
 	Container,
 	Flex,
+	Heading,
 	HStack,
-	Spacer,
 	useColorModeValue,
-	useDisclosure,
 } from '@chakra-ui/react';
 
-/**
- * Internal dependencies
- */
-import APIKeyModal from '../APIKeyModal/APIKeyModal';
 
-export default function Header() {
-	const { isOpen, onOpen, onClose } = useDisclosure();
 
+export default function Header( { onAPIKeyModalOpen = () => {} } ) {
 	return (
 		<>
 			<Box as="section" pb={ { base: '12', md: '24' } }>
@@ -27,12 +21,14 @@ export default function Header() {
 					<Container py={ { base: '4', lg: '5' } } maxW="100%">
 						<HStack spacing="10" justify="space-between">
 							<Flex justify="space-between" flex="1">
-								<Spacer />
+								<HStack>
+									<Heading as="h4" size="md">Zenhub Dependency Graph</Heading>
+								</HStack>
 								<HStack spacing="3">
 									<Button
 										colorScheme="blue"
 										mr={ 3 }
-										onClick={ onOpen }
+										onClick={ onAPIKeyModalOpen }
 									>API Key</Button>
 								</HStack>
 							</Flex>
@@ -40,7 +36,6 @@ export default function Header() {
 					</Container>
 				</Box>
 			</Box>
-			<APIKeyModal isOpen={ isOpen } onClose={ onClose } />
 		</>
 	)
 }
