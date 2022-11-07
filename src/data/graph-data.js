@@ -44,9 +44,22 @@ export async function getGraphData(
   );
 
   const d3GraphData = linkedIssues.nodes.map(
-    ({ number: id, blockingIssues }) => ({
+    ({
+      number: id,
+      title,
+      htmlUrl,
+      assignees: { nodes: assignees },
+      blockingIssues,
+      pipelineIssue: {
+        pipeline: { name: pipelineName },
+      },
+    }) => ({
       id: `${id}`,
+      title,
+      htmlUrl,
+      assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
+      pipelineName,
     })
   );
 
