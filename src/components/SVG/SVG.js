@@ -14,9 +14,8 @@ import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 export default function SVG() {
   const [APIKey] = useLocalStorage("zenhubAPIKey");
-  const [graphData, setGraphData] = useState(null);
-  const [workspace, setWorkspace] = useState(null);
-  const [epic, setEpic] = useState(null);
+  const [workspace] = useLocalStorage("zenhubWorkspace");
+  const [epic] = useLocalStorage("zenhubEpicIssueNumber");
 
   const ref = useRef();
 
@@ -40,20 +39,8 @@ export default function SVG() {
   }, [workspace, epic, APIKey]);
 
   return (
-    <Box>
-      <FormControl>
-        <Input
-          placeholder="Workspace Name"
-          onChange={(e) => setWorkspace(e.target.value)}
-        />
-      </FormControl>
-      <FormControl>
-        <Input
-          placeholder="Epic Issue Number"
-          onChange={(e) => setEpic(parseInt(e.target.value))}
-        />
-      </FormControl>
-      <svg ref={ref} />
+    <Box h="calc(100vh - 80px)">
+      <svg style={{ width: "100%", height: "100%" }} ref={ref} />
     </Box>
   );
 }
