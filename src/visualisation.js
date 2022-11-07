@@ -17,6 +17,16 @@ const pipelineColors = {
   Approval: "#488f31",
 };
 
+function getIntersection(dx, dy, cx, cy, w, h) {
+  if (Math.abs(dy / dx) < h / w) {
+    // Hit vertical edge of box1
+    return [cx + (dx > 0 ? w : -w), cy + (dy * w) / Math.abs(dx)];
+  } else {
+    // Hit horizontal edge of box1
+    return [cx + (dx * h) / Math.abs(dy), cy + (dy > 0 ? h : -h)];
+  }
+}
+
 export function renderGraph(d3GraphData) {
   // const data = [
   //   {
@@ -55,6 +65,7 @@ export function renderGraph(d3GraphData) {
   const rectHeight = 30;
   const nodeWidth = rectWidth * 2;
   const nodeHeight = rectHeight * 2;
+  const arrowSize = nodeHeight / 2.0;
   const layout = d3
     .sugiyama() // base layout
     .decross(d3.decrossOpt()) // minimize number of crossings
@@ -92,10 +103,31 @@ export function renderGraph(d3GraphData) {
     .data(dag.links())
     .enter()
     .append("path")
-    .attr("d", ({ points }) => line(points))
+    .attr("d", ({ points }) => {
+      console.log({ points });
+      const [source, target] = points;
+      const [dx, dy] = getIntersection(
+        source.x - target.x,
+        source.y - target.y,
+        target.x,
+        target.y,
+        (rectWidth + arrowSize / 3) / 2,
+        (rectHeight + arrowSize / 3) / 2
+      );
+      return line([source, { x: dx, y: dy }]);
+    })
     .attr("fill", "none")
     .attr("stroke-width", 3)
     .attr("stroke", ({ source, target }) => {
+      const [dx, dy] = getIntersection(
+        source.x - target.x,
+        source.y - target.y,
+        target.x,
+        target.y,
+        (rectWidth + arrowSize / 3) / 2,
+        (rectHeight + arrowSize / 3) / 2
+      );
+
       // encodeURIComponents for spaces, hope id doesn't have a `--` in it
       const gradId = encodeURIComponent(`${source.data.id}--${target.data.id}`);
       const grad = defs
@@ -103,9 +135,9 @@ export function renderGraph(d3GraphData) {
         .attr("id", gradId)
         .attr("gradientUnits", "userSpaceOnUse")
         .attr("x1", source.x)
-        .attr("x2", target.x)
+        .attr("x2", dx)
         .attr("y1", source.y)
-        .attr("y2", target.y);
+        .attr("y2", dy);
       grad
         .append("stop")
         .attr("offset", "0%")
@@ -127,17 +159,17 @@ export function renderGraph(d3GraphData) {
     .attr("transform", ({ x, y }) => `translate(${x}, ${y})`);
 
   // Plot node outlines
-  nodes
-    .append("rect")
-    .attr("width", nodeWidth)
-    .attr("height", nodeHeight)
-    .attr("fill", "rgba(0,0,0,0)")
-    .attr("x", -nodeWidth / 2)
-    .attr("y", -nodeHeight / 2)
-    .attr("stroke", "#2378ae")
-    .attr("stroke-dasharray", "10,5")
-    .attr("stroke-linecap", "butt")
-    .attr("stroke-width", 1);
+  // nodes
+  //   .append("rect")
+  //   .attr("width", nodeWidth)
+  //   .attr("height", nodeHeight)
+  //   .attr("fill", "rgba(0,0,0,0)")
+  //   .attr("x", -nodeWidth / 2)
+  //   .attr("y", -nodeHeight / 2)
+  //   .attr("stroke", "#2378ae")
+  //   .attr("stroke-dasharray", "10,5")
+  //   .attr("stroke-linecap", "butt")
+  //   .attr("stroke-width", 1);
 
   // Plot node rects
   nodes
@@ -155,21 +187,8 @@ export function renderGraph(d3GraphData) {
   // .attr("stroke-linecap", "butt")
   // .attr("stroke-width", 1);
 
-  function getIntersection(dx, dy, cx, cy, w, h) {
-    if (Math.abs(dy / dx) < h / w) {
-      // Hit vertical edge of box1
-      return [cx + (dx > 0 ? w : -w), cy + (dy * w) / Math.abs(dx)];
-    } else {
-      // Hit horizontal edge of box1
-      return [cx + (dx * h) / Math.abs(dy), cy + (dy > 0 ? h : -h)];
-    }
-  }
-
   // Draw arrows
-  const arrow = d3
-    .symbol()
-    .type(d3.symbolTriangle)
-    .size(nodeHeight / 2.0);
+  const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
   svgSelection
     .append("g")
     .selectAll("path")
@@ -188,8 +207,8 @@ export function renderGraph(d3GraphData) {
         start.y - end.y,
         end.x,
         end.y,
-        rectWidth / 2,
-        rectHeight / 2
+        (rectWidth + arrowSize / 3) / 2,
+        (rectHeight + arrowSize / 3) / 2
       );
       console.log({ target, start, end, dx, dy });
       const scale = ((nodeHeight / 3) * 1.15) / Math.sqrt(dx * dx + dy * dy);
@@ -200,9 +219,9 @@ export function renderGraph(d3GraphData) {
       // }) rotate(${angle})`;
       return `translate(${dx}, ${dy}) rotate(${angle})`;
     })
-    .attr("fill", ({ target }) => pipelineColors[target.data.pipelineName])
-    .attr("stroke", "white")
-    .attr("stroke-width", 1.5);
+    .attr("fill", ({ target }) => pipelineColors[target.data.pipelineName]);
+  // .attr("stroke", "white")
+  // .attr("stroke-width", 1.5);
 
   // Add text to nodes
   nodes
