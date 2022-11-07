@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useDisclosure } from "@chakra-ui/react";
+import { Box, useDisclosure } from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -15,11 +15,11 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <div className="App">
+    <Box>
       <Header onAPIKeyModalOpen={onOpen} />
       <SVG />
       <APIKeyModal isOpen={isOpen} onClose={onClose} />
-    </div>
+    </Box>
   );
 }
 
