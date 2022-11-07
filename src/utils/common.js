@@ -17,5 +17,5 @@
  * @return {boolean} If the variable is empty
  */
 export const isEmpty = ( variable ) => {
-	return isSet( variable ) && variable?.length === 0;
+	return ! isSet( variable ) || variable?.length === 0;
 };
