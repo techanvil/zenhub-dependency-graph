@@ -320,4 +320,12 @@ export function renderGraph(d3GraphData) {
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
+
+  svgPanZoom("svg", {
+    zoomEnabled: true,
+    controlIconsEnabled: true,
+    fit: true,
+    center: true,
+    zoomScaleSensitivity: 0.4,
+  });
 }
