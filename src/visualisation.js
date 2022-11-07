@@ -150,3 +150,8 @@ export function renderGraph(d3GraphData) {
     .attr("alignment-baseline", "middle")
     .attr("fill", "white");
 }
+
+export function removeGraph() {
+  const svg = d3.select("svg");
+  svg.selectAll("*").remove();
+}
