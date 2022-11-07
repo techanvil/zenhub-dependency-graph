@@ -3,23 +3,23 @@
  */
 import { useState, useEffect } from "react";
 
-export const getStorageValue = ( key, defaultValue ) => {
+export const getStorageValue = (key, defaultValue) => {
   // Getting stored value.
-	const saved = localStorage.getItem( key );
-  	const initial = JSON.parse( saved );
+  const saved = localStorage.getItem(key);
+  const initial = JSON.parse(saved);
 
-	return initial || defaultValue;
-}
+  return initial || defaultValue;
+};
 
-export const useLocalStorage = ( key, defaultValue ) => {
-  const [ value, setValue ] = useState( () => {
-    return getStorageValue( key, defaultValue );
-  } );
+export const useLocalStorage = (key, defaultValue) => {
+  const [value, setValue] = useState(() => {
+    return getStorageValue(key, defaultValue);
+  });
 
-  useEffect( () => {
+  useEffect(() => {
     // Storing input.
-    localStorage.setItem( key, JSON.stringify( value ) );
-  }, [ key, value ] );
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
 
-  return [ value, setValue ];
+  return [value, setValue];
 };
