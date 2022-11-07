@@ -120,7 +120,8 @@ export const generateGraph = ( graphData ) => {
 		}
 		});
 	}
-	const svgSelection = document.createElement( 'svg' );
+	const svg = document.createElement( 'svg' );
+	const svgSelection = d3.select(svg);
 	svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
 	const defs = svgSelection.append("defs"); // For gradients
 
