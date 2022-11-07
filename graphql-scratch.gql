@@ -1,0 +1,80 @@
+# Welcome to GraphiQL
+#
+# GraphiQL is an in-browser tool for writing, validating, and
+# testing GraphQL queries.
+#
+# Type queries into this side of the screen, and you will see intelligent
+# typeaheads aware of the current GraphQL type schema and live syntax and
+# validation errors highlighted within the text.
+#
+# GraphQL queries typically start with a "{" character. Lines that start
+# with a # are ignored.
+#
+# An example GraphQL query might look like:
+#
+#     {
+#       field(arg: "value") {
+#         subField
+#       }
+#     }
+#
+# Keyboard shortcuts:
+#
+#  Prettify Query:  Shift-Ctrl-P (or press the prettify button above)
+#
+#     Merge Query:  Shift-Ctrl-M (or press the merge button above)
+#
+#       Run Query:  Ctrl-Enter (or press the play button above)
+#
+#   Auto Complete:  Ctrl-Space (or just start typing)
+#
+
+query GetWorkSpaceAndGhID {
+  viewer {
+    searchWorkspaces(query: "ZenHub Dependency Graph") {
+      nodes {
+        id
+        name
+      }
+    }
+    githubUser {
+      ghId
+    }
+  }
+}
+
+query GetRepositoryID {
+  workspace(id: "62e7cf5c58d0a154564ca57d") {
+    defaultRepository {
+      id
+      ghId
+    }
+    pipelinesConnection {
+      nodes {
+        id
+        name
+      }
+    }
+  }
+}
+
+query SearchIssues {
+  searchIssues(
+    workspaceId: "62e7cf5c58d0a154564ca57d"
+    epicIssueByInfo: { repositoryGhId: 520103850, issueNumber: 1 }
+    includeClosed: true
+    filters: {
+      repositoryIds: ["Z2lkOi8vcmFwdG9yL1JlcG9zaXRvcnkvMTMzMTk2MTMy"]
+      pipelineIds: ["Z2lkOi8vcmFwdG9yL1BpcGVsaW5lLzI4MDI0NzE"]
+    }
+  ) {
+    nodes {
+      number
+      blockingIssues {
+        nodes {
+          number
+        }
+      }
+    }
+  }
+}
