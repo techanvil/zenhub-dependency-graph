@@ -45,9 +45,15 @@ export const GET_LINKED_ISSUES_QUERY = gql`
     ) {
       nodes {
         number
+        title
         blockingIssues {
           nodes {
             number
+          }
+        }
+        pipelineIssue(workspaceId: $workspaceId) {
+          pipeline {
+            name
           }
         }
       }
