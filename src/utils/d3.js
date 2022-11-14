@@ -46,9 +46,21 @@ function getIntersection(dx, dy, cx, cy, w, h) {
   }
 }
 
+const panZoom = {
+  instance: null,
+  resizeHandler: null,
+};
+
 export const generateGraph = (graphData, svgElement) => {
+  try {
+    panZoom.instance?.destroy();
+    window.removeEventListener("resize", panZoom.resizeHandler);
+  } catch (err) {
+    console.log("panZoomInstance destroy error", err);
+  }
+  d3.selectAll("svg > *").remove();
+
   if (!graphData?.length) {
-    d3.selectAll("svg > *").remove();
     return;
   }
 
@@ -346,13 +358,20 @@ export const generateGraph = (graphData, svgElement) => {
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
 
-  // svgPanZoom("svg", {
-  // 	zoomEnabled: true,
-  // 	controlIconsEnabled: true,
-  // 	fit: true,
-  // 	center: true,
-  // 	zoomScaleSensitivity: 0.4,
-  // });
+  // eslint-disable-next-line no-undef
+  panZoom.instance = svgPanZoom("svg", {
+    zoomEnabled: true,
+    controlIconsEnabled: true,
+    fit: true,
+    center: true,
+    zoomScaleSensitivity: 0.4,
+  });
+
+  panZoom.resizeHandler = window.addEventListener("resize", function () {
+    panZoom.instance.resize();
+    panZoom.instance.fit();
+    panZoom.instance.center();
+  });
 
   return svgSelection;
 };
