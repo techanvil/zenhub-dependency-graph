@@ -10,6 +10,7 @@ import {
   Heading,
   HStack,
   Input,
+  Text,
   useColorModeValue,
 } from "@chakra-ui/react";
 
@@ -19,6 +20,7 @@ export default function Header({
   saveWorkspace,
   epic,
   saveEpic,
+  epicIssue,
 }) {
   return (
     <>
@@ -57,6 +59,11 @@ export default function Header({
                       }}
                     />
                   </FormControl>
+                </HStack>
+                <HStack>
+                  <Text>
+                    <b>{epicIssue?.title}</b>
+                  </Text>
                 </HStack>
                 <HStack spacing="3">
                   <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>

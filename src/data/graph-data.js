@@ -130,13 +130,27 @@ export async function getGraphData(
     })
   );
 
+  const { issueByInfo: epicIssue } = await gqlQuery(
+    GET_ISSUE_BY_NUMBER_QUERY,
+    "GetIssueByNumber",
+    {
+      workspaceId,
+      repositoryGhId,
+      issueNumber: epicIssueNumber,
+    }
+  );
+
+  console.log("epicIssue", epicIssue);
   console.log("workspace", workspaceId);
   console.log("repository", repositoryId, repositoryGhId);
   console.log("pipelines", pipelines);
   console.log("linkedIssues", linkedIssues);
   console.log("d3GraphData", d3GraphData);
 
-  return d3GraphData;
+  return {
+    graphData: d3GraphData,
+    epicIssue,
+  };
 }
 
 function createGqlQuery(endpointUrl, zenhubApiKey, signal) {
