@@ -47,6 +47,11 @@ function getIntersection(dx, dy, cx, cy, w, h) {
 }
 
 export const generateGraph = (graphData, svgElement) => {
+  if (!graphData?.length) {
+    d3.selectAll("svg > *").remove();
+    return;
+  }
+
   const dag = dagStratify()(graphData);
   const rectWidth = 60;
   const rectHeight = 35;

@@ -29,13 +29,18 @@ export default function SVG({ APIKey, workspace, epic }) {
       "https://api.zenhub.com/public/graphql/",
       APIKey,
       signal
-    ).then(setGraphData);
+    )
+      .then(setGraphData)
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setGraphData([]);
+      });
 
     return () => controller.abort();
   }, [workspace, epic, APIKey]);
 
   useEffect(() => {
-    if (graphData?.length) generateGraph(graphData, ref.current);
+    generateGraph(graphData, ref.current);
   }, [graphData]);
 
   return (

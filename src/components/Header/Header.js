@@ -49,7 +49,7 @@ export default function Header({
                   <FormControl>
                     <Input
                       placeholder="Epic Issue Number"
-                      value={epic || ""}
+                      value={epic ?? ""}
                       onChange={(e) => {
                         const epicIssueNumber =
                           e.target.value && parseInt(e.target.value, 10);
