@@ -11,7 +11,7 @@ import { generateGraph } from "../../utils/d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
-export default function SVG({ APIKey, workspace, epic }) {
+export default function SVG({ APIKey, workspace, epic, setEpicIssue }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
 
@@ -30,14 +30,17 @@ export default function SVG({ APIKey, workspace, epic }) {
       APIKey,
       signal
     )
-      .then(setGraphData)
+      .then(({ graphData, epicIssue }) => {
+        setGraphData(graphData);
+        setEpicIssue(epicIssue);
+      })
       .catch((err) => {
         console.log("getGraphData error", err);
         setGraphData([]);
       });
 
     return () => controller.abort();
-  }, [workspace, epic, APIKey]);
+  }, [workspace, epic, APIKey, setEpicIssue]);
 
   useEffect(() => {
     generateGraph(graphData, ref.current);
