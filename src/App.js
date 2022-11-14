@@ -12,6 +12,7 @@ import "./App.css";
 import SVG from "./components/SVG/SVG";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
+import { useState } from "react";
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
@@ -37,22 +38,25 @@ function App() {
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey");
   const [workspace, saveWorkspace] = useParameter("zenhubWorkspace");
   const [epic, saveEpic] = useParameter("zenhubEpicIssueNumber");
+  const [epicIssue, setEpicIssue] = useState();
 
   // TODO: Provide a nicer state sharing solution.
-  const localStorageProps = {
+  const sharedStateProps = {
     APIKey,
     saveAPIKey,
     workspace,
     saveWorkspace,
     epic,
     saveEpic,
+    epicIssue,
+    setEpicIssue,
   };
 
   return (
     <Box>
-      <Header onAPIKeyModalOpen={onOpen} {...localStorageProps} />
-      <SVG APIKey={APIKey} {...localStorageProps} />
-      <APIKeyModal isOpen={isOpen} onClose={onClose} {...localStorageProps} />
+      <Header onAPIKeyModalOpen={onOpen} {...sharedStateProps} />
+      <SVG APIKey={APIKey} {...sharedStateProps} />
+      <APIKeyModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
     </Box>
   );
 }
