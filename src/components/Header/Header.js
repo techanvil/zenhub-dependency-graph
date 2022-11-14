@@ -12,23 +12,14 @@ import {
   Input,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { useState } from "react";
 
-/**
- * Internal dependencies
- */
-import { useLocalStorage } from "../../hooks/useLocalStorage";
-
-export default function Header({ onAPIKeyModalOpen = () => {} }) {
-  const [savedWorkspace, saveWorkspace] = useLocalStorage(
-    "zenhubWorkspace",
-    ""
-  );
-  const [savedEpic, saveEpic] = useLocalStorage("zenhubEpicIssueNumber", "");
-  // TODO: Probably don't need so much state...
-  const [workspace, setWorkspace] = useState(savedWorkspace);
-  const [epic, setEpic] = useState(savedEpic);
-
+export default function Header({
+  onAPIKeyModalOpen = () => {},
+  workspace,
+  saveWorkspace,
+  epic,
+  saveEpic,
+}) {
   return (
     <>
       <Box as="section" h="80px">
@@ -52,7 +43,6 @@ export default function Header({ onAPIKeyModalOpen = () => {} }) {
                       value={workspace}
                       onChange={(e) => {
                         saveWorkspace(e.target.value);
-                        setWorkspace(e.target.value);
                       }}
                     />
                   </FormControl>
@@ -64,7 +54,6 @@ export default function Header({ onAPIKeyModalOpen = () => {} }) {
                         const epicIssueNumber =
                           e.target.value && parseInt(e.target.value, 10);
                         saveEpic(epicIssueNumber);
-                        setEpic(epicIssueNumber);
                       }}
                     />
                   </FormControl>

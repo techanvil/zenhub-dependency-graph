@@ -22,19 +22,18 @@ import {
  */
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-export default function APIKeyModal({ isOpen, onClose }) {
-  const [savedAPIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
-  const [APIKey, setAPIKey] = useState("");
+export default function APIKeyModal({ isOpen, onClose, APIKey, saveAPIKey }) {
+  const [APIKeyState, setAPIKeyState] = useState("");
 
   useEffect(() => {
-    setAPIKey(savedAPIKey);
-  }, [savedAPIKey]);
+    setAPIKeyState(APIKey);
+  }, [APIKey]);
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={() => {
-        if (savedAPIKey !== "") {
+        if (APIKey !== "") {
           onClose();
         }
       }}
@@ -42,14 +41,14 @@ export default function APIKeyModal({ isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Zenhub API Key</ModalHeader>
-        {savedAPIKey !== "" && <ModalCloseButton />}
+        {APIKey !== "" && <ModalCloseButton />}
         <ModalBody>
           <FormControl>
             <Input
               placeholder="API Key"
-              value={APIKey}
+              value={APIKeyState}
               onChange={(e) => {
-                setAPIKey(e.target.value);
+                setAPIKeyState(e.target.value);
               }}
             />
             <FormHelperText>
@@ -71,17 +70,17 @@ export default function APIKeyModal({ isOpen, onClose }) {
             colorScheme="blue"
             mr={3}
             onClick={() => {
-              saveAPIKey(APIKey);
+              saveAPIKey(APIKeyState);
 
-              if (APIKey !== "") {
+              if (APIKeyState !== "") {
                 onClose();
               }
             }}
-            disabled={APIKey === savedAPIKey}
+            disabled={APIKeyState === APIKey}
           >
             Save
           </Button>
-          {savedAPIKey !== "" && (
+          {APIKey !== "" && (
             <Button variant="ghost" onClick={onClose}>
               Close
             </Button>
