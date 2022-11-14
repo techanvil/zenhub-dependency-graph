@@ -1,8 +1,76 @@
 import {
   GET_WORKSPACE_QUERY,
   GET_REPO_AND_PIPELINES_QUERY,
-  GET_LINKED_ISSUES_QUERY,
+  GET_EPIC_LINKED_ISSUES_QUERY,
+  GET_ISSUE_BY_NUMBER_QUERY,
 } from "./queries.js";
+
+async function getAllIssues(gqlQuery, issues, { workspaceId, repositoryGhId }) {
+  const nonEpicBlockingIssues = issues.map(({ blockingIssues }) =>
+    blockingIssues.nodes.filter(
+      (blockingIssue) =>
+        !issues.some((issue) => issue.number === blockingIssue.number)
+    )
+  );
+
+  const nonEpicBlockedIssues = issues.map(({ blockedIssues }) =>
+    blockedIssues.nodes.filter(
+      (blockedIssue) =>
+        !issues.some((issue) => issue.number === blockedIssue.number)
+    )
+  );
+
+  const nonEpicIssues = [
+    ...nonEpicBlockedIssues,
+    ...nonEpicBlockingIssues,
+  ].flatMap((a) => a);
+
+  if (nonEpicIssues.length === 0) {
+    return issues;
+  }
+
+  // FIXME: Find a way to avoid making a query per single issue!
+  const nonEpicIssuesFull = await Promise.all(
+    nonEpicIssues.map(async (issue) => {
+      const { issueByInfo } = await gqlQuery(
+        GET_ISSUE_BY_NUMBER_QUERY,
+        "GetIssueByNumber",
+        {
+          workspaceId,
+          repositoryGhId,
+          issueNumber: issue.number,
+        }
+      );
+      return { ...issueByInfo, isNonEpicIssue: true };
+    })
+  );
+
+  const allIssues = [...issues, ...nonEpicIssuesFull];
+
+  return getAllIssues(gqlQuery, allIssues, { workspaceId, repositoryGhId });
+}
+
+async function getLinkedIssues(
+  gqlQuery,
+  { workspaceId, repositoryId, repositoryGhId, epicIssueNumber, pipelineIds }
+) {
+  const { linkedIssues } = await gqlQuery(
+    GET_EPIC_LINKED_ISSUES_QUERY,
+    "GetEpicLinkedIssues",
+    {
+      workspaceId,
+      repositoryId,
+      repositoryGhId,
+      epicIssueNumber,
+      pipelineIds,
+    }
+  );
+
+  return getAllIssues(gqlQuery, linkedIssues.nodes, {
+    workspaceId,
+    repositoryGhId,
+  });
+}
 
 export async function getGraphData(
   workspaceName,
@@ -31,23 +99,20 @@ export async function getGraphData(
     workspaceId,
   });
 
-  const { linkedIssues } = await gqlQuery(
-    GET_LINKED_ISSUES_QUERY,
-    "GetLinkedIssues",
-    {
-      workspaceId,
-      repositoryId,
-      repositoryGhId,
-      epicIssueNumber,
-      pipelineIds: pipelines.map((pipeline) => pipeline.id),
-    }
-  );
+  const linkedIssues = await getLinkedIssues(gqlQuery, {
+    workspaceId,
+    repositoryId,
+    repositoryGhId,
+    epicIssueNumber,
+    pipelineIds: pipelines.map((pipeline) => pipeline.id),
+  });
 
-  const d3GraphData = linkedIssues.nodes.map(
+  const d3GraphData = linkedIssues.map(
     ({
       number: id,
       title,
       htmlUrl,
+      isNonEpicIssue,
       assignees: { nodes: assignees },
       blockingIssues,
       pipelineIssue: {
@@ -57,6 +122,7 @@ export async function getGraphData(
       id: `${id}`,
       title,
       htmlUrl,
+      isNonEpicIssue,
       assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
       pipelineName,
