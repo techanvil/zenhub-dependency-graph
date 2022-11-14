@@ -10,13 +10,8 @@ import { Box, FormControl, Input } from "@chakra-ui/react";
 import { generateGraph } from "../../utils/d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-export default function SVG() {
-  const [APIKey] = useLocalStorage("zenhubAPIKey");
-  const [workspace] = useLocalStorage("zenhubWorkspace");
-  const [epic] = useLocalStorage("zenhubEpicIssueNumber");
-
+export default function SVG({ APIKey, workspace, epic }) {
   const ref = useRef();
 
   useEffect(() => {
