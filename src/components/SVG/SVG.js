@@ -10,33 +10,33 @@ import { Box, FormControl, Input } from "@chakra-ui/react";
 import { generateGraph } from "../../utils/d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
 
-export default function SVG() {
-  const [APIKey] = useLocalStorage("zenhubAPIKey");
-  const [workspace] = useLocalStorage("zenhubWorkspace");
-  const [epic] = useLocalStorage("zenhubEpicIssueNumber");
-
+export default function SVG({ APIKey, workspace, epic }) {
   const ref = useRef();
+  const [graphData, setGraphData] = useState();
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
       return;
     }
 
-    async function renderGraph() {
-      const graphData = await getGraphData(
-        workspace,
-        epic,
-        "https://api.zenhub.com/public/graphql/",
-        APIKey
-      );
+    const controller = new AbortController();
+    const { signal } = controller;
 
-      generateGraph(graphData, ref.current);
-    }
+    getGraphData(
+      workspace,
+      epic,
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    ).then(setGraphData);
 
-    renderGraph();
+    return () => controller.abort();
   }, [workspace, epic, APIKey]);
+
+  useEffect(() => {
+    if (graphData?.length) generateGraph(graphData, ref.current);
+  }, [graphData]);
 
   return (
     <Box h="calc(100vh - 80px)">

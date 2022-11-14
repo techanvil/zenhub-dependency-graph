@@ -26,8 +26,8 @@ export const GET_REPO_AND_PIPELINES_QUERY = gql`
   }
 `;
 
-export const GET_LINKED_ISSUES_QUERY = gql`
-  query GetLinkedIssues(
+export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
+  query GetEpicLinkedIssues(
     $workspaceId: ID!
     $repositoryId: ID!
     $repositoryGhId: Int!
@@ -58,10 +58,50 @@ export const GET_LINKED_ISSUES_QUERY = gql`
             number
           }
         }
+        blockedIssues {
+          nodes {
+            number
+          }
+        }
         pipelineIssue(workspaceId: $workspaceId) {
           pipeline {
             name
           }
+        }
+      }
+    }
+  }
+`;
+
+export const GET_ISSUE_BY_NUMBER_QUERY = gql`
+  query GetIssueByNumber(
+    $workspaceId: ID!
+    $repositoryGhId: Int!
+    $issueNumber: Int!
+  ) {
+    issueByInfo(issueNumber: $issueNumber, repositoryGhId: $repositoryGhId) {
+      number
+      title
+      htmlUrl
+      assignees {
+        nodes {
+          login
+          # name
+        }
+      }
+      pipelineIssue(workspaceId: $workspaceId) {
+        pipeline {
+          name
+        }
+      }
+      blockingIssues {
+        nodes {
+          number
+        }
+      }
+      blockedIssues {
+        nodes {
+          number
         }
       }
     }

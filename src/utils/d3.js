@@ -53,11 +53,17 @@ export const generateGraph = (graphData, svgElement) => {
   const nodeWidth = rectWidth * 1.5;
   const nodeHeight = rectHeight * 2;
   const arrowSize = nodeHeight / 2.0;
-  const layout = sugiyama() // base layout
-    .decross(decrossOpt()) // minimize number of crossings
-    .nodeSize((node) =>
-      node === undefined ? [0, 0] : [nodeWidth, nodeHeight]
-    ); // set node size instead of constraining to fit
+  let layout = sugiyama(); // base layout
+  // FIXME: Improve check for smaller graphs. See
+  // https://github.com/erikbrinkman/d3-dag/blob/949a079457f6295d2834b750b898c1e0b412b6f8/src/sugiyama/decross/opt.ts#L70-L90
+  const maxGraphSizeToDecross = 20;
+  if (graphData.length < maxGraphSizeToDecross) {
+    layout = layout.decross(decrossOpt()); // minimize number of crossings
+  }
+
+  layout = layout.nodeSize((node) =>
+    node === undefined ? [0, 0] : [nodeWidth, nodeHeight]
+  ); // set node size instead of constraining to fit
   const { width, height } = layout(dag);
 
   const padding = 3;
@@ -319,6 +325,19 @@ export const generateGraph = (graphData, svgElement) => {
     .attr("font-family", "sans-serif")
     .attr("font-size", 5)
     .attr("text-anchor", "end")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black");
+
+  // Add "External" text for non-epic issues to nodes
+  nodes
+    .filter((d) => d.data.isNonEpicIssue)
+    .append("text")
+    .text("External")
+    .attr("y", rectHeight / 2 - 5)
+    .attr("font-weight", "bold")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 5)
+    .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
 
