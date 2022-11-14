@@ -76,9 +76,10 @@ export async function getGraphData(
   workspaceName,
   epicIssueNumber,
   endpointUrl,
-  zenhubApiKey
+  zenhubApiKey,
+  signal
 ) {
-  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey);
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
 
   const {
     viewer: {
@@ -138,7 +139,7 @@ export async function getGraphData(
   return d3GraphData;
 }
 
-function createGqlQuery(endpointUrl, zenhubApiKey) {
+function createGqlQuery(endpointUrl, zenhubApiKey, signal) {
   return async function gqlQuery(query, operationName, variables) {
     const options = {
       method: "post",
@@ -151,6 +152,7 @@ function createGqlQuery(endpointUrl, zenhubApiKey) {
         query,
         variables,
       }),
+      signal,
     };
 
     const res = await fetch(endpointUrl, options);
