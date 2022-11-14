@@ -13,25 +13,30 @@ import { isEmpty } from "../../utils/common";
 
 export default function SVG({ APIKey, workspace, epic }) {
   const ref = useRef();
+  const [graphData, setGraphData] = useState();
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
       return;
     }
 
-    async function renderGraph() {
-      const graphData = await getGraphData(
-        workspace,
-        epic,
-        "https://api.zenhub.com/public/graphql/",
-        APIKey
-      );
+    const controller = new AbortController();
+    const { signal } = controller;
 
-      generateGraph(graphData, ref.current);
-    }
+    getGraphData(
+      workspace,
+      epic,
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    ).then(setGraphData);
 
-    renderGraph();
+    return () => controller.abort();
   }, [workspace, epic, APIKey]);
+
+  useEffect(() => {
+    if (graphData?.length) generateGraph(graphData, ref.current);
+  }, [graphData]);
 
   return (
     <Box h="calc(100vh - 80px)">
