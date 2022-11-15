@@ -42,7 +42,7 @@ export default function Header({
                   <FormControl>
                     <Input
                       placeholder="Workspace Name"
-                      value={workspace}
+                      value={workspace ?? ""}
                       onChange={(e) => {
                         saveWorkspace(e.target.value);
                       }}
