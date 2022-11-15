@@ -17,7 +17,7 @@ import { useState } from "react";
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
   const url = new URL(window.location);
-  ["zenhubWorkspace", "zenhubEpicIssueNumber"].forEach((key) => {
+  ["workspace", "epic"].forEach((key) => {
     if (url.searchParams.has(key)) {
       localStorage.setItem(key, url.searchParams.get(key));
     } else {
@@ -36,8 +36,8 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey");
-  const [workspace, saveWorkspace] = useParameter("zenhubWorkspace");
-  const [epic, saveEpic] = useParameter("zenhubEpicIssueNumber");
+  const [workspace, saveWorkspace] = useParameter("workspace");
+  const [epic, saveEpic] = useParameter("epic");
   const [epicIssue, setEpicIssue] = useState();
 
   // TODO: Provide a nicer state sharing solution.
