@@ -6,7 +6,14 @@ import { useState, useEffect } from "react";
 export const getStorageValue = (key, defaultValue) => {
   // Getting stored value.
   const saved = localStorage.getItem(key);
-  const initial = JSON.parse(saved);
+
+  let initial;
+
+  try {
+    initial = JSON.parse(saved);
+  } catch (err) {
+    console.log("JSON parse error", err);
+  }
 
   return initial || defaultValue;
 };

@@ -54,6 +54,7 @@ const panZoom = {
 export const generateGraph = (graphData, svgElement) => {
   try {
     panZoom.instance?.destroy();
+    panZoom.instance = null;
     window.removeEventListener("resize", panZoom.resizeHandler);
   } catch (err) {
     console.log("panZoomInstance destroy error", err);
