@@ -18,11 +18,19 @@ import { useState } from "react";
 function bootstrapParameters() {
   const url = new URL(window.location);
   ["workspace", "epic"].forEach((key) => {
-    if (url.searchParams.has(key)) {
+    if (url.searchParams.get(key)) {
       localStorage.setItem(key, url.searchParams.get(key));
     } else {
       const localValue = localStorage.getItem(key);
-      if (localValue != null) {
+      if (!localValue) return;
+
+      let parsedValue;
+      try {
+        parsedValue = JSON.parse(localValue);
+      } catch (err) {
+        console.log("JSON parse error", err);
+      }
+      if (parsedValue) {
         url.searchParams.set(key, localValue);
         window.history.pushState({}, undefined, url);
       }
@@ -35,9 +43,9 @@ bootstrapParameters();
 function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey");
-  const [workspace, saveWorkspace] = useParameter("workspace");
-  const [epic, saveEpic] = useParameter("epic");
+  const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
+  const [workspace, saveWorkspace] = useParameter("workspace", "");
+  const [epic, saveEpic] = useParameter("epic", "");
   const [epicIssue, setEpicIssue] = useState();
 
   // TODO: Provide a nicer state sharing solution.
