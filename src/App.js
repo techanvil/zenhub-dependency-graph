@@ -22,7 +22,7 @@ function bootstrapParameters() {
       localStorage.setItem(key, url.searchParams.get(key));
     } else {
       const localValue = localStorage.getItem(key);
-      if (localValue !== undefined) {
+      if (localValue != null) {
         url.searchParams.set(key, localValue);
         window.history.pushState({}, undefined, url);
       }
