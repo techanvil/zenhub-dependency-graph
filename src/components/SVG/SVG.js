@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { useEffect, useState, useRef } from "react";
-import { Box, FormControl, Input } from "@chakra-ui/react";
+import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -14,11 +14,14 @@ import { isEmpty } from "../../utils/common";
 export default function SVG({ APIKey, workspace, epic, setEpicIssue }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
+  const [error, setError] = useState();
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
       return;
     }
+
+    setError(null);
 
     const controller = new AbortController();
     const { signal } = controller;
@@ -43,12 +46,21 @@ export default function SVG({ APIKey, workspace, epic, setEpicIssue }) {
   }, [workspace, epic, APIKey, setEpicIssue]);
 
   useEffect(() => {
-    generateGraph(graphData, ref.current);
+    try {
+      generateGraph(graphData, ref.current);
+    } catch (err) {
+      console.log("generateGraph error", err);
+      setError(err);
+    }
   }, [graphData]);
 
   return (
     <Box h="calc(100vh - 80px)">
-      <svg style={{ width: "100%", height: "100%" }} ref={ref} />
+      {error ? (
+        <Text>{error.toString()}</Text>
+      ) : (
+        <svg style={{ width: "100%", height: "100%" }} ref={ref} />
+      )}
     </Box>
   );
 }
