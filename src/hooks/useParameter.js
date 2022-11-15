@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useEffect } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 
 export const useParameter = (key, defaultValue) => {
@@ -7,15 +7,15 @@ export const useParameter = (key, defaultValue) => {
     defaultValue
   );
 
-  const saveValue = useCallback(
-    (value) => {
-      saveLocalStorageValue(value);
-      const url = new URL(window.location);
-      url.searchParams.set(key, JSON.stringify(value));
-      window.history.pushState({}, undefined, url);
-    },
-    [key, saveLocalStorageValue]
-  );
+  useEffect(() => {
+    const url = new URL(window.location);
+    if (localStorageValue) {
+      url.searchParams.set(key, JSON.stringify(localStorageValue));
+    } else {
+      url.searchParams.delete(key);
+    }
+    window.history.pushState({}, undefined, url);
+  }, [key, localStorageValue]);
 
-  return [localStorageValue, saveValue];
+  return [localStorageValue, saveLocalStorageValue];
 };
