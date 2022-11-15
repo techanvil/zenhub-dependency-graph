@@ -25,13 +25,20 @@ async function getAllIssues(gqlQuery, issues, { workspaceId, repositoryGhId }) {
     ...nonEpicBlockingIssues,
   ].flatMap((a) => a);
 
-  if (nonEpicIssues.length === 0) {
+  const dedupedNonEpicIssues = Object.values(
+    nonEpicIssues.reduce((issueMap, issue) => {
+      issueMap[issue.number] = issue;
+      return issueMap;
+    }, {})
+  );
+
+  if (dedupedNonEpicIssues.length === 0) {
     return issues;
   }
 
   // FIXME: Find a way to avoid making a query per single issue!
   const nonEpicIssuesFull = await Promise.all(
-    nonEpicIssues.map(async (issue) => {
+    dedupedNonEpicIssues.map(async (issue) => {
       const { issueByInfo } = await gqlQuery(
         GET_ISSUE_BY_NUMBER_QUERY,
         "GetIssueByNumber",
