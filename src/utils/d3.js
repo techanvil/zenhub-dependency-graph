@@ -183,7 +183,9 @@ export const generateGraph = (graphData, svgElement) => {
     .enter()
     .append("path")
     .attr("d", ({ points }) => {
-      const [source, target] = points;
+      const source = points[0];
+      const target = points.at(-1);
+      console.log("num points", points.length);
       const [dx, dy] = getIntersection(
         source.x - target.x,
         source.y - target.y,
