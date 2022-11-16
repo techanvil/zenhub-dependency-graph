@@ -183,9 +183,9 @@ export const generateGraph = (graphData, svgElement) => {
     .enter()
     .append("path")
     .attr("d", ({ points }) => {
-      const source = points[0];
-      const target = points.at(-1);
-      console.log("num points", points.length);
+      const linePoints = [...points];
+      const target = linePoints.pop();
+      const source = linePoints[0];
       const [dx, dy] = getIntersection(
         source.x - target.x,
         source.y - target.y,
@@ -194,7 +194,7 @@ export const generateGraph = (graphData, svgElement) => {
         (rectWidth + arrowSize / 3) / 2,
         (rectHeight + arrowSize / 3) / 2
       );
-      return line([source, { x: dx, y: dy }]);
+      return line([...linePoints, { x: dx, y: dy }]);
     })
     .attr("fill", "none")
     .attr("stroke-width", 3)
