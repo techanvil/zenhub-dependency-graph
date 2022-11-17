@@ -17,9 +17,16 @@ import { useState } from "react";
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
   const url = new URL(window.location);
-  ["workspace", "epic"].forEach((key) => {
-    if (url.searchParams.get(key)) {
-      localStorage.setItem(key, url.searchParams.get(key));
+  [
+    { key: "workspace" },
+    { key: "epic", parse: (v) => parseInt(v, 10) },
+  ].forEach(({ key, parse = (v) => v }) => {
+    if (url.searchParams.has(key)) {
+      // Local storage is always JSON.stringified.
+      localStorage.setItem(
+        key,
+        JSON.stringify(parse(url.searchParams.get(key)))
+      );
     } else {
       const localValue = localStorage.getItem(key);
       if (!localValue) return;
