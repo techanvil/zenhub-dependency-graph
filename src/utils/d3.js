@@ -144,18 +144,15 @@ export const generateGraph = (graphData, svgElement) => {
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
   const defs = svgSelection.append("defs"); // For gradients
 
-  /*
-	const steps = dag.size();
-	const interp = d3.interpolateRainbow;
-	const colorMap = new Map();
-	for (const [i, node] of dag.idescendants().entries()) {
-		colorMap.set(node.data.id, interp(i / steps));
-	}
-	*/
+  const steps = dag.size();
+  const interp = d3.interpolateRainbow;
+  const colorMap = new Map();
+  for (const [i, node] of dag.descendants().entries()) {
+    colorMap.set(node.data.id, interp(i / steps));
+  }
 
   function getNodeColor(node) {
-    return pipelineColors[node.data.pipelineName];
-    // return pipelineColors[node.data.pipelineName] || colorMap.get(node.data.id);
+    return pipelineColors[node.data.pipelineName] || colorMap.get(node.data.id);
   }
 
   function getPipelineAbbreviation(node) {
