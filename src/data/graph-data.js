@@ -120,6 +120,7 @@ export async function getGraphData(
       number: id,
       title,
       htmlUrl,
+      state,
       isNonEpicIssue,
       assignees: { nodes: assignees },
       blockingIssues,
@@ -133,7 +134,7 @@ export async function getGraphData(
       isNonEpicIssue,
       assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
-      pipelineName,
+      pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
     })
   );
 
