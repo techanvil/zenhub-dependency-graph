@@ -47,6 +47,7 @@ export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
         number
         title
         htmlUrl
+        state
         assignees {
           nodes {
             login
@@ -83,6 +84,7 @@ export const GET_ISSUE_BY_NUMBER_QUERY = gql`
       number
       title
       htmlUrl
+      state
       assignees {
         nodes {
           login

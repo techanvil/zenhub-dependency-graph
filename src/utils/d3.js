@@ -18,6 +18,7 @@ const pipelineColors = {
   "Merge Review": "#8bac4b",
   QA: "#6b9e3d",
   Approval: "#488f31",
+  Closed: "#288f11",
 };
 
 const pipelineAbbreviations = {
@@ -34,6 +35,7 @@ const pipelineAbbreviations = {
   "Merge Review": "MR",
   QA: "QA",
   Approval: "A",
+  Closed: "C",
 };
 
 function getIntersection(dx, dy, cx, cy, w, h) {
