@@ -18,7 +18,6 @@ const pipelineColors = {
   "Merge Review": "#8bac4b",
   QA: "#6b9e3d",
   Approval: "#488f31",
-  Closed: "#388f21",
 };
 
 const pipelineAbbreviations = {
@@ -35,7 +34,6 @@ const pipelineAbbreviations = {
   "Merge Review": "MR",
   QA: "QA",
   Approval: "A",
-  Closed: "C",
 };
 
 function getIntersection(dx, dy, cx, cy, w, h) {
@@ -158,13 +156,18 @@ export const generateGraph = (graphData, svgElement) => {
   }
 
   function getPipelineAbbreviation(node) {
-    return (
+    const abbreviation =
       pipelineAbbreviations[node.data.pipelineName] ||
       node.data.pipelineName
         .match(/\b([A-Za-z0-9])/g)
         .join("")
-        .toUpperCase()
-    );
+        .toUpperCase();
+
+    if (node.data.state === "CLOSED") {
+      return "C " + abbreviation;
+    }
+
+    return abbreviation;
   }
 
   // How to draw edges
@@ -250,6 +253,18 @@ export const generateGraph = (graphData, svgElement) => {
   //   .attr("stroke-linecap", "butt")
   //   .attr("stroke-width", 1);
 
+  // Append a diagonal fill pattern to the defs, to use for Closed issues.
+  svgSelection
+    .append("defs")
+    .append("pattern")
+    .attr("id", "diagonalHatch")
+    .attr("patternUnits", "userSpaceOnUse")
+    .attr("width", 4)
+    .attr("height", 4)
+    .append("path")
+    .attr("d", "M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2")
+    .attr("style", "stroke:#000000; stroke-width:1.5; opacity: 0.2");
+
   // Plot node rects
   nodes
     .append("rect")
@@ -260,6 +275,20 @@ export const generateGraph = (graphData, svgElement) => {
     .attr("x", -rectWidth / 2)
     .attr("y", -rectHeight / 2)
     .attr("fill", (n) => getNodeColor(n));
+
+  // Add diagonal hatch to closed issues.
+  nodes
+    .filter((n) => n.data.state === "CLOSED")
+    // .attr("fill", (n) => "url(#diagonalHatch)")
+    .append("rect")
+    .attr("width", rectWidth)
+    .attr("height", rectHeight)
+    .attr("rx", 5)
+    .attr("ry", 5)
+    .attr("x", -rectWidth / 2)
+    .attr("y", -rectHeight / 2)
+    // .attr("fill", (n) => getNodeColor(n));
+    .attr("fill", (n) => "url(#diagonalHatch)");
 
   // Draw arrows
   const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
@@ -359,6 +388,26 @@ export const generateGraph = (graphData, svgElement) => {
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
+
+  // Add background for closed issue texts.
+  nodes
+    .filter((d) => d.data.state === "CLOSED")
+    .selectAll("text")
+    .each(function (n) {
+      const bbox = this.getBBox();
+      const self = this;
+
+      d3.select(this.parentNode)
+        .insert("rect")
+        .each(function () {
+          this.parentNode.insertBefore(this, self);
+        })
+        .attr("x", () => bbox.x - 0.5)
+        .attr("y", () => bbox.y - 0.5)
+        .attr("width", () => bbox.width + 1.5)
+        .attr("height", () => bbox.height + 1.5)
+        .attr("fill", getNodeColor(n));
+    });
 
   // eslint-disable-next-line no-undef
   panZoom.instance = svgPanZoom("svg", {

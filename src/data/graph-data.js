@@ -131,10 +131,12 @@ export async function getGraphData(
       id: `${id}`,
       title,
       htmlUrl,
+      state,
       isNonEpicIssue,
       assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
-      pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
+      pipelineName,
+      // pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
     })
   );
 
