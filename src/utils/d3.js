@@ -18,7 +18,7 @@ const pipelineColors = {
   "Merge Review": "#8bac4b",
   QA: "#6b9e3d",
   Approval: "#488f31",
-  Closed: "#288f11",
+  Closed: "#388f21",
 };
 
 const pipelineAbbreviations = {
