@@ -3,6 +3,8 @@ import {
   GET_REPO_AND_PIPELINES_QUERY,
   GET_EPIC_LINKED_ISSUES_QUERY,
   GET_ISSUE_BY_NUMBER_QUERY,
+  GET_ALL_EPICS,
+  GET_ALL_ORGANIZATIONS,
 } from "./queries.js";
 
 async function getAllIssues(gqlQuery, issues, { workspaceId, repositoryGhId }) {
@@ -77,6 +79,49 @@ async function getLinkedIssues(
     workspaceId,
     repositoryGhId,
   });
+}
+
+export async function GetAllOrganizations(
+  endpointUrl,
+  zenhubApiKey,
+  signal
+) {
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+
+  const {
+    viewer: {
+      zenhubOrganizations: {
+        nodes: organizations,
+      }
+    }
+  } = await gqlQuery(GET_ALL_ORGANIZATIONS, "GetAllOrganizations", {});
+
+  return organizations.map( ( organization ) => ( {
+    id: organization.id,
+    name: organization.name,
+    workspaces: organization.workspaces.nodes.map( ( workspace ) => ( { id: workspace.id, name: workspace.name } ) ),
+  } ) );
+}
+
+export async function getAllEpics(
+  workspaceId,
+  endpointUrl,
+  zenhubApiKey,
+  signal
+) {
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+
+  const {
+    workspace: {
+      epics: {
+        nodes: epics,
+      }
+    }
+  } = await gqlQuery(GET_ALL_EPICS, "GetAllEpics", {
+    workspaceId,
+  });
+
+  return epics.map( ( epic ) => epic.issue );
 }
 
 export async function getGraphData(

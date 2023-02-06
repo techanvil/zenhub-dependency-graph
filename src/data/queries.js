@@ -110,6 +110,40 @@ export const GET_ISSUE_BY_NUMBER_QUERY = gql`
   }
 `;
 
+export const GET_ALL_ORGANIZATIONS = gql`
+  query GetAllOrganizations {
+    viewer {
+      zenhubOrganizations {
+        nodes {
+          id,
+          name,
+          workspaces {
+            nodes {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const GET_ALL_EPICS = gql`
+  query GetAllEpics($workspaceId: ID!) {
+    workspace(id: $workspaceId) {
+      epics {
+        nodes{
+          issue {
+            number,
+            title
+          }
+        }
+      }
+    }
+  }
+`;
+
 // For the sake of syntax highlighting:
 function gql(strings) {
   return strings[0];
