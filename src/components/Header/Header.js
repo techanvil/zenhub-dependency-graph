@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -13,8 +14,16 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
+import { Select } from "chakra-react-select";
+
+/**
+ * Internal dependencies 
+ */
+import { GetAllOrganizations, getAllEpics } from "../../data/graph-data";
+import { isEmpty } from "../../utils/common";
 
 export default function Header({
+  APIKey,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
@@ -22,6 +31,58 @@ export default function Header({
   saveEpic,
   epicIssue,
 }) {
+  const [allOrganizations, setAllOrganizations] = useState([]);
+  const [chosenOrganization, setChosenOrganization] = useState(false);
+  const [chosenWorkspace, setChosenWorkspace] = useState(false);
+  const [allEpics, setAllEpics] = useState([]);
+
+  useEffect(() => {
+    if (isEmpty(APIKey)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    GetAllOrganizations(
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    ).then( ( organizations ) => {
+      setAllOrganizations( organizations );
+    } ).catch((err) => {
+      console.log("getGraphData error", err);
+      setAllOrganizations([]);
+    });
+
+    return () => controller.abort();
+  }, [workspace, APIKey]);
+
+  useEffect(() => {
+    if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    getAllEpics(
+      chosenWorkspace,
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    )
+      .then(( epics ) => {
+        setAllEpics( epics );
+      })
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setAllEpics([]);
+      });
+
+    return () => controller.abort();
+  }, [APIKey, chosenWorkspace]);
+
   return (
     <>
       <Box as="section" h="80px">
@@ -40,23 +101,21 @@ export default function Header({
                 </HStack>
                 <HStack>
                   <FormControl>
-                    <Input
-                      placeholder="Workspace Name"
-                      value={workspace ?? ""}
-                      onChange={(e) => {
-                        saveWorkspace(e.target.value);
-                      }}
+                    <Select
+                      options={ allOrganizations.map( ( organization ) => ( { label: organization.name, value: organization.id } ) ) }
+                      onChange={ ( organization ) => setChosenOrganization(organization.value) }
                     />
                   </FormControl>
                   <FormControl>
-                    <Input
-                      placeholder="Epic Issue Number"
-                      value={epic ?? ""}
-                      onChange={(e) => {
-                        const epicIssueNumber =
-                          e.target.value && parseInt(e.target.value, 10);
-                        saveEpic(epicIssueNumber);
-                      }}
+                    <Select
+                      options={ allOrganizations.find( ( organization ) => chosenOrganization === organization.id )?.workspaces.map( ( workspace ) => ( { label: workspace.name, value: workspace.id } ) ) }
+                      onChange={ ( workspace ) => {setChosenWorkspace(workspace.value); saveWorkspace(workspace.label)} }
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <Select
+                      options={ allEpics.map( ( anEpic ) => ( { label: anEpic.title, value: anEpic.number } ) ) }
+                      onChange={ ( chosenEpic ) => saveEpic(chosenEpic.value) }
                     />
                   </FormControl>
                 </HStack>
