@@ -48,9 +48,8 @@ export default function Header({
       "https://api.zenhub.com/public/graphql/",
       APIKey,
       signal
-    ).then( ( organizations ) => {
-      setAllOrganizations( organizations );
-    } ).catch((err) => {
+    ).then(setAllOrganizations)
+    .catch((err) => {
       console.log("getGraphData error", err);
       setAllOrganizations([]);
     });
@@ -72,9 +71,7 @@ export default function Header({
       APIKey,
       signal
     )
-      .then(( epics ) => {
-        setAllEpics( epics );
-      })
+      .then(setAllEpics)
       .catch((err) => {
         console.log("getGraphData error", err);
         setAllEpics([]);
@@ -82,6 +79,10 @@ export default function Header({
 
     return () => controller.abort();
   }, [APIKey, chosenWorkspace]);
+
+  function entityToOption({ name, id }) {
+    return { label: name, value: id };
+  }
 
   return (
     <>
@@ -102,13 +103,13 @@ export default function Header({
                 <HStack>
                   <FormControl>
                     <Select
-                      options={ allOrganizations.map( ( organization ) => ( { label: organization.name, value: organization.id } ) ) }
+                      options={ allOrganizations.map( entityToOption ) }
                       onChange={ ( organization ) => setChosenOrganization(organization.value) }
                     />
                   </FormControl>
                   <FormControl>
                     <Select
-                      options={ allOrganizations.find( ( organization ) => chosenOrganization === organization.id )?.workspaces.map( ( workspace ) => ( { label: workspace.name, value: workspace.id } ) ) }
+                      options={ allOrganizations.find( ( organization ) => chosenOrganization === organization.id )?.workspaces.map( entityToOption ) }
                       onChange={ ( workspace ) => {setChosenWorkspace(workspace.value); saveWorkspace(workspace.label)} }
                     />
                   </FormControl>

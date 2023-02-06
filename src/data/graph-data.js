@@ -99,7 +99,7 @@ export async function getAllOrganizations(
   return organizations.map( ( organization ) => ( {
     id: organization.id,
     name: organization.name,
-    workspaces: organization.workspaces.nodes.map( ( workspace ) => ( { id: workspace.id, name: workspace.name } ) ),
+    workspaces: organization.workspaces.nodes.map( ( {id, name} ) => ( { id, name } ) ),
   } ) );
 }
 
