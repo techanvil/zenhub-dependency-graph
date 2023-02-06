@@ -19,7 +19,7 @@ import { Select } from "chakra-react-select";
 /**
  * Internal dependencies 
  */
-import { GetAllOrganizations, getAllEpics } from "../../data/graph-data";
+import { getAllOrganizations, getAllEpics } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
 export default function Header({
@@ -44,7 +44,7 @@ export default function Header({
     const controller = new AbortController();
     const { signal } = controller;
 
-    GetAllOrganizations(
+    getAllOrganizations(
       "https://api.zenhub.com/public/graphql/",
       APIKey,
       signal

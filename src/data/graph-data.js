@@ -81,7 +81,7 @@ async function getLinkedIssues(
   });
 }
 
-export async function GetAllOrganizations(
+export async function getAllOrganizations(
   endpointUrl,
   zenhubApiKey,
   signal
