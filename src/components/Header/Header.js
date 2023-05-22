@@ -25,7 +25,6 @@ import {
   getWorkspaces,
 } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { set } from "lodash";
 
 function sortOptions({ label: a }, { label: b }) {
   return a.localeCompare(b);
@@ -44,11 +43,11 @@ export default function Header({
   saveEpic,
   epicIssue,
 }) {
-  const [allOrganizations, setAllOrganizations] = useState([]);
+  const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
   const [chosenWorkspace, setChosenWorkspace] = useState(false);
   const [workspaceOptions, setWorkspaceOptions] = useState(false);
-  const [allEpics, setAllEpics] = useState([]);
+  const [epicOptions, setEpicOptions] = useState([]);
   const [chosenEpic, setChosenEpic] = useState(false);
 
   useEffect(() => {
@@ -65,11 +64,13 @@ export default function Header({
       signal
     )
       .then((organizations) =>
-        setAllOrganizations(organizations.map(entityToOption).sort(sortOptions))
+        setOrganizationOptions(
+          organizations.map(entityToOption).sort(sortOptions)
+        )
       )
       .catch((err) => {
         console.log("getGraphData error", err);
-        setAllOrganizations([]);
+        setOrganizationOptions([]);
       });
 
     return () => controller.abort();
@@ -124,7 +125,7 @@ export default function Header({
         if (options.length === 1) {
           setChosenWorkspace(options[0]);
 
-          const organization = allOrganizations.find(
+          const organization = organizationOptions.find(
             ({ label }) => label === options[0].zenhubOrganizationName
           );
 
@@ -139,7 +140,7 @@ export default function Header({
       });
 
     return () => controller.abort();
-  }, [APIKey, allOrganizations, loadOptions, workspace]);
+  }, [APIKey, organizationOptions, loadOptions, workspace]);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
@@ -156,23 +157,23 @@ export default function Header({
       signal
     )
       .then((epics) => {
-        const epicOptions = epics
+        const options = epics
           .map(({ title: label, number: value }) => ({
             label,
             value,
           }))
           .sort(sortOptions);
 
-        const currentEpic = epicOptions.find(({ value }) => value === epic);
+        const currentEpic = options.find(({ value }) => value === epic);
         if (currentEpic) {
           setChosenEpic(currentEpic);
         }
 
-        setAllEpics(epicOptions);
+        setEpicOptions(options);
       })
       .catch((err) => {
         console.log("getGraphData error", err);
-        setAllEpics([]);
+        setEpicOptions([]);
       });
 
     return () => controller.abort();
@@ -198,14 +199,14 @@ export default function Header({
                   <FormControl>
                     <Box w="250px">
                       <Select
-                        options={allOrganizations}
+                        options={organizationOptions}
                         value={chosenOrganization}
                         onChange={(organization) => {
                           setChosenOrganization(organization);
                           setWorkspaceOptions([]);
                           setChosenWorkspace(false);
                           saveWorkspace(false);
-                          setAllEpics([]);
+                          setEpicOptions([]);
                           setChosenEpic(false);
                           saveEpic(false);
                         }}
@@ -232,7 +233,7 @@ export default function Header({
                   <FormControl>
                     <Box w="250px">
                       <Select
-                        options={allEpics}
+                        options={epicOptions}
                         value={chosenEpic}
                         onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
                       />
