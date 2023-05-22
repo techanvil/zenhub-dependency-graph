@@ -48,6 +48,48 @@ function getIntersection(dx, dy, cx, cy, w, h) {
   }
 }
 
+function isAncestorOfNode(nodeId, ancestorId, graphData) {
+  const node = graphData.find(({ id }) => id === nodeId);
+
+  if (!node) {
+    return false;
+  }
+
+  const { parentIds } = node;
+
+  return !!parentIds?.some((parentId) => {
+    if (parentId === ancestorId) {
+      return true;
+    }
+
+    return isAncestorOfNode(parentId, ancestorId, graphData);
+  });
+}
+
+function removeAncestors(graphData) {
+  graphData?.forEach((node) => {
+    const { parentIds } = node;
+
+    if (!(parentIds && parentIds.length > 1)) {
+      return;
+    }
+
+    const ancestorParentIds = [];
+
+    parentIds.forEach((parentId) => {
+      parentIds.forEach((otherParentId) => {
+        if (isAncestorOfNode(parentId, otherParentId, graphData)) {
+          ancestorParentIds.push(otherParentId);
+        }
+      });
+    });
+
+    node.parentIds = node.parentIds.filter(
+      (parentId) => !ancestorParentIds.includes(parentId)
+    );
+  });
+}
+
 const panZoom = {
   instance: null,
   resizeHandler: null,
@@ -62,6 +104,8 @@ export const generateGraph = (graphData, svgElement) => {
     console.log("panZoomInstance destroy error", err);
   }
   d3.selectAll("svg > *").remove();
+
+  removeAncestors(graphData);
 
   if (!graphData?.length) {
     return;
