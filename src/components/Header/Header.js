@@ -247,7 +247,7 @@ export default function Header({
                 </HStack>
                 <HStack spacing="3">
                   <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
-                    API Key
+                    Settings
                   </Button>
                 </HStack>
               </Flex>

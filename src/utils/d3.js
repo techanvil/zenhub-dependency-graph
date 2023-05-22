@@ -95,7 +95,11 @@ const panZoom = {
   resizeHandler: null,
 };
 
-export const generateGraph = (graphData, svgElement) => {
+export const generateGraph = (
+  graphData,
+  svgElement,
+  { showAncestorDependencies }
+) => {
   try {
     panZoom.instance?.destroy();
     panZoom.instance = null;
@@ -105,7 +109,9 @@ export const generateGraph = (graphData, svgElement) => {
   }
   d3.selectAll("svg > *").remove();
 
-  removeAncestors(graphData);
+  if (!showAncestorDependencies) {
+    removeAncestors(graphData);
+  }
 
   if (!graphData?.length) {
     return;
