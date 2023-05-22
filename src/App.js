@@ -69,7 +69,7 @@ function App() {
 
   return (
     <Box>
-      <Header onAPIKeyModalOpen={onOpen} {...sharedStateProps} />
+      <Header APIKey={APIKey} onAPIKeyModalOpen={onOpen} {...sharedStateProps} />
       <SVG APIKey={APIKey} {...sharedStateProps} />
       <APIKeyModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
     </Box>
