@@ -81,7 +81,8 @@ async function getLinkedIssues(
   });
 }
 
-export async function getAllOrganizations(
+export async function getWorkspaces(
+  workspaceName,
   endpointUrl,
   zenhubApiKey,
   signal
@@ -90,17 +91,19 @@ export async function getAllOrganizations(
 
   const {
     viewer: {
-      zenhubOrganizations: {
-        nodes: organizations,
-      }
-    }
-  } = await gqlQuery(GET_ALL_ORGANIZATIONS, "GetAllOrganizations", {});
+      searchWorkspaces: { nodes: workspaces },
+    },
+  } = await gqlQuery(GET_WORKSPACE_QUERY, "GetWorkSpace", {
+    workspaceName,
+  });
 
-  return organizations.map( ( organization ) => ( {
-    id: organization.id,
-    name: organization.name,
-    workspaces: organization.workspaces.nodes.map( ( {id, name} ) => ( { id, name } ) ),
-  } ) );
+  return workspaces.map(
+    ({ id, name, zenhubOrganization: { name: zenhubOrganizationName } }) => ({
+      id,
+      name,
+      zenhubOrganizationName,
+    })
+  );
 }
 
 export async function getAllEpics(
@@ -113,15 +116,13 @@ export async function getAllEpics(
 
   const {
     workspace: {
-      epics: {
-        nodes: epics,
-      }
-    }
+      epics: { nodes: epics },
+    },
   } = await gqlQuery(GET_ALL_EPICS, "GetAllEpics", {
     workspaceId,
   });
 
-  return epics.map( ( epic ) => epic.issue );
+  return epics.map((epic) => epic.issue);
 }
 
 export async function getGraphData(

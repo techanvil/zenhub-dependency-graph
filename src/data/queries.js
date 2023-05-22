@@ -4,6 +4,10 @@ export const GET_WORKSPACE_QUERY = gql`
       searchWorkspaces(query: $workspaceName) {
         nodes {
           id
+          name
+          zenhubOrganization {
+            name
+          }
         }
       }
     }
@@ -110,32 +114,13 @@ export const GET_ISSUE_BY_NUMBER_QUERY = gql`
   }
 `;
 
-export const GET_ALL_ORGANIZATIONS = gql`
-  query GetAllOrganizations {
-    viewer {
-      zenhubOrganizations {
-        nodes {
-          id,
-          name,
-          workspaces {
-            nodes {
-              id
-              name
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
 export const GET_ALL_EPICS = gql`
   query GetAllEpics($workspaceId: ID!) {
     workspace(id: $workspaceId) {
       epics {
-        nodes{
+        nodes {
           issue {
-            number,
+            number
             title
           }
         }

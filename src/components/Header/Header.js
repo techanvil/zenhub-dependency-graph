@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -14,12 +14,12 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { Select } from "chakra-react-select";
+import { AsyncSelect, Select } from "chakra-react-select";
 
 /**
- * Internal dependencies 
+ * Internal dependencies
  */
-import { getAllOrganizations, getAllEpics } from "../../data/graph-data";
+import { getAllEpics, getWorkspaces } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
 export default function Header({
@@ -31,31 +31,59 @@ export default function Header({
   saveEpic,
   epicIssue,
 }) {
-  const [allOrganizations, setAllOrganizations] = useState([]);
-  const [chosenOrganization, setChosenOrganization] = useState(false);
   const [chosenWorkspace, setChosenWorkspace] = useState(false);
+  const [workspaceOptions, setWorkspaceOptions] = useState(false);
   const [allEpics, setAllEpics] = useState([]);
 
+  const loadOptions = useCallback(
+    async function loadOptions(workspaceName, signal = null) {
+      if (isEmpty(workspaceName) || workspaceName.length < 2) {
+        return [];
+      }
+
+      const workspaces = await getWorkspaces(
+        workspaceName,
+        "https://api.zenhub.com/public/graphql/",
+        APIKey,
+        signal
+      );
+
+      const options = workspaces.map(
+        ({ name, id, zenhubOrganizationName }) => ({
+          label: `${name} (${zenhubOrganizationName})`,
+          value: id,
+          name,
+        })
+      );
+
+      return options;
+    },
+    [APIKey]
+  );
+
   useEffect(() => {
-    if (isEmpty(APIKey)) {
+    if (isEmpty(APIKey) || isEmpty(workspace)) {
       return;
     }
 
     const controller = new AbortController();
     const { signal } = controller;
 
-    getAllOrganizations(
-      "https://api.zenhub.com/public/graphql/",
-      APIKey,
-      signal
-    ).then(setAllOrganizations)
-    .catch((err) => {
-      console.log("getGraphData error", err);
-      setAllOrganizations([]);
-    });
+    loadOptions(workspace, signal)
+      .then((options) => {
+        setWorkspaceOptions(options);
+
+        if (options.length === 1) {
+          setChosenWorkspace(options[0]);
+        }
+      })
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setWorkspaceOptions([]);
+      });
 
     return () => controller.abort();
-  }, [workspace, APIKey]);
+  }, [APIKey, loadOptions, workspace]);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
@@ -66,7 +94,7 @@ export default function Header({
     const { signal } = controller;
 
     getAllEpics(
-      chosenWorkspace,
+      chosenWorkspace.value,
       "https://api.zenhub.com/public/graphql/",
       APIKey,
       signal
@@ -80,9 +108,11 @@ export default function Header({
     return () => controller.abort();
   }, [APIKey, chosenWorkspace]);
 
+  /*
   function entityToOption({ name, id }) {
     return { label: name, value: id };
   }
+  */
 
   return (
     <>
@@ -102,22 +132,31 @@ export default function Header({
                 </HStack>
                 <HStack>
                   <FormControl>
-                    <Select
-                      options={ allOrganizations.map( entityToOption ) }
-                      onChange={ ( organization ) => setChosenOrganization(organization.value) }
-                    />
+                    <Box w="250px">
+                      <AsyncSelect
+                        cacheOptions
+                        loadOptions={(workspaceName) =>
+                          loadOptions(workspaceName)
+                        }
+                        defaultOptions={workspaceOptions}
+                        value={chosenWorkspace}
+                        onChange={(workspace) => {
+                          setChosenWorkspace(workspace);
+                          saveWorkspace(workspace.name);
+                        }}
+                      />
+                    </Box>
                   </FormControl>
                   <FormControl>
-                    <Select
-                      options={ allOrganizations.find( ( organization ) => chosenOrganization === organization.id )?.workspaces.map( entityToOption ) }
-                      onChange={ ( workspace ) => {setChosenWorkspace(workspace.value); saveWorkspace(workspace.label)} }
-                    />
-                  </FormControl>
-                  <FormControl>
-                    <Select
-                      options={ allEpics.map( ( anEpic ) => ( { label: anEpic.title, value: anEpic.number } ) ) }
-                      onChange={ ( chosenEpic ) => saveEpic(chosenEpic.value) }
-                    />
+                    <Box w="250px">
+                      <Select
+                        options={allEpics.map((anEpic) => ({
+                          label: anEpic.title,
+                          value: anEpic.number,
+                        }))}
+                        onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
+                      />
+                    </Box>
                   </FormControl>
                 </HStack>
                 <HStack>
