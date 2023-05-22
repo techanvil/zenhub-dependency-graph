@@ -11,7 +11,13 @@ import { generateGraph } from "../../utils/d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
-export default function SVG({ APIKey, workspace, epic, setEpicIssue }) {
+export default function SVG({
+  APIKey,
+  showAncestorDependencies,
+  workspace,
+  epic,
+  setEpicIssue,
+}) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
@@ -47,12 +53,12 @@ export default function SVG({ APIKey, workspace, epic, setEpicIssue }) {
 
   useEffect(() => {
     try {
-      generateGraph(graphData, ref.current);
+      generateGraph(graphData, ref.current, { showAncestorDependencies });
     } catch (err) {
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData]);
+  }, [graphData, showAncestorDependencies]);
 
   return (
     <Box h="calc(100vh - 80px)">

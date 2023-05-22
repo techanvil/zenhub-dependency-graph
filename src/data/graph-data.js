@@ -3,6 +3,8 @@ import {
   GET_REPO_AND_PIPELINES_QUERY,
   GET_EPIC_LINKED_ISSUES_QUERY,
   GET_ISSUE_BY_NUMBER_QUERY,
+  GET_ALL_EPICS,
+  GET_ALL_ORGANIZATIONS,
 } from "./queries.js";
 
 async function getAllIssues(gqlQuery, issues, { workspaceId, repositoryGhId }) {
@@ -77,6 +79,69 @@ async function getLinkedIssues(
     workspaceId,
     repositoryGhId,
   });
+}
+
+export async function getAllOrganizations(endpointUrl, zenhubApiKey, signal) {
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+
+  const {
+    viewer: {
+      zenhubOrganizations: { nodes: organizations },
+    },
+  } = await gqlQuery(GET_ALL_ORGANIZATIONS, "GetAllOrganizations", {});
+
+  return organizations.map((organization) => ({
+    id: organization.id,
+    name: organization.name,
+    workspaces: organization.workspaces.nodes.map(({ id, name }) => ({
+      id,
+      name,
+    })),
+  }));
+}
+
+export async function getWorkspaces(
+  workspaceName,
+  endpointUrl,
+  zenhubApiKey,
+  signal
+) {
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+
+  const {
+    viewer: {
+      searchWorkspaces: { nodes: workspaces },
+    },
+  } = await gqlQuery(GET_WORKSPACE_QUERY, "GetWorkSpace", {
+    workspaceName,
+  });
+
+  return workspaces.map(
+    ({ id, name, zenhubOrganization: { name: zenhubOrganizationName } }) => ({
+      id,
+      name,
+      zenhubOrganizationName,
+    })
+  );
+}
+
+export async function getAllEpics(
+  workspaceId,
+  endpointUrl,
+  zenhubApiKey,
+  signal
+) {
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+
+  const {
+    workspace: {
+      epics: { nodes: epics },
+    },
+  } = await gqlQuery(GET_ALL_EPICS, "GetAllEpics", {
+    workspaceId,
+  });
+
+  return epics.map((epic) => epic.issue);
 }
 
 export async function getGraphData(
@@ -177,7 +242,51 @@ function createGqlQuery(endpointUrl, zenhubApiKey, signal) {
       signal,
     };
 
-    const res = await fetch(endpointUrl, options);
-    return (await res.json()).data;
+    // const res = await fetch(endpointUrl, options);
+    // return (await res.json()).data;
+    const res = await cachedFetch(endpointUrl, options);
+    return res.data;
   };
 }
+
+// Cache responses for 1 hour.
+const cachedFetch = async (url, options) => {
+  // Generate a unique key for the request
+  const cacheKey = `cachedFetch:${url}:${JSON.stringify(options)}`;
+
+  // Check if the cached response is still valid
+  const cachedResponse = sessionStorage.getItem(cacheKey);
+  if (cachedResponse) {
+    const { data, expiry } = JSON.parse(cachedResponse);
+
+    // Check if the response has not expired
+    if (expiry > Date.now()) {
+      return data;
+    }
+
+    // If the response has expired, remove it from the cache
+    sessionStorage.removeItem(cacheKey);
+  }
+
+  // Fetch the data
+  const response = await fetch(url, options);
+
+  // Check if the request was successful
+  if (response.ok) {
+    // Parse the response body
+    const data = await response.json();
+
+    // Calculate the expiry time (e.g., 1 hour from the current time)
+    const expiry = Date.now() + 3600000;
+
+    // Cache the response with the expiry time in session storage
+    const cachedData = JSON.stringify({ data, expiry });
+    sessionStorage.setItem(cacheKey, cachedData);
+
+    // Return the data
+    return data;
+  }
+
+  // If the request was not successful, throw an error
+  throw new Error(`Request failed with status ${response.status}`);
+};

@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -13,8 +14,28 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
+import { AsyncSelect, Select } from "chakra-react-select";
+
+/**
+ * Internal dependencies
+ */
+import {
+  getAllOrganizations,
+  getAllEpics,
+  getWorkspaces,
+} from "../../data/graph-data";
+import { isEmpty } from "../../utils/common";
+
+function sortOptions({ label: a }, { label: b }) {
+  return a.localeCompare(b);
+}
+
+function entityToOption({ name, id }) {
+  return { label: name, value: id };
+}
 
 export default function Header({
+  APIKey,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
@@ -22,6 +43,142 @@ export default function Header({
   saveEpic,
   epicIssue,
 }) {
+  const [organizationOptions, setOrganizationOptions] = useState([]);
+  const [chosenOrganization, setChosenOrganization] = useState(false);
+  const [chosenWorkspace, setChosenWorkspace] = useState(false);
+  const [workspaceOptions, setWorkspaceOptions] = useState(false);
+  const [epicOptions, setEpicOptions] = useState([]);
+  const [chosenEpic, setChosenEpic] = useState(false);
+
+  useEffect(() => {
+    if (isEmpty(APIKey)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    getAllOrganizations(
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    )
+      .then((organizations) =>
+        setOrganizationOptions(
+          organizations.map(entityToOption).sort(sortOptions)
+        )
+      )
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setOrganizationOptions([]);
+      });
+
+    return () => controller.abort();
+  }, [workspace, APIKey]);
+
+  const loadOptions = useCallback(
+    async function loadOptions(workspaceName, signal = null) {
+      if (isEmpty(workspaceName) || workspaceName.length < 2) {
+        return [];
+      }
+
+      const workspaces = await getWorkspaces(
+        workspaceName,
+        "https://api.zenhub.com/public/graphql/",
+        APIKey,
+        signal
+      );
+
+      let options = workspaces
+        .map(({ name, id, zenhubOrganizationName }) => ({
+          label: `${name} (${zenhubOrganizationName})`,
+          value: id,
+          name,
+          zenhubOrganizationName,
+        }))
+        .sort(sortOptions);
+
+      if (chosenOrganization) {
+        options = options.filter(
+          ({ zenhubOrganizationName }) =>
+            zenhubOrganizationName === chosenOrganization.label
+        );
+      }
+
+      return options;
+    },
+    [APIKey, chosenOrganization]
+  );
+
+  useEffect(() => {
+    if (isEmpty(APIKey) || isEmpty(workspace)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    loadOptions(workspace, signal)
+      .then((options) => {
+        setWorkspaceOptions(options);
+
+        if (options.length === 1) {
+          setChosenWorkspace(options[0]);
+
+          const organization = organizationOptions.find(
+            ({ label }) => label === options[0].zenhubOrganizationName
+          );
+
+          if (organization) {
+            setChosenOrganization(organization);
+          }
+        }
+      })
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setWorkspaceOptions([]);
+      });
+
+    return () => controller.abort();
+  }, [APIKey, organizationOptions, loadOptions, workspace]);
+
+  useEffect(() => {
+    if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    getAllEpics(
+      chosenWorkspace.value,
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    )
+      .then((epics) => {
+        const options = epics
+          .map(({ title: label, number: value }) => ({
+            label,
+            value,
+          }))
+          .sort(sortOptions);
+
+        const currentEpic = options.find(({ value }) => value === epic);
+        if (currentEpic) {
+          setChosenEpic(currentEpic);
+        }
+
+        setEpicOptions(options);
+      })
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setEpicOptions([]);
+      });
+
+    return () => controller.abort();
+  }, [APIKey, chosenWorkspace, epic]);
+
   return (
     <>
       <Box as="section" h="80px">
@@ -40,24 +197,47 @@ export default function Header({
                 </HStack>
                 <HStack>
                   <FormControl>
-                    <Input
-                      placeholder="Workspace Name"
-                      value={workspace ?? ""}
-                      onChange={(e) => {
-                        saveWorkspace(e.target.value);
-                      }}
-                    />
+                    <Box w="250px">
+                      <Select
+                        options={organizationOptions}
+                        value={chosenOrganization}
+                        onChange={(organization) => {
+                          setChosenOrganization(organization);
+                          setWorkspaceOptions([]);
+                          setChosenWorkspace(false);
+                          saveWorkspace(false);
+                          setEpicOptions([]);
+                          setChosenEpic(false);
+                          saveEpic(false);
+                        }}
+                      />
+                    </Box>
+                  </FormControl>
+
+                  <FormControl>
+                    <Box w="250px">
+                      <AsyncSelect
+                        // cacheOptions
+                        loadOptions={(workspaceName) =>
+                          loadOptions(workspaceName)
+                        }
+                        defaultOptions={workspaceOptions}
+                        value={chosenWorkspace}
+                        onChange={(workspace) => {
+                          setChosenWorkspace(workspace);
+                          saveWorkspace(workspace.name);
+                        }}
+                      />
+                    </Box>
                   </FormControl>
                   <FormControl>
-                    <Input
-                      placeholder="Epic Issue Number"
-                      value={epic ?? ""}
-                      onChange={(e) => {
-                        const epicIssueNumber =
-                          e.target.value && parseInt(e.target.value, 10);
-                        saveEpic(epicIssueNumber);
-                      }}
-                    />
+                    <Box w="250px">
+                      <Select
+                        options={epicOptions}
+                        value={chosenEpic}
+                        onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
+                      />
+                    </Box>
                   </FormControl>
                 </HStack>
                 <HStack>
@@ -67,7 +247,7 @@ export default function Header({
                 </HStack>
                 <HStack spacing="3">
                   <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
-                    API Key
+                    Settings
                   </Button>
                 </HStack>
               </Flex>

@@ -15,19 +15,37 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  FormLabel,
+  Switch,
 } from "@chakra-ui/react";
+import { shallowEqual } from "../../utils/common";
 
-/**
- * Internal dependencies
- */
-import { useLocalStorage } from "../../hooks/useLocalStorage";
-
-export default function APIKeyModal({ isOpen, onClose, APIKey, saveAPIKey }) {
-  const [APIKeyState, setAPIKeyState] = useState("");
+export default function APIKeyModal({
+  isOpen,
+  onClose,
+  APIKey,
+  saveAPIKey,
+  showAncestorDependencies,
+  saveShowAncestorDependencies,
+}) {
+  const [settingsState, setSettingsState] = useState({
+    APIKey: "",
+    showAncestorDependencies: false,
+  });
 
   useEffect(() => {
-    setAPIKeyState(APIKey);
-  }, [APIKey]);
+    setSettingsState({
+      APIKey,
+      showAncestorDependencies,
+    });
+  }, [APIKey, showAncestorDependencies]);
+
+  const updateSettings = (newSettings) => {
+    setSettingsState({
+      ...settingsState,
+      ...newSettings,
+    });
+  };
 
   return (
     <Modal
@@ -40,15 +58,16 @@ export default function APIKeyModal({ isOpen, onClose, APIKey, saveAPIKey }) {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Zenhub API Key</ModalHeader>
+        <ModalHeader>Settings</ModalHeader>
         {APIKey !== "" && <ModalCloseButton />}
         <ModalBody>
           <FormControl>
+            <FormLabel>Zenhub API Key</FormLabel>
             <Input
               placeholder="API Key"
-              value={APIKeyState}
+              value={settingsState.APIKey}
               onChange={(e) => {
-                setAPIKeyState(e.target.value);
+                updateSettings({ APIKey: e.target.value });
               }}
             />
             <FormHelperText>
@@ -63,6 +82,15 @@ export default function APIKeyModal({ isOpen, onClose, APIKey, saveAPIKey }) {
               .
             </FormHelperText>
           </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show Ancestor Dependencies</FormLabel>
+            <Switch
+              isChecked={settingsState.showAncestorDependencies}
+              onChange={(e) => {
+                updateSettings({ showAncestorDependencies: e.target.checked });
+              }}
+            />
+          </FormControl>
         </ModalBody>
 
         <ModalFooter>
@@ -70,13 +98,19 @@ export default function APIKeyModal({ isOpen, onClose, APIKey, saveAPIKey }) {
             colorScheme="blue"
             mr={3}
             onClick={() => {
-              saveAPIKey(APIKeyState);
+              saveAPIKey(settingsState.APIKey);
+              saveShowAncestorDependencies(
+                settingsState.showAncestorDependencies
+              );
 
-              if (APIKeyState !== "") {
+              if (settingsState.APIKey !== "") {
                 onClose();
               }
             }}
-            disabled={APIKeyState === APIKey}
+            disabled={shallowEqual(settingsState, {
+              APIKey,
+              showAncestorDependencies: !!showAncestorDependencies,
+            })}
           >
             Save
           </Button>
