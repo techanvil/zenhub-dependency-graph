@@ -7,7 +7,7 @@ import { Box, useDisclosure } from "@chakra-ui/react";
  * Internal dependencies
  */
 import Header from "./components/Header/Header";
-import APIKeyModal from "./components/APIKeyModal/APIKeyModal";
+import SettingsModal from "./components/SettingsModal/SettingsModal";
 import "./App.css";
 import SVG from "./components/SVG/SVG";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -51,6 +51,8 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
+  const [showAncestorDependencies, saveShowAncestorDependencies] =
+    useLocalStorage("showAncestorDependencies", "");
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [epicIssue, setEpicIssue] = useState();
@@ -59,6 +61,8 @@ function App() {
   const sharedStateProps = {
     APIKey,
     saveAPIKey,
+    showAncestorDependencies,
+    saveShowAncestorDependencies,
     workspace,
     saveWorkspace,
     epic,
@@ -69,9 +73,13 @@ function App() {
 
   return (
     <Box>
-      <Header APIKey={APIKey} onAPIKeyModalOpen={onOpen} {...sharedStateProps} />
+      <Header
+        APIKey={APIKey}
+        onAPIKeyModalOpen={onOpen}
+        {...sharedStateProps}
+      />
       <SVG APIKey={APIKey} {...sharedStateProps} />
-      <APIKeyModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
+      <SettingsModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
     </Box>
   );
 }

@@ -242,7 +242,51 @@ function createGqlQuery(endpointUrl, zenhubApiKey, signal) {
       signal,
     };
 
-    const res = await fetch(endpointUrl, options);
-    return (await res.json()).data;
+    // const res = await fetch(endpointUrl, options);
+    // return (await res.json()).data;
+    const res = await cachedFetch(endpointUrl, options);
+    return res.data;
   };
 }
+
+// Cache responses for 1 hour.
+const cachedFetch = async (url, options) => {
+  // Generate a unique key for the request
+  const cacheKey = `cachedFetch:${url}:${JSON.stringify(options)}`;
+
+  // Check if the cached response is still valid
+  const cachedResponse = sessionStorage.getItem(cacheKey);
+  if (cachedResponse) {
+    const { data, expiry } = JSON.parse(cachedResponse);
+
+    // Check if the response has not expired
+    if (expiry > Date.now()) {
+      return data;
+    }
+
+    // If the response has expired, remove it from the cache
+    sessionStorage.removeItem(cacheKey);
+  }
+
+  // Fetch the data
+  const response = await fetch(url, options);
+
+  // Check if the request was successful
+  if (response.ok) {
+    // Parse the response body
+    const data = await response.json();
+
+    // Calculate the expiry time (e.g., 1 hour from the current time)
+    const expiry = Date.now() + 3600000;
+
+    // Cache the response with the expiry time in session storage
+    const cachedData = JSON.stringify({ data, expiry });
+    sessionStorage.setItem(cacheKey, cachedData);
+
+    // Return the data
+    return data;
+  }
+
+  // If the request was not successful, throw an error
+  throw new Error(`Request failed with status ${response.status}`);
+};
