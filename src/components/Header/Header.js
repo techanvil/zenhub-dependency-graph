@@ -19,8 +19,21 @@ import { AsyncSelect, Select } from "chakra-react-select";
 /**
  * Internal dependencies
  */
-import { getAllEpics, getWorkspaces } from "../../data/graph-data";
+import {
+  getAllOrganizations,
+  getAllEpics,
+  getWorkspaces,
+} from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
+import { set } from "lodash";
+
+function sortOptions({ label: a }, { label: b }) {
+  return a.localeCompare(b);
+}
+
+function entityToOption({ name, id }) {
+  return { label: name, value: id };
+}
 
 export default function Header({
   APIKey,
@@ -31,9 +44,36 @@ export default function Header({
   saveEpic,
   epicIssue,
 }) {
+  const [allOrganizations, setAllOrganizations] = useState([]);
+  const [chosenOrganization, setChosenOrganization] = useState(false);
   const [chosenWorkspace, setChosenWorkspace] = useState(false);
   const [workspaceOptions, setWorkspaceOptions] = useState(false);
   const [allEpics, setAllEpics] = useState([]);
+  const [chosenEpic, setChosenEpic] = useState(false);
+
+  useEffect(() => {
+    if (isEmpty(APIKey)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    getAllOrganizations(
+      "https://api.zenhub.com/public/graphql/",
+      APIKey,
+      signal
+    )
+      .then((organizations) =>
+        setAllOrganizations(organizations.map(entityToOption).sort(sortOptions))
+      )
+      .catch((err) => {
+        console.log("getGraphData error", err);
+        setAllOrganizations([]);
+      });
+
+    return () => controller.abort();
+  }, [workspace, APIKey]);
 
   const loadOptions = useCallback(
     async function loadOptions(workspaceName, signal = null) {
@@ -48,17 +88,25 @@ export default function Header({
         signal
       );
 
-      const options = workspaces.map(
-        ({ name, id, zenhubOrganizationName }) => ({
+      let options = workspaces
+        .map(({ name, id, zenhubOrganizationName }) => ({
           label: `${name} (${zenhubOrganizationName})`,
           value: id,
           name,
-        })
-      );
+          zenhubOrganizationName,
+        }))
+        .sort(sortOptions);
+
+      if (chosenOrganization) {
+        options = options.filter(
+          ({ zenhubOrganizationName }) =>
+            zenhubOrganizationName === chosenOrganization.label
+        );
+      }
 
       return options;
     },
-    [APIKey]
+    [APIKey, chosenOrganization]
   );
 
   useEffect(() => {
@@ -75,6 +123,14 @@ export default function Header({
 
         if (options.length === 1) {
           setChosenWorkspace(options[0]);
+
+          const organization = allOrganizations.find(
+            ({ label }) => label === options[0].zenhubOrganizationName
+          );
+
+          if (organization) {
+            setChosenOrganization(organization);
+          }
         }
       })
       .catch((err) => {
@@ -83,7 +139,7 @@ export default function Header({
       });
 
     return () => controller.abort();
-  }, [APIKey, loadOptions, workspace]);
+  }, [APIKey, allOrganizations, loadOptions, workspace]);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
@@ -99,20 +155,28 @@ export default function Header({
       APIKey,
       signal
     )
-      .then(setAllEpics)
+      .then((epics) => {
+        const epicOptions = epics
+          .map(({ title: label, number: value }) => ({
+            label,
+            value,
+          }))
+          .sort(sortOptions);
+
+        const currentEpic = epicOptions.find(({ value }) => value === epic);
+        if (currentEpic) {
+          setChosenEpic(currentEpic);
+        }
+
+        setAllEpics(epicOptions);
+      })
       .catch((err) => {
         console.log("getGraphData error", err);
         setAllEpics([]);
       });
 
     return () => controller.abort();
-  }, [APIKey, chosenWorkspace]);
-
-  /*
-  function entityToOption({ name, id }) {
-    return { label: name, value: id };
-  }
-  */
+  }, [APIKey, chosenWorkspace, epic]);
 
   return (
     <>
@@ -133,8 +197,26 @@ export default function Header({
                 <HStack>
                   <FormControl>
                     <Box w="250px">
+                      <Select
+                        options={allOrganizations}
+                        value={chosenOrganization}
+                        onChange={(organization) => {
+                          setChosenOrganization(organization);
+                          setWorkspaceOptions([]);
+                          setChosenWorkspace(false);
+                          saveWorkspace(false);
+                          setAllEpics([]);
+                          setChosenEpic(false);
+                          saveEpic(false);
+                        }}
+                      />
+                    </Box>
+                  </FormControl>
+
+                  <FormControl>
+                    <Box w="250px">
                       <AsyncSelect
-                        cacheOptions
+                        // cacheOptions
                         loadOptions={(workspaceName) =>
                           loadOptions(workspaceName)
                         }
@@ -150,10 +232,8 @@ export default function Header({
                   <FormControl>
                     <Box w="250px">
                       <Select
-                        options={allEpics.map((anEpic) => ({
-                          label: anEpic.title,
-                          value: anEpic.number,
-                        }))}
+                        options={allEpics}
+                        value={chosenEpic}
                         onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
                       />
                     </Box>

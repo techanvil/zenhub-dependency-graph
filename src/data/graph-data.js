@@ -81,6 +81,25 @@ async function getLinkedIssues(
   });
 }
 
+export async function getAllOrganizations(endpointUrl, zenhubApiKey, signal) {
+  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+
+  const {
+    viewer: {
+      zenhubOrganizations: { nodes: organizations },
+    },
+  } = await gqlQuery(GET_ALL_ORGANIZATIONS, "GetAllOrganizations", {});
+
+  return organizations.map((organization) => ({
+    id: organization.id,
+    name: organization.name,
+    workspaces: organization.workspaces.nodes.map(({ id, name }) => ({
+      id,
+      name,
+    })),
+  }));
+}
+
 export async function getWorkspaces(
   workspaceName,
   endpointUrl,
