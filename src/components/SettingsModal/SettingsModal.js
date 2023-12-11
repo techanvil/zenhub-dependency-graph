@@ -31,7 +31,11 @@ export default function APIKeyModal({
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(
     () => ({
-      ...{ showAncestorDependencies: false },
+      ...{
+        showAncestorDependencies: false,
+        showIssueDetails: false,
+        showNonEpicIssues: false,
+      },
       ...appSettings,
     }),
     [appSettings]
@@ -108,6 +112,28 @@ export default function APIKeyModal({
               onChange={(e) => {
                 updateAppSettings({
                   showAncestorDependencies: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show Issue Details</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showIssueDetails}
+              onChange={(e) => {
+                updateAppSettings({
+                  showIssueDetails: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show Non-Epic Issues</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showNonEpicIssues}
+              onChange={(e) => {
+                updateAppSettings({
+                  showNonEpicIssues: e.target.checked,
                 });
               }}
             />

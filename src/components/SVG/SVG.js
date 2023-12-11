@@ -37,7 +37,8 @@ export default function SVG({
       epic,
       "https://api.zenhub.com/public/graphql/",
       APIKey,
-      signal
+      signal,
+      appSettings
     )
       .then(({ graphData, epicIssue }) => {
         setGraphData(graphData);
@@ -49,7 +50,7 @@ export default function SVG({
       });
 
     return () => controller.abort();
-  }, [workspace, epic, APIKey, setEpicIssue]);
+  }, [workspace, epic, APIKey, setEpicIssue, appSettings]);
 
   useEffect(() => {
     try {
