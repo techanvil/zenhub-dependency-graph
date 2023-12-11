@@ -57,6 +57,7 @@ function App() {
   const [epic, saveEpic] = useParameter("epic", "");
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
+  const [selfContainedIssues, setSelfContainedIssues] = useState();
 
   // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
@@ -72,6 +73,8 @@ function App() {
     setEpicIssue,
     nonEpicIssues,
     setNonEpicIssues,
+    selfContainedIssues,
+    setSelfContainedIssues,
   };
 
   return (
