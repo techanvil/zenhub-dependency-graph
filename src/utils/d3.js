@@ -411,7 +411,7 @@ export const generateGraph = (
     .attr("fill", "black");
 
   // eslint-disable-next-line no-undef
-  panZoom.instance = svgPanZoom("svg", {
+  panZoom.instance = svgPanZoom("#zdg-graph", {
     zoomEnabled: true,
     controlIconsEnabled: true,
     fit: true,
