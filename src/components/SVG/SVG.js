@@ -13,7 +13,7 @@ import { isEmpty } from "../../utils/common";
 
 export default function SVG({
   APIKey,
-  showAncestorDependencies,
+  appSettings,
   workspace,
   epic,
   setEpicIssue,
@@ -53,12 +53,12 @@ export default function SVG({
 
   useEffect(() => {
     try {
-      generateGraph(graphData, ref.current, { showAncestorDependencies });
+      generateGraph(graphData, ref.current, appSettings);
     } catch (err) {
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData, showAncestorDependencies]);
+  }, [graphData, appSettings]);
 
   return (
     <Box h="calc(100vh - 80px)">

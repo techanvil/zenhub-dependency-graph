@@ -51,8 +51,7 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
-  const [showAncestorDependencies, saveShowAncestorDependencies] =
-    useLocalStorage("showAncestorDependencies", "");
+  const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [epicIssue, setEpicIssue] = useState();
@@ -61,8 +60,8 @@ function App() {
   const sharedStateProps = {
     APIKey,
     saveAPIKey,
-    showAncestorDependencies,
-    saveShowAncestorDependencies,
+    appSettings,
+    saveAppSettings,
     workspace,
     saveWorkspace,
     epic,

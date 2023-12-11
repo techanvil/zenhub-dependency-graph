@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   FormControl,
@@ -18,32 +18,51 @@ import {
   FormLabel,
   Switch,
 } from "@chakra-ui/react";
-import { shallowEqual } from "../../utils/common";
+import { deepEquals, shallowEqual } from "../../utils/common";
 
 export default function APIKeyModal({
   isOpen,
   onClose,
   APIKey,
   saveAPIKey,
-  showAncestorDependencies,
-  saveShowAncestorDependencies,
+  appSettings,
+  saveAppSettings,
 }) {
+  // TODO: Clean this up.
+  const appSettingsWithDefaults = useMemo(
+    () => ({
+      ...{ showAncestorDependencies: false },
+      ...appSettings,
+    }),
+    [appSettings]
+  );
+
   const [settingsState, setSettingsState] = useState({
     APIKey: "",
-    showAncestorDependencies: false,
+    appSettings: appSettingsWithDefaults,
   });
 
   useEffect(() => {
     setSettingsState({
       APIKey,
-      showAncestorDependencies,
+      appSettings: appSettingsWithDefaults,
     });
-  }, [APIKey, showAncestorDependencies]);
+  }, [APIKey, appSettings, appSettingsWithDefaults]);
 
   const updateSettings = (newSettings) => {
     setSettingsState({
       ...settingsState,
       ...newSettings,
+    });
+  };
+
+  const updateAppSettings = (newAppSettings) => {
+    setSettingsState({
+      ...settingsState,
+      appSettings: {
+        ...settingsState.appSettings,
+        ...newAppSettings,
+      },
     });
   };
 
@@ -85,9 +104,11 @@ export default function APIKeyModal({
           <FormControl pt="5">
             <FormLabel>Show Ancestor Dependencies</FormLabel>
             <Switch
-              isChecked={settingsState.showAncestorDependencies}
+              isChecked={settingsState.appSettings.showAncestorDependencies}
               onChange={(e) => {
-                updateSettings({ showAncestorDependencies: e.target.checked });
+                updateAppSettings({
+                  showAncestorDependencies: e.target.checked,
+                });
               }}
             />
           </FormControl>
@@ -99,17 +120,15 @@ export default function APIKeyModal({
             mr={3}
             onClick={() => {
               saveAPIKey(settingsState.APIKey);
-              saveShowAncestorDependencies(
-                settingsState.showAncestorDependencies
-              );
+              saveAppSettings(settingsState.appSettings);
 
               if (settingsState.APIKey !== "") {
                 onClose();
               }
             }}
-            disabled={shallowEqual(settingsState, {
+            disabled={deepEquals(settingsState, {
               APIKey,
-              showAncestorDependencies: !!showAncestorDependencies,
+              appSettings: appSettingsWithDefaults,
             })}
           >
             Save
