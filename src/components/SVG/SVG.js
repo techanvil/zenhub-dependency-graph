@@ -7,7 +7,7 @@ import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 /**
  * Internal dependencies
  */
-import { generateGraph } from "../../utils/d3";
+import { generateGraph } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
