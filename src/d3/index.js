@@ -98,6 +98,34 @@ function removeAncestors(graphData) {
   });
 }
 
+export function removeNonEpicIssues(graphData) {
+  const nonEpicIssues = graphData?.filter((node) => node.isNonEpicIssue);
+
+  graphData?.forEach((node) => {
+    const { parentIds } = node;
+
+    if (!parentIds?.length) {
+      return;
+    }
+
+    node.parentIds = node.parentIds.filter(
+      (parentId) =>
+        !nonEpicIssues.some((nonEpicIssue) => nonEpicIssue.id === parentId)
+    );
+  });
+
+  // remove nonEpicIssues from graphData, mutating it:
+  nonEpicIssues?.forEach((nonEpicIssue) => {
+    const index = graphData.findIndex((node) => node.id === nonEpicIssue.id);
+
+    if (index > -1) {
+      graphData.splice(index, 1);
+    }
+  });
+
+  return nonEpicIssues.length;
+}
+
 const panZoom = {
   instance: null,
   resizeHandler: null,
@@ -106,7 +134,7 @@ const panZoom = {
 export const generateGraph = (
   graphData,
   svgElement,
-  { showAncestorDependencies, showIssueDetails = false }
+  { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
 ) => {
   try {
     panZoom.instance?.destroy();

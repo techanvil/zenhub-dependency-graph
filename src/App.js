@@ -54,9 +54,10 @@ function App() {
   const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
-  const [epicIssue, setEpicIssue] = useState();
+  const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
+  const [nonEpicIssueCount, setNonEpicIssueCount] = useState();
 
-  // TODO: Provide a nicer state sharing solution.
+  // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
     APIKey,
     saveAPIKey,
@@ -68,12 +69,15 @@ function App() {
     saveEpic,
     epicIssue,
     setEpicIssue,
+    nonEpicIssueCount,
+    setNonEpicIssueCount,
   };
 
   return (
     <Box>
       <Header
         APIKey={APIKey}
+        appSettings={appSettings}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />

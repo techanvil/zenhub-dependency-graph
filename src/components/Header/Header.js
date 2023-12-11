@@ -36,12 +36,14 @@ function entityToOption({ name, id }) {
 
 export default function Header({
   APIKey,
+  appSettings,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
   epic,
   saveEpic,
   epicIssue,
+  nonEpicIssueCount,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -240,11 +242,13 @@ export default function Header({
                     </Box>
                   </FormControl>
                 </HStack>
-                <HStack>
-                  <Text>
-                    <b>{epicIssue?.title}</b>
-                  </Text>
-                </HStack>
+                {!appSettings.showNonEpicIssues && nonEpicIssueCount > 0 && (
+                  <HStack>
+                    <Text color="tomato">
+                      <b>{nonEpicIssueCount}</b> non-epic issues hidden
+                    </Text>
+                  </HStack>
+                )}
                 <HStack spacing="3">
                   <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                     Settings
