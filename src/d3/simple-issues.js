@@ -36,7 +36,7 @@ export function renderSimpleIssues(nodes) {
     .attr("y", rectHeight / 2 - 5)
     .attr("font-weight", "bold")
     .attr("font-family", "sans-serif")
-    .attr("font-size", 5)
+    .attr("font-size", 8)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");

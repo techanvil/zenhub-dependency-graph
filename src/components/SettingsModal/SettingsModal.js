@@ -86,7 +86,7 @@ export default function APIKeyModal({
         {APIKey !== "" && <ModalCloseButton />}
         <ModalBody>
           <FormControl>
-            <FormLabel>Zenhub API Key</FormLabel>
+            <FormLabel>Zenhub API key</FormLabel>
             <Input
               placeholder="API Key"
               value={settingsState.APIKey}
@@ -107,7 +107,7 @@ export default function APIKeyModal({
             </FormHelperText>
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>Show Issue Details</FormLabel>
+            <FormLabel>Show issue details</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showIssueDetails}
               onChange={(e) => {
@@ -118,7 +118,7 @@ export default function APIKeyModal({
             />
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>Show Non-Epic Issues</FormLabel>
+            <FormLabel>Show linked issues outside this epic</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showNonEpicIssues}
               onChange={(e) => {
@@ -130,7 +130,7 @@ export default function APIKeyModal({
           </FormControl>
           <FormControl pt="5">
             <FormLabel>
-              Show Ancestor Dependencies (it's recommended to leave this off)
+              Show ancestor dependencies (it's recommended to leave this off)
             </FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showAncestorDependencies}
