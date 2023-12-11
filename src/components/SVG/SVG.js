@@ -7,16 +7,17 @@ import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 /**
  * Internal dependencies
  */
-import { generateGraph } from "../../utils/d3";
+import { generateGraph, removeNonEpicIssues } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
 export default function SVG({
   APIKey,
-  showAncestorDependencies,
+  appSettings,
   workspace,
   epic,
   setEpicIssue,
+  setNonEpicIssues,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -37,9 +38,15 @@ export default function SVG({
       epic,
       "https://api.zenhub.com/public/graphql/",
       APIKey,
-      signal
+      signal,
+      appSettings
     )
       .then(({ graphData, epicIssue }) => {
+        if (!appSettings.showNonEpicIssues) {
+          const nonEpicIssues = removeNonEpicIssues(graphData);
+          setNonEpicIssues(nonEpicIssues);
+        }
+
         setGraphData(graphData);
         setEpicIssue(epicIssue);
       })
@@ -49,23 +56,27 @@ export default function SVG({
       });
 
     return () => controller.abort();
-  }, [workspace, epic, APIKey, setEpicIssue]);
+  }, [workspace, epic, APIKey, setEpicIssue, appSettings, setNonEpicIssues]);
 
   useEffect(() => {
     try {
-      generateGraph(graphData, ref.current, { showAncestorDependencies });
+      generateGraph(graphData, ref.current, appSettings);
     } catch (err) {
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData, showAncestorDependencies]);
+  }, [graphData, appSettings]);
 
   return (
     <Box h="calc(100vh - 80px)">
       {error ? (
         <Text>{error.toString()}</Text>
       ) : (
-        <svg style={{ width: "100%", height: "100%" }} ref={ref} />
+        <svg
+          id="zdg-graph"
+          style={{ width: "100%", height: "100%" }}
+          ref={ref}
+        />
       )}
     </Box>
   );

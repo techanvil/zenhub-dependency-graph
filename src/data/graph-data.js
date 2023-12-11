@@ -7,7 +7,9 @@ import {
   GET_ALL_ORGANIZATIONS,
 } from "./queries.js";
 
-async function getAllIssues(gqlQuery, issues, { workspaceId, repositoryGhId }) {
+async function getAllIssues(gqlQuery, issues, variables, appSettings) {
+  const { workspaceId, repositoryGhId } = variables;
+
   const nonEpicBlockingIssues = issues.map(({ blockingIssues }) =>
     blockingIssues.nodes.filter(
       (blockingIssue) =>
@@ -56,12 +58,13 @@ async function getAllIssues(gqlQuery, issues, { workspaceId, repositoryGhId }) {
 
   const allIssues = [...issues, ...nonEpicIssuesFull];
 
-  return getAllIssues(gqlQuery, allIssues, { workspaceId, repositoryGhId });
+  return getAllIssues(gqlQuery, allIssues, variables, appSettings);
 }
 
 async function getLinkedIssues(
   gqlQuery,
-  { workspaceId, repositoryId, repositoryGhId, epicIssueNumber, pipelineIds }
+  { workspaceId, repositoryId, repositoryGhId, epicIssueNumber, pipelineIds },
+  appSettings
 ) {
   const { linkedIssues } = await gqlQuery(
     GET_EPIC_LINKED_ISSUES_QUERY,
@@ -75,10 +78,15 @@ async function getLinkedIssues(
     }
   );
 
-  return getAllIssues(gqlQuery, linkedIssues.nodes, {
-    workspaceId,
-    repositoryGhId,
-  });
+  return getAllIssues(
+    gqlQuery,
+    linkedIssues.nodes,
+    {
+      workspaceId,
+      repositoryGhId,
+    },
+    appSettings
+  );
 }
 
 export async function getAllOrganizations(endpointUrl, zenhubApiKey, signal) {
@@ -149,7 +157,8 @@ export async function getGraphData(
   epicIssueNumber,
   endpointUrl,
   zenhubApiKey,
-  signal
+  signal,
+  appSettings
 ) {
   const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
 
@@ -172,13 +181,17 @@ export async function getGraphData(
     workspaceId,
   });
 
-  const linkedIssues = await getLinkedIssues(gqlQuery, {
-    workspaceId,
-    repositoryId,
-    repositoryGhId,
-    epicIssueNumber,
-    pipelineIds: pipelines.map((pipeline) => pipeline.id),
-  });
+  const linkedIssues = await getLinkedIssues(
+    gqlQuery,
+    {
+      workspaceId,
+      repositoryId,
+      repositoryGhId,
+      epicIssueNumber,
+      pipelineIds: pipelines.map((pipeline) => pipeline.id),
+    },
+    appSettings
+  );
 
   const d3GraphData = linkedIssues.map(
     ({
