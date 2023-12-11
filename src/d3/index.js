@@ -288,6 +288,7 @@ export const generateGraph = (
     renderSimpleIssues(nodes);
   }
 
+  // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   // eslint-disable-next-line no-undef
   panZoom.instance = svgPanZoom("#zdg-graph", {
     zoomEnabled: true,

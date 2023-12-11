@@ -20,6 +20,8 @@ import {
   PopoverTrigger,
   Text,
   useColorModeValue,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import { AsyncSelect, Select } from "chakra-react-select";
 
@@ -206,88 +208,86 @@ export default function Header({
           boxShadow={useColorModeValue("sm", "sm-dark")}
         >
           <Container py={{ base: "4", lg: "5" }} maxW="100%">
-            <HStack spacing="10" justify="space-between">
-              <Flex justify="space-between" flex="1">
-                <HStack>
-                  <Heading as="h4" size="md">
-                    Zenhub Dependency Graph
-                  </Heading>
-                </HStack>
-                <HStack>
-                  <FormControl>
-                    <Box w="250px">
-                      <Select
-                        options={organizationOptions}
-                        value={chosenOrganization}
-                        onChange={(organization) => {
-                          setChosenOrganization(organization);
-                          setWorkspaceOptions([]);
-                          setChosenWorkspace(false);
-                          saveWorkspace(false);
-                          setEpicOptions([]);
-                          setChosenEpic(false);
-                          saveEpic(false);
-                        }}
-                      />
-                    </Box>
-                  </FormControl>
+            <Wrap justify="space-between" overflow="visible">
+              <WrapItem alignItems="center">
+                <Heading as="h4" size="md">
+                  Zenhub Dependency Graph
+                </Heading>
+              </WrapItem>
+              <HStack>
+                <FormControl>
+                  <Box w="250px">
+                    <Select
+                      options={organizationOptions}
+                      value={chosenOrganization}
+                      onChange={(organization) => {
+                        setChosenOrganization(organization);
+                        setWorkspaceOptions([]);
+                        setChosenWorkspace(false);
+                        saveWorkspace(false);
+                        setEpicOptions([]);
+                        setChosenEpic(false);
+                        saveEpic(false);
+                      }}
+                    />
+                  </Box>
+                </FormControl>
 
-                  <FormControl>
-                    <Box w="250px">
-                      <AsyncSelect
-                        // cacheOptions
-                        loadOptions={(workspaceName) =>
-                          loadOptions(workspaceName)
-                        }
-                        defaultOptions={workspaceOptions}
-                        value={chosenWorkspace}
-                        onChange={(workspace) => {
-                          setChosenWorkspace(workspace);
-                          saveWorkspace(workspace.name);
-                        }}
-                      />
-                    </Box>
-                  </FormControl>
-                  <FormControl>
-                    <Box w="250px">
-                      <Select
-                        options={epicOptions}
-                        value={chosenEpic}
-                        onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
-                      />
-                    </Box>
-                  </FormControl>
-                </HStack>
-                {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
-                  <HStack>
-                    <Text color="tomato">
-                      <b>{nonEpicIssues.length}</b> non-epic issues hidden (
-                      <b>{getOpenIssueCount(nonEpicIssues)}</b> open)
-                    </Text>
-                  </HStack>
-                )}
-                <HStack spacing="3">
-                  <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
-                    Settings
-                  </Button>
-                  <Popover placement="bottom-end">
-                    <PopoverTrigger>
-                      <Button colorScheme="blue" mr={3}>
-                        Legend
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <PopoverArrow />
-                      <PopoverCloseButton />
-                      <PopoverHeader>Issue state</PopoverHeader>
-                      <PopoverBody>
-                        <Legend />
-                      </PopoverBody>
-                    </PopoverContent>
-                  </Popover>
-                </HStack>
-              </Flex>
-            </HStack>
+                <FormControl>
+                  <Box w="250px">
+                    <AsyncSelect
+                      // cacheOptions
+                      loadOptions={(workspaceName) =>
+                        loadOptions(workspaceName)
+                      }
+                      defaultOptions={workspaceOptions}
+                      value={chosenWorkspace}
+                      onChange={(workspace) => {
+                        setChosenWorkspace(workspace);
+                        saveWorkspace(workspace.name);
+                      }}
+                    />
+                  </Box>
+                </FormControl>
+                <FormControl>
+                  <Box w="250px">
+                    <Select
+                      options={epicOptions}
+                      value={chosenEpic}
+                      onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
+                    />
+                  </Box>
+                </FormControl>
+              </HStack>
+              {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
+                <WrapItem alignItems="center">
+                  <Text color="tomato">
+                    <b>{nonEpicIssues.length}</b> non-epic issues hidden (
+                    <b>{getOpenIssueCount(nonEpicIssues)}</b> open)
+                  </Text>
+                </WrapItem>
+              )}
+              <WrapItem spacing="3">
+                <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
+                  Settings
+                </Button>
+                <Popover placement="bottom-end">
+                  <PopoverTrigger>
+                    <Button colorScheme="blue" mr={3}>
+                      Legend
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverCloseButton />
+                    <PopoverHeader>Issue state</PopoverHeader>
+                    <PopoverBody>
+                      <Legend />
+                    </PopoverBody>
+                  </PopoverContent>
+                </Popover>
+              </WrapItem>
+            </Wrap>
           </Container>
         </Box>
       </Box>
