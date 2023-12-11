@@ -36,9 +36,9 @@ import {
 import { isEmpty } from "../../utils/common";
 import { Legend } from "../Legend";
 
-// LEGEND
-
-// END LEGEND
+function pluralise(count, singular, plural) {
+  return count === 1 ? singular : plural;
+}
 
 function sortOptions({ label: a }, { label: b }) {
   return a.localeCompare(b);
@@ -262,8 +262,9 @@ export default function Header({
               {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
                 <WrapItem alignItems="center">
                   <Text color="tomato">
-                    <b>{nonEpicIssues.length}</b> non-epic issues hidden (
-                    <b>{getOpenIssueCount(nonEpicIssues)}</b> open)
+                    <b>{nonEpicIssues.length}</b> non-epic{" "}
+                    {pluralise(nonEpicIssues.length, "issue", "issues")} hidden
+                    (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
                   </Text>
                 </WrapItem>
               )}
