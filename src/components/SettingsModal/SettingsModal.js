@@ -17,6 +17,7 @@ import {
   ModalCloseButton,
   FormLabel,
   Switch,
+  Text,
 } from "@chakra-ui/react";
 import { deepEquals, shallowEqual } from "../../utils/common";
 
@@ -106,17 +107,6 @@ export default function APIKeyModal({
             </FormHelperText>
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>Show Ancestor Dependencies</FormLabel>
-            <Switch
-              isChecked={settingsState.appSettings.showAncestorDependencies}
-              onChange={(e) => {
-                updateAppSettings({
-                  showAncestorDependencies: e.target.checked,
-                });
-              }}
-            />
-          </FormControl>
-          <FormControl pt="5">
             <FormLabel>Show Issue Details</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showIssueDetails}
@@ -134,6 +124,19 @@ export default function APIKeyModal({
               onChange={(e) => {
                 updateAppSettings({
                   showNonEpicIssues: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>
+              Show Ancestor Dependencies (it's recommended to leave this off)
+            </FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showAncestorDependencies}
+              onChange={(e) => {
+                updateAppSettings({
+                  showAncestorDependencies: e.target.checked,
                 });
               }}
             />

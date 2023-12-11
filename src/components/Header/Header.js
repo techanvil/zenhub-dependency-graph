@@ -34,6 +34,10 @@ function entityToOption({ name, id }) {
   return { label: name, value: id };
 }
 
+function getOpenIssueCount(issues) {
+  return issues.filter(({ pipelineName }) => pipelineName !== "Closed").length;
+}
+
 export default function Header({
   APIKey,
   appSettings,
@@ -43,7 +47,7 @@ export default function Header({
   epic,
   saveEpic,
   epicIssue,
-  nonEpicIssueCount,
+  nonEpicIssues,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -242,10 +246,11 @@ export default function Header({
                     </Box>
                   </FormControl>
                 </HStack>
-                {!appSettings.showNonEpicIssues && nonEpicIssueCount > 0 && (
+                {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
                   <HStack>
                     <Text color="tomato">
-                      <b>{nonEpicIssueCount}</b> non-epic issues hidden
+                      <b>{nonEpicIssues.length}</b> non-epic issues hidden (
+                      <b>{getOpenIssueCount(nonEpicIssues)}</b> open)
                     </Text>
                   </HStack>
                 )}

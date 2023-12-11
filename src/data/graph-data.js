@@ -41,7 +41,6 @@ async function getAllIssues(gqlQuery, issues, variables, appSettings) {
   }
 
   // FIXME: Find a way to avoid making a query per single issue!
-  // TODO: Return a dummy issue when showNonEpicIssues is false.
   const nonEpicIssuesFull = await Promise.all(
     dedupedNonEpicIssues.map(async (issue) => {
       const { issueByInfo } = await gqlQuery(

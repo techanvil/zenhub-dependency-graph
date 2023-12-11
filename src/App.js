@@ -55,7 +55,7 @@ function App() {
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
-  const [nonEpicIssueCount, setNonEpicIssueCount] = useState();
+  const [nonEpicIssues, setNonEpicIssues] = useState();
 
   // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
@@ -69,8 +69,8 @@ function App() {
     saveEpic,
     epicIssue,
     setEpicIssue,
-    nonEpicIssueCount,
-    setNonEpicIssueCount,
+    nonEpicIssues,
+    setNonEpicIssues,
   };
 
   return (

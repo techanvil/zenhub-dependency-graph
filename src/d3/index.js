@@ -123,7 +123,7 @@ export function removeNonEpicIssues(graphData) {
     }
   });
 
-  return nonEpicIssues.length;
+  return nonEpicIssues;
 }
 
 const panZoom = {

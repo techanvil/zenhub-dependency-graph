@@ -17,7 +17,7 @@ export default function SVG({
   workspace,
   epic,
   setEpicIssue,
-  setNonEpicIssueCount,
+  setNonEpicIssues,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -43,8 +43,8 @@ export default function SVG({
     )
       .then(({ graphData, epicIssue }) => {
         if (!appSettings.showNonEpicIssues) {
-          const count = removeNonEpicIssues(graphData);
-          setNonEpicIssueCount(count);
+          const nonEpicIssues = removeNonEpicIssues(graphData);
+          setNonEpicIssues(nonEpicIssues);
         }
 
         setGraphData(graphData);
@@ -56,14 +56,7 @@ export default function SVG({
       });
 
     return () => controller.abort();
-  }, [
-    workspace,
-    epic,
-    APIKey,
-    setEpicIssue,
-    appSettings,
-    setNonEpicIssueCount,
-  ]);
+  }, [workspace, epic, APIKey, setEpicIssue, appSettings, setNonEpicIssues]);
 
   useEffect(() => {
     try {
