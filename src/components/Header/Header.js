@@ -11,6 +11,13 @@ import {
   Heading,
   HStack,
   Input,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -25,6 +32,11 @@ import {
   getWorkspaces,
 } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
+import { Legend } from "../Legend";
+
+// LEGEND
+
+// END LEGEND
 
 function sortOptions({ label: a }, { label: b }) {
   return a.localeCompare(b);
@@ -258,6 +270,21 @@ export default function Header({
                   <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                     Settings
                   </Button>
+                  <Popover placement="bottom-end">
+                    <PopoverTrigger>
+                      <Button colorScheme="blue" mr={3}>
+                        Legend
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <PopoverArrow />
+                      <PopoverCloseButton />
+                      <PopoverHeader>Issue state</PopoverHeader>
+                      <PopoverBody>
+                        <Legend />
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
                 </HStack>
               </Flex>
             </HStack>

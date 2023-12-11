@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { Box, useDisclosure } from "@chakra-ui/react";
+import { Box, Flex, useDisclosure } from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -13,6 +13,7 @@ import SVG from "./components/SVG/SVG";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
+import { Legend } from "./components/Legend";
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
@@ -81,7 +82,16 @@ function App() {
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />
-      <SVG APIKey={APIKey} {...sharedStateProps} />
+      <Flex direction="row">
+        <Box flex="1">
+          <SVG APIKey={APIKey} {...sharedStateProps} />
+        </Box>
+        {/* TODO: Optional inline legend...
+        <Box flex="0 0 250px">
+          <Legend />
+        </Box>
+        */}
+      </Flex>
       <SettingsModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
     </Box>
   );
