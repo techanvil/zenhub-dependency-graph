@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
   Text,
   useColorModeValue,
+  VStack,
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
@@ -62,6 +63,7 @@ export default function Header({
   saveEpic,
   epicIssue,
   nonEpicIssues,
+  selfContainedIssues,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -259,15 +261,26 @@ export default function Header({
                   </Box>
                 </FormControl>
               </HStack>
-              {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
-                <WrapItem alignItems="center">
-                  <Text color="tomato">
-                    <b>{nonEpicIssues.length}</b> non-epic{" "}
-                    {pluralise(nonEpicIssues.length, "issue", "issues")} hidden
-                    (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
-                  </Text>
-                </WrapItem>
-              )}
+              <WrapItem alignItems="center">
+                <VStack spacing="0">
+                  {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
+                    <Text color="tomato">
+                      <b>{nonEpicIssues.length}</b> non-epic{" "}
+                      {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
+                      hidden (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
+                    </Text>
+                  )}
+                  {!appSettings.showSelfContainedIssues &&
+                    selfContainedIssues?.length > 0 && (
+                      <Text color="tomato">
+                        <b>{selfContainedIssues.length}</b> self-contained{" "}
+                        {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
+                        hidden (<b>{getOpenIssueCount(selfContainedIssues)}</b>{" "}
+                        open)
+                      </Text>
+                    )}
+                </VStack>
+              </WrapItem>
               <WrapItem spacing="3">
                 <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings

@@ -92,6 +92,32 @@ export function removeNonEpicIssues(graphData) {
   return nonEpicIssues;
 }
 
+// Remove issues which have no parents and aren't the parent for any issues.
+export function removeSelfContainedIssues(graphData) {
+  const selfContainedIssues = graphData?.filter((node) => {
+    if (node.parentIds?.length) {
+      return false;
+    }
+
+    return !graphData?.some((otherNode) =>
+      otherNode.parentIds?.includes(node.id)
+    );
+  });
+
+  // remove selfContainedIssues from graphData, mutating it:
+  selfContainedIssues?.forEach((selfContainedIssue) => {
+    const index = graphData.findIndex(
+      (node) => node.id === selfContainedIssue.id
+    );
+
+    if (index > -1) {
+      graphData.splice(index, 1);
+    }
+  });
+
+  return selfContainedIssues;
+}
+
 const panZoom = {
   instance: null,
   resizeHandler: null,

@@ -7,7 +7,11 @@ import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 /**
  * Internal dependencies
  */
-import { generateGraph, removeNonEpicIssues } from "../../d3";
+import {
+  generateGraph,
+  removeNonEpicIssues,
+  removeSelfContainedIssues,
+} from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 
@@ -18,6 +22,7 @@ export default function SVG({
   epic,
   setEpicIssue,
   setNonEpicIssues,
+  setSelfContainedIssues,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -47,6 +52,11 @@ export default function SVG({
           setNonEpicIssues(nonEpicIssues);
         }
 
+        if (!appSettings.showSelfContainedIssues) {
+          const selfContainedIssues = removeSelfContainedIssues(graphData);
+          setSelfContainedIssues(selfContainedIssues);
+        }
+
         setGraphData(graphData);
         setEpicIssue(epicIssue);
       })
@@ -56,7 +66,15 @@ export default function SVG({
       });
 
     return () => controller.abort();
-  }, [workspace, epic, APIKey, setEpicIssue, appSettings, setNonEpicIssues]);
+  }, [
+    workspace,
+    epic,
+    APIKey,
+    setEpicIssue,
+    appSettings,
+    setNonEpicIssues,
+    setSelfContainedIssues,
+  ]);
 
   useEffect(() => {
     try {
