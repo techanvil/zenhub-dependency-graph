@@ -181,8 +181,18 @@ export const generateGraph = (
     colorMap.set(node.data.id, interp(i / steps));
   }
 
-  function getNodeColor(node) {
-    return pipelineColors[node.data.pipelineName] || colorMap.get(node.data.id);
+  function getNodeColor(target) {
+    return (
+      pipelineColors[target.data.pipelineName] || colorMap.get(target.data.id)
+    );
+  }
+
+  function getArrowEndColor(source, target) {
+    if (!source.data.isNonEpicIssue && target.data.isNonEpicIssue) {
+      return "tomato";
+    }
+
+    return getNodeColor(target);
   }
 
   // How to draw edges
@@ -242,7 +252,7 @@ export const generateGraph = (
       grad
         .append("stop")
         .attr("offset", "100%")
-        .attr("stop-color", getNodeColor(target));
+        .attr("stop-color", getArrowEndColor(source, target));
       return `url(#${gradId})`;
     });
 
@@ -304,7 +314,7 @@ export const generateGraph = (
       const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
       return `translate(${dx}, ${dy}) rotate(${angle})`;
     })
-    .attr("fill", ({ target }) => getNodeColor(target));
+    .attr("fill", ({ source, target }) => getArrowEndColor(source, target));
 
   if (showIssueDetails) {
     renderDetailedIssues(nodes);
