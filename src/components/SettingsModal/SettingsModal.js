@@ -36,6 +36,7 @@ export default function APIKeyModal({
         showAncestorDependencies: false,
         showIssueDetails: false,
         showNonEpicIssues: false,
+        showSelfContainedIssues: false,
       },
       ...appSettings,
     }),
@@ -118,12 +119,23 @@ export default function APIKeyModal({
             />
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>Show linked issues outside this epic</FormLabel>
+            <FormLabel>Show non-epic issues</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showNonEpicIssues}
               onChange={(e) => {
                 updateAppSettings({
                   showNonEpicIssues: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show self-contained issues</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showSelfContainedIssues}
+              onChange={(e) => {
+                updateAppSettings({
+                  showSelfContainedIssues: e.target.checked,
                 });
               }}
             />
