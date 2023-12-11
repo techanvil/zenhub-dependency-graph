@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   FormControl,
@@ -17,33 +17,57 @@ import {
   ModalCloseButton,
   FormLabel,
   Switch,
+  Text,
 } from "@chakra-ui/react";
-import { shallowEqual } from "../../utils/common";
+import { deepEquals, shallowEqual } from "../../utils/common";
 
 export default function APIKeyModal({
   isOpen,
   onClose,
   APIKey,
   saveAPIKey,
-  showAncestorDependencies,
-  saveShowAncestorDependencies,
+  appSettings,
+  saveAppSettings,
 }) {
+  // TODO: Clean this up.
+  const appSettingsWithDefaults = useMemo(
+    () => ({
+      ...{
+        showAncestorDependencies: false,
+        showIssueDetails: false,
+        showNonEpicIssues: false,
+      },
+      ...appSettings,
+    }),
+    [appSettings]
+  );
+
   const [settingsState, setSettingsState] = useState({
     APIKey: "",
-    showAncestorDependencies: false,
+    appSettings: appSettingsWithDefaults,
   });
 
   useEffect(() => {
     setSettingsState({
       APIKey,
-      showAncestorDependencies,
+      appSettings: appSettingsWithDefaults,
     });
-  }, [APIKey, showAncestorDependencies]);
+  }, [APIKey, appSettings, appSettingsWithDefaults]);
 
   const updateSettings = (newSettings) => {
     setSettingsState({
       ...settingsState,
       ...newSettings,
+    });
+  };
+
+  const updateAppSettings = (newAppSettings) => {
+    setSettingsState({
+      ...settingsState,
+      appSettings: {
+        ...settingsState.appSettings,
+        ...newAppSettings,
+      },
     });
   };
 
@@ -62,7 +86,7 @@ export default function APIKeyModal({
         {APIKey !== "" && <ModalCloseButton />}
         <ModalBody>
           <FormControl>
-            <FormLabel>Zenhub API Key</FormLabel>
+            <FormLabel>Zenhub API key</FormLabel>
             <Input
               placeholder="API Key"
               value={settingsState.APIKey}
@@ -83,11 +107,37 @@ export default function APIKeyModal({
             </FormHelperText>
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>Show Ancestor Dependencies</FormLabel>
+            <FormLabel>Show issue details</FormLabel>
             <Switch
-              isChecked={settingsState.showAncestorDependencies}
+              isChecked={settingsState.appSettings.showIssueDetails}
               onChange={(e) => {
-                updateSettings({ showAncestorDependencies: e.target.checked });
+                updateAppSettings({
+                  showIssueDetails: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show linked issues outside this epic</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showNonEpicIssues}
+              onChange={(e) => {
+                updateAppSettings({
+                  showNonEpicIssues: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>
+              Show ancestor dependencies (it's recommended to leave this off)
+            </FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showAncestorDependencies}
+              onChange={(e) => {
+                updateAppSettings({
+                  showAncestorDependencies: e.target.checked,
+                });
               }}
             />
           </FormControl>
@@ -99,17 +149,15 @@ export default function APIKeyModal({
             mr={3}
             onClick={() => {
               saveAPIKey(settingsState.APIKey);
-              saveShowAncestorDependencies(
-                settingsState.showAncestorDependencies
-              );
+              saveAppSettings(settingsState.appSettings);
 
               if (settingsState.APIKey !== "") {
                 onClose();
               }
             }}
-            disabled={shallowEqual(settingsState, {
+            disabled={deepEquals(settingsState, {
               APIKey,
-              showAncestorDependencies: !!showAncestorDependencies,
+              appSettings: appSettingsWithDefaults,
             })}
           >
             Save

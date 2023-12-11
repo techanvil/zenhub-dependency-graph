@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { Box, useDisclosure } from "@chakra-ui/react";
+import { Box, Flex, useDisclosure } from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -13,6 +13,7 @@ import SVG from "./components/SVG/SVG";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
+import { Legend } from "./components/Legend";
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
@@ -51,34 +52,46 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
-  const [showAncestorDependencies, saveShowAncestorDependencies] =
-    useLocalStorage("showAncestorDependencies", "");
+  const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
-  const [epicIssue, setEpicIssue] = useState();
+  const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
+  const [nonEpicIssues, setNonEpicIssues] = useState();
 
-  // TODO: Provide a nicer state sharing solution.
+  // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
     APIKey,
     saveAPIKey,
-    showAncestorDependencies,
-    saveShowAncestorDependencies,
+    appSettings,
+    saveAppSettings,
     workspace,
     saveWorkspace,
     epic,
     saveEpic,
     epicIssue,
     setEpicIssue,
+    nonEpicIssues,
+    setNonEpicIssues,
   };
 
   return (
     <Box>
       <Header
         APIKey={APIKey}
+        appSettings={appSettings}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />
-      <SVG APIKey={APIKey} {...sharedStateProps} />
+      <Flex direction="row">
+        <Box flex="1">
+          <SVG APIKey={APIKey} {...sharedStateProps} />
+        </Box>
+        {/* TODO: Optional inline legend...
+        <Box flex="0 0 250px">
+          <Legend />
+        </Box>
+        */}
+      </Flex>
       <SettingsModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
     </Box>
   );
