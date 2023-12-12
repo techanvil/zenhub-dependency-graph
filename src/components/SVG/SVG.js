@@ -27,6 +27,7 @@ export default function SVG({
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
@@ -34,6 +35,7 @@ export default function SVG({
     }
 
     setError(null);
+    setLoading(true);
 
     const controller = new AbortController();
     const { signal } = controller;
@@ -63,6 +65,9 @@ export default function SVG({
       .catch((err) => {
         console.log("getGraphData error", err);
         setGraphData([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
 
     return () => controller.abort();
@@ -85,17 +90,17 @@ export default function SVG({
     }
   }, [graphData, appSettings]);
 
+  if (loading) {
+    return <Text padding="20px">Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text padding="20px">{error.toString()}</Text>;
+  }
+
   return (
     <Box h="calc(100vh - 80px)">
-      {error ? (
-        <Text>{error.toString()}</Text>
-      ) : (
-        <svg
-          id="zdg-graph"
-          style={{ width: "100%", height: "100%" }}
-          ref={ref}
-        />
-      )}
+      <svg id="zdg-graph" style={{ width: "100%", height: "100%" }} ref={ref} />
     </Box>
   );
 }
