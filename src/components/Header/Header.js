@@ -274,7 +274,11 @@ export default function Header({
                     selfContainedIssues?.length > 0 && (
                       <Text color="tomato">
                         <b>{selfContainedIssues.length}</b> self-contained{" "}
-                        {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
+                        {pluralise(
+                          selfContainedIssues.length,
+                          "issue",
+                          "issues"
+                        )}{" "}
                         hidden (<b>{getOpenIssueCount(selfContainedIssues)}</b>{" "}
                         open)
                       </Text>
