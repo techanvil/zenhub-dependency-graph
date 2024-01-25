@@ -204,10 +204,10 @@ export const generateGraph = (
     .attr("d", ({ points }) => {
       const linePoints = [...points];
       const target = linePoints.pop();
-      const source = linePoints[0];
+      const prevPoint = linePoints[linePoints.length - 1];
       const [dx, dy] = getIntersection(
-        source.x - target.x,
-        source.y - target.y,
+        prevPoint.x - target.x,
+        prevPoint.y - target.y,
         target.x,
         target.y,
         (rectWidth + arrowSize / 3) / 2,
