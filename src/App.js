@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { Box, Flex, useDisclosure } from "@chakra-ui/react";
+import { Box, Flex, Link, useDisclosure } from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -87,7 +87,27 @@ function App() {
       />
       <Flex direction="row">
         <Box flex="1">
-          <SVG APIKey={APIKey} {...sharedStateProps} />
+          {APIKey ? (
+            <SVG APIKey={APIKey} {...sharedStateProps} />
+          ) : (
+            <Box p={4}>
+              <p>
+                Please add your <strong>Zenhub API key</strong> in{" "}
+                <strong>Settings</strong>.
+              </p>
+              <p>
+                To generate your Personal API Key, go to the{" "}
+                <Link
+                  href="https://app.zenhub.com/settings/tokens"
+                  isExternal
+                  color="teal.500"
+                >
+                  API section of your Zenhub Dashboard
+                </Link>
+                .
+              </p>
+            </Box>
+          )}
         </Box>
         {/* TODO: Optional inline legend...
         <Box flex="0 0 250px">
