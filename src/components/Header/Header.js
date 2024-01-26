@@ -201,6 +201,12 @@ export default function Header({
     return () => controller.abort();
   }, [APIKey, chosenWorkspace, epic]);
 
+  const extraWorkspaceProps = chosenOrganization
+    ? {
+        placeholder: "Start typing...",
+      }
+    : {};
+
   return (
     <>
       <Box as="section" h="80px">
@@ -248,6 +254,7 @@ export default function Header({
                         setChosenWorkspace(workspace);
                         saveWorkspace(workspace.name);
                       }}
+                      {...extraWorkspaceProps}
                     />
                   </Box>
                 </FormControl>
