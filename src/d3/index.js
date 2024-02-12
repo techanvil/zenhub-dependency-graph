@@ -238,11 +238,13 @@ export const generateGraph = (
     .x((d) => d.x)
     .y((d) => d.y);
 
+  const links = dag.links();
+
   // Plot edges
   svgSelection
     .append("g")
     .selectAll("path")
-    .data(dag.links())
+    .data(links)
     .enter()
     .append("path")
     .attr("d", ({ points }) => {
@@ -271,8 +273,11 @@ export const generateGraph = (
         (rectHeight + arrowSize / 3) / 2
       );
 
-      // encodeURIComponents for spaces, hope id doesn't have a `--` in it
-      const gradId = encodeURIComponent(`${source.data.id}--${target.data.id}`);
+      // encodeURIComponents for spaces, hope id doesn't have a `--` in it.
+      // Prefix with an alpha character to avoid invalid CSS selectors.
+      const gradId = encodeURIComponent(
+        `s-${source.data.id}--${target.data.id}`
+      );
       const grad = defs
         .append("linearGradient")
         .attr("id", gradId)
@@ -375,25 +380,107 @@ export const generateGraph = (
 
   // Dragging
   function started(event) {
-    const circle = d3.select(this).classed("dragging", true);
+    const node = d3.select(this).classed("dragging", true);
 
     event.on("drag", dragged).on("end", ended);
 
     function dragged(event, d) {
-      circle
+      node
         .raise()
-        .attr("cx", (d.x = event.x))
-        .attr("cy", (d.y = event.y))
+        // .attr("cx", (d.x = event.x))
+        // .attr("cy", (d.y = event.y))
         .attr("transform", `translate(${event.x}, ${event.y})`);
+
+      function getSourceAndTarget(l) {
+        if (l.source === d) {
+          return [{ ...l.source, x: event.x, y: event.y }, l.target];
+        }
+
+        return [l.source, { ...l.target, x: event.x, y: event.y }];
+      }
+
+      svgSelection
+        .selectChild("g")
+        .selectChild("g") // links
+        .selectAll("path")
+        .filter((l) => {
+          return l.source === d || l.target === d;
+        })
+        .attr("d", (l) => {
+          const [source, target] = getSourceAndTarget(l);
+
+          const [dx, dy] = getIntersection(
+            source.x - target.x,
+            source.y - target.y,
+            target.x,
+            target.y,
+            (rectWidth + arrowSize / 3) / 2,
+            (rectHeight + arrowSize / 3) / 2
+          );
+
+          // Stroke is already defined so we can just update the gradient here.
+          const grad = defs
+            .select(
+              `linearGradient#${encodeURIComponent(
+                `s-${source.data.id}--${target.data.id}`
+              )}`
+            )
+            .attr("x1", source.x)
+            .attr("x2", dx)
+            .attr("y1", source.y)
+            .attr("y2", dy);
+          grad
+            .select("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", getNodeColor(source));
+          grad
+            .select("stop:nth-child(2)")
+            .attr("offset", "100%")
+            .attr("stop-color", getArrowEndColor(source, target));
+
+          return line([
+            { x: source.x, y: source.y },
+            { x: dx, y: dy },
+          ]);
+        });
+
+      svgSelection
+        .selectChild("g")
+        .selectChild("g:nth-child(3)") // arrows
+        .selectAll("path")
+        .filter((l) => {
+          return l.source === d || l.target === d;
+        })
+        .attr("transform", (l) => {
+          const [start, end] = getSourceAndTarget(l);
+          const rdx = start.x - end.x;
+          const rdy = start.y - end.y;
+          const [dx, dy] = getIntersection(
+            start.x - end.x,
+            start.y - end.y,
+            end.x,
+            end.y,
+            (rectWidth + arrowSize / 3) / 2,
+            (rectHeight + arrowSize / 3) / 2
+          );
+          // This is the angle of the last line segment
+          const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
+          return `translate(${dx}, ${dy}) rotate(${angle})`;
+        })
+        .attr("fill", (l) => {
+          const [source, target] = getSourceAndTarget(l);
+          return getArrowEndColor(source, target);
+        });
     }
 
     function ended(event) {
-      circle.classed("dragging", false);
+      node.classed("dragging", false);
       // console.log("ended", event.x, d3.select(this).datum().data.id);
       saveCoordinateOverrides({
         ...coordinateOverrides,
         [epic]: {
           ...coordinateOverrides[epic],
+          // TODO do we have a `d` arg?
           [d3.select(this).datum().data.id]: { x: event.x, y: event.y },
         },
       });
