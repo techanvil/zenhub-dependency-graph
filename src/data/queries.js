@@ -8,6 +8,16 @@ export const GET_WORKSPACE_QUERY = gql`
           zenhubOrganization {
             name
           }
+          activeSprint {
+            id
+            name
+          }
+          sprints(filters: { state: { eq: OPEN } }) {
+            nodes {
+              id
+              name
+            }
+          }
         }
       }
     }

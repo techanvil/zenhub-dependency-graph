@@ -124,10 +124,18 @@ export async function getWorkspaces(
   });
 
   return workspaces.map(
-    ({ id, name, zenhubOrganization: { name: zenhubOrganizationName } }) => ({
+    ({
+      id,
+      name,
+      zenhubOrganization: { name: zenhubOrganizationName },
+      sprints,
+      activeSprint,
+    }) => ({
       id,
       name,
       zenhubOrganizationName,
+      sprints: sprints.nodes,
+      activeSprint,
     })
   );
 }
