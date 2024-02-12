@@ -63,6 +63,10 @@ function App() {
     "additionalColors",
     additionalColorDefaults
   );
+  const [coordinateOverrides, saveCoordinateOverrides] = useLocalStorage(
+    `coordinateOverrides`,
+    {}
+  );
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [sprint, saveSprint] = useParameter("sprint", "");
@@ -80,6 +84,8 @@ function App() {
     savePipelineColors,
     additionalColors,
     saveAdditionalColors,
+    coordinateOverrides,
+    saveCoordinateOverrides,
     workspace,
     saveWorkspace,
     epic,
