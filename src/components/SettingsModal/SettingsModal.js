@@ -130,7 +130,7 @@ export default function APIKeyModal({
               }}
             />
           </FormControl>
-          <FormControl pt="5" pb="5">
+          <FormControl pt="5">
             <FormLabel>Show self-contained issues</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showSelfContainedIssues}
@@ -140,6 +140,25 @@ export default function APIKeyModal({
                 });
               }}
             />
+          </FormControl>
+          <FormControl pt="5" pb="5">
+            <FormLabel>Flush request cache (not really a setting)</FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                const keys = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                  const key = sessionStorage.key(i);
+                  if (key.startsWith("cachedFetch:")) {
+                    keys.push(key);
+                  }
+                }
+                keys.forEach((key) => sessionStorage.removeItem(key));
+              }}
+            >
+              Flush cache
+            </Button>
           </FormControl>
           <details>
             <summary>Advanced</summary>
