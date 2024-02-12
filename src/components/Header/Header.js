@@ -287,6 +287,18 @@ export default function Header({
                     />
                   </Box>
                 </FormControl>
+                <FormControl>
+                  <Box w="200px">
+                    <Select
+                      options={sprintOptions}
+                      value={chosenSprint}
+                      onChange={(chosenSprint) => {
+                        console.log({ chosenSprint });
+                        saveSprint(chosenSprint.name);
+                      }}
+                    />
+                  </Box>
+                </FormControl>
 
                 <FormControl>
                   <Box w="200px">
@@ -311,18 +323,6 @@ export default function Header({
                       options={epicOptions}
                       value={chosenEpic}
                       onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
-                    />
-                  </Box>
-                </FormControl>
-                <FormControl>
-                  <Box w="200px">
-                    <Select
-                      options={sprintOptions}
-                      value={chosenSprint}
-                      onChange={(chosenSprint) => {
-                        console.log({ chosenSprint });
-                        saveSprint(chosenSprint.name);
-                      }}
                     />
                   </Box>
                 </FormControl>
