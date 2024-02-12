@@ -141,6 +141,17 @@ export default function APIKeyModal({
               }}
             />
           </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show closed epics</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showClosedEpics}
+              onChange={(e) => {
+                updateAppSettings({
+                  showClosedEpics: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
           <FormControl pt="5" pb="5">
             <FormLabel>Flush request cache (not really a setting)</FormLabel>
             <Button
