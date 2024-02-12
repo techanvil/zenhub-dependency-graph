@@ -36,6 +36,10 @@ export const pipelineColorDefaults = {
   Closed: "#7bb255",
 };
 
+export const additionalColorDefaults = {
+  "Current sprint": "#00f",
+};
+
 export const pipelineAbbreviations = {
   Triage: "T",
   Stalled: "S",

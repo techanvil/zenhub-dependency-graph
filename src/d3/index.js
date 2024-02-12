@@ -126,6 +126,7 @@ export const generateGraph = (
   graphData,
   svgElement,
   pipelineColors,
+  additionalColors,
   { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
 ) => {
   try {
@@ -282,7 +283,7 @@ export const generateGraph = (
     .attr("ry", 5)
     .attr("x", -borderRectWidth / 2)
     .attr("y", -borderRectHeight / 2)
-    .attr("fill", "blue");
+    .attr("fill", additionalColors["Current sprint"]);
   // .attr("fill", (n) => getNodeColor(n));
 
   // Plot node rects

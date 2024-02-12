@@ -58,6 +58,8 @@ export default function Header({
   appSettings,
   pipelineColors,
   savePipelineColors,
+  additionalColors,
+  saveAdditionalColors,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
@@ -371,6 +373,8 @@ export default function Header({
                       <Legend
                         pipelineColors={pipelineColors}
                         savePipelineColors={savePipelineColors}
+                        additionalColors={additionalColors}
+                        saveAdditionalColors={saveAdditionalColors}
                       />
                     </PopoverBody>
                   </PopoverContent>

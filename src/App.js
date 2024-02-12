@@ -14,7 +14,7 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
 import { Legend } from "./components/Legend";
-import { pipelineColorDefaults } from "./d3/constants";
+import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
@@ -59,6 +59,10 @@ function App() {
     "pipelineColors",
     pipelineColorDefaults
   );
+  const [additionalColors, saveAdditionalColors] = useLocalStorage(
+    "additionalColors",
+    additionalColorDefaults
+  );
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [sprint, saveSprint] = useParameter("sprint", "");
@@ -74,6 +78,8 @@ function App() {
     saveAppSettings,
     pipelineColors,
     savePipelineColors,
+    additionalColors,
+    saveAdditionalColors,
     workspace,
     saveWorkspace,
     epic,
@@ -95,6 +101,8 @@ function App() {
         appSettings={appSettings}
         pipelineColors={pipelineColors}
         savePipelineColors={savePipelineColors}
+        additionalColors={additionalColors}
+        saveAdditionalColors={saveAdditionalColors}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />

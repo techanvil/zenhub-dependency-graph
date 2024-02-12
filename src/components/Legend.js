@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
 
-function LegendItem({ label, color, pipelineColors, savePipelineColors }) {
+function LegendItem({ label, color, colors, saveColors }) {
   const { isOpen, onToggle, onClose } = useDisclosure();
 
   const [hex, setHex] = useState(color);
@@ -52,8 +52,8 @@ function LegendItem({ label, color, pipelineColors, savePipelineColors }) {
                   colorScheme="blue"
                   mr={3}
                   onClick={() => {
-                    savePipelineColors({
-                      ...pipelineColors,
+                    saveColors({
+                      ...colors,
                       [label]: hex,
                     });
                     onClose();
@@ -74,18 +74,34 @@ function LegendItem({ label, color, pipelineColors, savePipelineColors }) {
   );
 }
 
-export function Legend({ pipelineColors, savePipelineColors }) {
-  const legendItems = Object.entries(pipelineColors);
+export function Legend({
+  pipelineColors,
+  savePipelineColors,
+  additionalColors,
+  saveAdditionalColors,
+}) {
+  const pipelineColorItems = Object.entries(pipelineColors);
+  const additionalColorItems = Object.entries(additionalColors);
 
   return (
     <Flex direction="column">
-      {legendItems.map(([label, color], index) => (
+      {pipelineColorItems.map(([label, color], index) => (
         <LegendItem
           key={index}
           label={label}
           color={color}
-          pipelineColors={pipelineColors}
-          savePipelineColors={savePipelineColors}
+          colors={pipelineColors}
+          saveColors={savePipelineColors}
+        />
+      ))}
+      <hr />
+      {additionalColorItems.map(([label, color], index) => (
+        <LegendItem
+          key={index}
+          label={label}
+          color={color}
+          colors={additionalColors}
+          saveColors={saveAdditionalColors}
         />
       ))}
     </Flex>

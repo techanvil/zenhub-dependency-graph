@@ -20,7 +20,10 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { deepEquals, shallowEqual } from "../../utils/common";
-import { pipelineColorDefaults } from "../../d3/constants";
+import {
+  additionalColorDefaults,
+  pipelineColorDefaults,
+} from "../../d3/constants";
 
 export default function APIKeyModal({
   isOpen,
@@ -29,6 +32,7 @@ export default function APIKeyModal({
   saveAPIKey,
   appSettings,
   savePipelineColors,
+  saveAdditionalColors,
   saveAppSettings,
 }) {
   // TODO: Clean this up.
@@ -163,6 +167,7 @@ export default function APIKeyModal({
               mr={1}
               onClick={() => {
                 savePipelineColors(pipelineColorDefaults);
+                saveAdditionalColors(additionalColorDefaults);
               }}
             >
               Reset colours
