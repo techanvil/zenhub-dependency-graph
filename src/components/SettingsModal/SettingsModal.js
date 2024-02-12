@@ -20,6 +20,10 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { deepEquals, shallowEqual } from "../../utils/common";
+import {
+  additionalColorDefaults,
+  pipelineColorDefaults,
+} from "../../d3/constants";
 
 export default function APIKeyModal({
   isOpen,
@@ -27,6 +31,11 @@ export default function APIKeyModal({
   APIKey,
   saveAPIKey,
   appSettings,
+  savePipelineColors,
+  saveAdditionalColors,
+  epic,
+  coordinateOverrides,
+  saveCoordinateOverrides,
   saveAppSettings,
 }) {
   // TODO: Clean this up.
@@ -36,6 +45,7 @@ export default function APIKeyModal({
         showAncestorDependencies: false,
         showIssueDetails: false,
         showNonEpicIssues: false,
+        showNonEpicBlockedIssues: false,
         showSelfContainedIssues: false,
       },
       ...appSettings,
@@ -141,18 +151,95 @@ export default function APIKeyModal({
             />
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>
-              Show ancestor dependencies (it's recommended to leave this off)
-            </FormLabel>
+            <FormLabel>Show closed epics</FormLabel>
             <Switch
-              isChecked={settingsState.appSettings.showAncestorDependencies}
+              isChecked={settingsState.appSettings.showClosedEpics}
               onChange={(e) => {
                 updateAppSettings({
-                  showAncestorDependencies: e.target.checked,
+                  showClosedEpics: e.target.checked,
                 });
               }}
             />
           </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Reset epic layout (takes effect immediately)</FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                const newCoordinateOverrides = { ...coordinateOverrides };
+                delete newCoordinateOverrides[epic];
+                saveCoordinateOverrides(newCoordinateOverrides);
+              }}
+            >
+              Reset layout
+            </Button>
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>
+              Reset issue colours (takes effect immediately)
+            </FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                savePipelineColors(pipelineColorDefaults);
+                saveAdditionalColors(additionalColorDefaults);
+              }}
+            >
+              Reset colours
+            </Button>
+          </FormControl>
+          <FormControl pt="5" pb="5">
+            <FormLabel>Flush request cache</FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                const keys = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                  const key = sessionStorage.key(i);
+                  if (key.startsWith("cachedFetch:")) {
+                    keys.push(key);
+                  }
+                }
+                keys.forEach((key) => sessionStorage.removeItem(key));
+              }}
+            >
+              Flush cache
+            </Button>
+          </FormControl>
+          <details>
+            <summary>Advanced</summary>
+
+            <FormControl pt="5">
+              <FormLabel>
+                Show non-epic blocked issues (it's recommended to leave this
+                off)
+              </FormLabel>
+              <Switch
+                isChecked={settingsState.appSettings.showNonEpicBlockedIssues}
+                onChange={(e) => {
+                  updateAppSettings({
+                    showNonEpicBlockedIssues: e.target.checked,
+                  });
+                }}
+              />
+            </FormControl>
+            <FormControl pt="5">
+              <FormLabel>
+                Show ancestor dependencies (it's recommended to leave this off)
+              </FormLabel>
+              <Switch
+                isChecked={settingsState.appSettings.showAncestorDependencies}
+                onChange={(e) => {
+                  updateAppSettings({
+                    showAncestorDependencies: e.target.checked,
+                  });
+                }}
+              />
+            </FormControl>
+          </details>
         </ModalBody>
 
         <ModalFooter>

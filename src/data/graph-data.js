@@ -7,26 +7,25 @@ import {
   GET_ALL_ORGANIZATIONS,
 } from "./queries.js";
 
+function getNonEpicIssues(issues, relationshipProperty) {
+  return issues.map((issue) =>
+    issue[relationshipProperty].nodes.filter(
+      (relatedIssue) =>
+        !issues.some((issue) => issue.number === relatedIssue.number)
+    )
+  );
+}
+
 async function getAllIssues(gqlQuery, issues, variables, appSettings) {
   const { workspaceId, repositoryGhId } = variables;
 
-  const nonEpicBlockingIssues = issues.map(({ blockingIssues }) =>
-    blockingIssues.nodes.filter(
-      (blockingIssue) =>
-        !issues.some((issue) => issue.number === blockingIssue.number)
-    )
-  );
-
-  const nonEpicBlockedIssues = issues.map(({ blockedIssues }) =>
-    blockedIssues.nodes.filter(
-      (blockedIssue) =>
-        !issues.some((issue) => issue.number === blockedIssue.number)
-    )
-  );
+  const nonEpicBlockingIssues = getNonEpicIssues(issues, "blockingIssues");
 
   const nonEpicIssues = [
-    ...nonEpicBlockedIssues,
     ...nonEpicBlockingIssues,
+    ...(appSettings.showNonEpicBlockedIssues
+      ? getNonEpicIssues(issues, "blockedIssues")
+      : []),
   ].flatMap((a) => a);
 
   const dedupedNonEpicIssues = Object.values(
@@ -125,10 +124,18 @@ export async function getWorkspaces(
   });
 
   return workspaces.map(
-    ({ id, name, zenhubOrganization: { name: zenhubOrganizationName } }) => ({
+    ({
+      id,
+      name,
+      zenhubOrganization: { name: zenhubOrganizationName },
+      sprints,
+      activeSprint,
+    }) => ({
       id,
       name,
       zenhubOrganizationName,
+      sprints: sprints.nodes,
+      activeSprint,
     })
   );
 }
@@ -154,6 +161,7 @@ export async function getAllEpics(
 
 export async function getGraphData(
   workspaceName,
+  sprintName,
   epicIssueNumber,
   endpointUrl,
   zenhubApiKey,
@@ -205,6 +213,7 @@ export async function getGraphData(
       pipelineIssue: {
         pipeline: { name: pipelineName },
       },
+      sprints,
     }) => ({
       id: `${id}`,
       title,
@@ -213,6 +222,7 @@ export async function getGraphData(
       assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
       pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
+      isChosenSprint: sprints.nodes.some(({ name }) => name === sprintName),
     })
   );
 

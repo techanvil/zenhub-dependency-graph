@@ -3,6 +3,7 @@
  */
 import * as d3 from "d3";
 import { dagStratify, sugiyama, decrossOpt } from "d3-dag";
+import { drag as d3Drag } from "d3-drag";
 
 /**
  * Internal dependencies
@@ -10,7 +11,6 @@ import { dagStratify, sugiyama, decrossOpt } from "d3-dag";
 import { rectWidth, rectHeight } from "./constants";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
-import { pipelineColors } from "./constants";
 
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
@@ -126,6 +126,13 @@ const panZoom = {
 export const generateGraph = (
   graphData,
   svgElement,
+  {
+    pipelineColors,
+    additionalColors,
+    epic,
+    coordinateOverrides,
+    saveCoordinateOverrides,
+  },
   { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
 ) => {
   try {
@@ -161,6 +168,43 @@ export const generateGraph = (
     node === undefined ? [0, 0] : [nodeWidth, nodeHeight]
   ); // set node size instead of constraining to fit
   const { width, height } = layout(dag);
+
+  function applyOverrides(roots, overrides) {
+    roots.forEach((root) => {
+      if (overrides[root.data.id]) {
+        root.x = overrides[root.data.id].x;
+        root.y = overrides[root.data.id].y;
+      }
+
+      root.dataChildren.forEach((dataChild) => {
+        const { child } = dataChild;
+
+        if (overrides[child.data.id]) {
+          child.x = overrides[child.data.id].x;
+          child.y = overrides[child.data.id].y;
+        }
+        // const points = [...dataChild.points];
+
+        dataChild.points.length = 0;
+        dataChild.points.push({ x: root.x, y: root.y });
+        dataChild.points.push({ x: child.x, y: child.y });
+        // dataChild.points.push(points[points.length - 1]);
+        // if (overrides[child.data.id]) {
+        //   child.x = overrides[child.data.id].x;
+        //   child.y = overrides[child.data.id].y;
+        // }
+      });
+
+      applyOverrides(
+        root.dataChildren.map(({ child }) => child),
+        overrides
+      );
+    });
+  }
+
+  if (Object.keys(coordinateOverrides[epic] || {}).length) {
+    applyOverrides(dag.proots, coordinateOverrides[epic]);
+  }
 
   const svgSelection = d3.select(svgElement);
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
@@ -270,6 +314,21 @@ export const generateGraph = (
   //   .attr("stroke-linecap", "butt")
   //   .attr("stroke-width", 1);
 
+  // Plot node outlines for chosen sprint
+  const borderRectWidth = rectWidth + 3;
+  const borderRectHeight = rectHeight + 3;
+  nodes
+    .filter((d) => d.data.isChosenSprint)
+    .append("rect")
+    .attr("width", borderRectWidth)
+    .attr("height", borderRectHeight)
+    .attr("rx", 5)
+    .attr("ry", 5)
+    .attr("x", -borderRectWidth / 2)
+    .attr("y", -borderRectHeight / 2)
+    .attr("fill", additionalColors["Current sprint"]);
+  // .attr("fill", (n) => getNodeColor(n));
+
   // Plot node rects
   nodes
     .append("rect")
@@ -313,6 +372,36 @@ export const generateGraph = (
   } else {
     renderSimpleIssues(nodes);
   }
+
+  // Dragging
+  function started(event) {
+    const circle = d3.select(this).classed("dragging", true);
+
+    event.on("drag", dragged).on("end", ended);
+
+    function dragged(event, d) {
+      circle
+        .raise()
+        .attr("cx", (d.x = event.x))
+        .attr("cy", (d.y = event.y))
+        .attr("transform", `translate(${event.x}, ${event.y})`);
+    }
+
+    function ended(event) {
+      circle.classed("dragging", false);
+      // console.log("ended", event.x, d3.select(this).datum().data.id);
+      saveCoordinateOverrides({
+        ...coordinateOverrides,
+        [epic]: {
+          ...coordinateOverrides[epic],
+          [d3.select(this).datum().data.id]: { x: event.x, y: event.y },
+        },
+      });
+    }
+  }
+
+  const drag = d3Drag();
+  nodes.call(drag.on("start", started));
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   // eslint-disable-next-line no-undef

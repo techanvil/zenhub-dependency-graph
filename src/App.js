@@ -14,12 +14,14 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
 import { Legend } from "./components/Legend";
+import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
   const url = new URL(window.location);
   [
     { key: "workspace" },
+    { key: "sprint" },
     { key: "epic", parse: (v) => parseInt(v, 10) },
   ].forEach(({ key, parse = (v) => v }) => {
     if (url.searchParams.has(key)) {
@@ -53,8 +55,21 @@ function App() {
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
   const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
+  const [pipelineColors, savePipelineColors] = useLocalStorage(
+    "pipelineColors",
+    pipelineColorDefaults
+  );
+  const [additionalColors, saveAdditionalColors] = useLocalStorage(
+    "additionalColors",
+    additionalColorDefaults
+  );
+  const [coordinateOverrides, saveCoordinateOverrides] = useLocalStorage(
+    `coordinateOverrides`,
+    {}
+  );
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
+  const [sprint, saveSprint] = useParameter("sprint", "");
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
@@ -65,10 +80,18 @@ function App() {
     saveAPIKey,
     appSettings,
     saveAppSettings,
+    pipelineColors,
+    savePipelineColors,
+    additionalColors,
+    saveAdditionalColors,
+    coordinateOverrides,
+    saveCoordinateOverrides,
     workspace,
     saveWorkspace,
     epic,
     saveEpic,
+    sprint,
+    saveSprint,
     epicIssue,
     setEpicIssue,
     nonEpicIssues,
@@ -82,6 +105,10 @@ function App() {
       <Header
         APIKey={APIKey}
         appSettings={appSettings}
+        pipelineColors={pipelineColors}
+        savePipelineColors={savePipelineColors}
+        additionalColors={additionalColors}
+        saveAdditionalColors={saveAdditionalColors}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />

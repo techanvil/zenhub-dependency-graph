@@ -19,7 +19,7 @@ export const rectHeight = 35;
 // };
 
 // Pastelised colors:
-export const pipelineColors = {
+export const pipelineColorDefaults = {
   Triage: "#f1c1cf",
   Stalled: "#f4c3c2",
   Backlog: "#f8d0c1",
@@ -34,6 +34,10 @@ export const pipelineColors = {
   QA: "#a1ca9f",
   Approval: "#89b85f",
   Closed: "#7bb255",
+};
+
+export const additionalColorDefaults = {
+  "Current sprint": "#00f",
 };
 
 export const pipelineAbbreviations = {

@@ -18,7 +18,12 @@ import { isEmpty } from "../../utils/common";
 export default function SVG({
   APIKey,
   appSettings,
+  pipelineColors,
+  additionalColors,
+  coordinateOverrides,
+  saveCoordinateOverrides,
   workspace,
+  sprint,
   epic,
   setEpicIssue,
   setNonEpicIssues,
@@ -42,6 +47,7 @@ export default function SVG({
 
     getGraphData(
       workspace,
+      sprint,
       epic,
       "https://api.zenhub.com/public/graphql/",
       APIKey,
@@ -79,16 +85,37 @@ export default function SVG({
     appSettings,
     setNonEpicIssues,
     setSelfContainedIssues,
+    sprint,
   ]);
 
   useEffect(() => {
     try {
-      generateGraph(graphData, ref.current, appSettings);
+      generateGraph(
+        graphData,
+        ref.current,
+        {
+          pipelineColors,
+          additionalColors,
+          epic,
+          coordinateOverrides,
+          saveCoordinateOverrides,
+        },
+        appSettings
+      );
     } catch (err) {
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData, appSettings]);
+  }, [
+    graphData,
+    appSettings,
+    workspace,
+    pipelineColors,
+    additionalColors,
+    coordinateOverrides,
+    saveCoordinateOverrides,
+    epic,
+  ]);
 
   if (loading) {
     return <Text padding="20px">Loading...</Text>;
