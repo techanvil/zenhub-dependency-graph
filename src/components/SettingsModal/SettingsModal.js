@@ -33,6 +33,9 @@ export default function APIKeyModal({
   appSettings,
   savePipelineColors,
   saveAdditionalColors,
+  epic,
+  coordinateOverrides,
+  saveCoordinateOverrides,
   saveAppSettings,
 }) {
   // TODO: Clean this up.
@@ -157,6 +160,20 @@ export default function APIKeyModal({
                 });
               }}
             />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Reset epic layout (takes effect immediately)</FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                const newCoordinateOverrides = { ...coordinateOverrides };
+                delete newCoordinateOverrides[epic];
+                saveCoordinateOverrides(newCoordinateOverrides);
+              }}
+            >
+              Reset layout
+            </Button>
           </FormControl>
           <FormControl pt="5">
             <FormLabel>

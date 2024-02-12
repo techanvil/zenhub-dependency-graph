@@ -126,10 +126,13 @@ const panZoom = {
 export const generateGraph = (
   graphData,
   svgElement,
-  pipelineColors,
-  additionalColors,
-  coordinateOverrides,
-  saveCoordinateOverrides,
+  {
+    pipelineColors,
+    additionalColors,
+    epic,
+    coordinateOverrides,
+    saveCoordinateOverrides,
+  },
   { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
 ) => {
   try {
@@ -166,19 +169,19 @@ export const generateGraph = (
   ); // set node size instead of constraining to fit
   const { width, height } = layout(dag);
 
-  function applyOverrides(roots) {
+  function applyOverrides(roots, overrides) {
     roots.forEach((root) => {
-      if (coordinateOverrides[root.data.id]) {
-        root.x = coordinateOverrides[root.data.id].x;
-        root.y = coordinateOverrides[root.data.id].y;
+      if (overrides[root.data.id]) {
+        root.x = overrides[root.data.id].x;
+        root.y = overrides[root.data.id].y;
       }
 
       root.dataChildren.forEach((dataChild) => {
         const { child } = dataChild;
 
-        if (coordinateOverrides[child.data.id]) {
-          child.x = coordinateOverrides[child.data.id].x;
-          child.y = coordinateOverrides[child.data.id].y;
+        if (overrides[child.data.id]) {
+          child.x = overrides[child.data.id].x;
+          child.y = overrides[child.data.id].y;
         }
         // const points = [...dataChild.points];
 
@@ -192,12 +195,15 @@ export const generateGraph = (
         // }
       });
 
-      applyOverrides(root.dataChildren.map(({ child }) => child));
+      applyOverrides(
+        root.dataChildren.map(({ child }) => child),
+        overrides
+      );
     });
   }
 
-  if (Object.keys(coordinateOverrides).length) {
-    applyOverrides(dag.proots);
+  if (Object.keys(coordinateOverrides[epic] || {}).length) {
+    applyOverrides(dag.proots, coordinateOverrides[epic]);
   }
 
   const svgSelection = d3.select(svgElement);
@@ -386,7 +392,10 @@ export const generateGraph = (
       // console.log("ended", event.x, d3.select(this).datum().data.id);
       saveCoordinateOverrides({
         ...coordinateOverrides,
-        [d3.select(this).datum().data.id]: { x: event.x, y: event.y },
+        [epic]: {
+          ...coordinateOverrides[epic],
+          [d3.select(this).datum().data.id]: { x: event.x, y: event.y },
+        },
       });
     }
   }

@@ -63,16 +63,16 @@ function App() {
     "additionalColors",
     additionalColorDefaults
   );
+  const [coordinateOverrides, saveCoordinateOverrides] = useLocalStorage(
+    `coordinateOverrides`,
+    {}
+  );
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [sprint, saveSprint] = useParameter("sprint", "");
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
-  const [coordinateOverrides, saveCoordinateOverrides] = useLocalStorage(
-    `coordinateOverrides:${epic}`,
-    {}
-  );
 
   // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {

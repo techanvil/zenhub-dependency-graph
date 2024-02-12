@@ -93,10 +93,13 @@ export default function SVG({
       generateGraph(
         graphData,
         ref.current,
-        pipelineColors,
-        additionalColors,
-        coordinateOverrides,
-        saveCoordinateOverrides,
+        {
+          pipelineColors,
+          additionalColors,
+          epic,
+          coordinateOverrides,
+          saveCoordinateOverrides,
+        },
         appSettings
       );
     } catch (err) {
@@ -111,6 +114,7 @@ export default function SVG({
     additionalColors,
     coordinateOverrides,
     saveCoordinateOverrides,
+    epic,
   ]);
 
   if (loading) {
