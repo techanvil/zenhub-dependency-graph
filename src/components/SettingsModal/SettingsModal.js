@@ -36,6 +36,7 @@ export default function APIKeyModal({
         showAncestorDependencies: false,
         showIssueDetails: false,
         showNonEpicIssues: false,
+        showNonEpicBlockedIssues: false,
         showSelfContainedIssues: false,
       },
       ...appSettings,
@@ -129,7 +130,7 @@ export default function APIKeyModal({
               }}
             />
           </FormControl>
-          <FormControl pt="5">
+          <FormControl pt="5" pb="5">
             <FormLabel>Show self-contained issues</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showSelfContainedIssues}
@@ -140,19 +141,37 @@ export default function APIKeyModal({
               }}
             />
           </FormControl>
-          <FormControl pt="5">
-            <FormLabel>
-              Show ancestor dependencies (it's recommended to leave this off)
-            </FormLabel>
-            <Switch
-              isChecked={settingsState.appSettings.showAncestorDependencies}
-              onChange={(e) => {
-                updateAppSettings({
-                  showAncestorDependencies: e.target.checked,
-                });
-              }}
-            />
-          </FormControl>
+          <details>
+            <summary>Advanced</summary>
+
+            <FormControl pt="5">
+              <FormLabel>
+                Show non-epic blocked issues (it's recommended to leave this
+                off)
+              </FormLabel>
+              <Switch
+                isChecked={settingsState.appSettings.showNonEpicBlockedIssues}
+                onChange={(e) => {
+                  updateAppSettings({
+                    showNonEpicBlockedIssues: e.target.checked,
+                  });
+                }}
+              />
+            </FormControl>
+            <FormControl pt="5">
+              <FormLabel>
+                Show ancestor dependencies (it's recommended to leave this off)
+              </FormLabel>
+              <Switch
+                isChecked={settingsState.appSettings.showAncestorDependencies}
+                onChange={(e) => {
+                  updateAppSettings({
+                    showAncestorDependencies: e.target.checked,
+                  });
+                }}
+              />
+            </FormControl>
+          </details>
         </ModalBody>
 
         <ModalFooter>
