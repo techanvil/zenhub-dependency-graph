@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/zenhub-dependency-graph/static/css/main.073c9b0a.css",
-    "main.js": "/zenhub-dependency-graph/static/js/main.48d26c1a.js",
-    "static/js/787.0f6c7507.chunk.js": "/zenhub-dependency-graph/static/js/787.0f6c7507.chunk.js",
+    "main.css": "/zenhub-dependency-graph/static/css/main.f855e6bc.css",
+    "main.js": "/zenhub-dependency-graph/static/js/main.e9e4a9cb.js",
+    "static/js/404.8f897e5b.chunk.js": "/zenhub-dependency-graph/static/js/404.8f897e5b.chunk.js",
     "index.html": "/zenhub-dependency-graph/index.html",
-    "main.073c9b0a.css.map": "/zenhub-dependency-graph/static/css/main.073c9b0a.css.map",
-    "main.48d26c1a.js.map": "/zenhub-dependency-graph/static/js/main.48d26c1a.js.map",
-    "787.0f6c7507.chunk.js.map": "/zenhub-dependency-graph/static/js/787.0f6c7507.chunk.js.map"
+    "main.f855e6bc.css.map": "/zenhub-dependency-graph/static/css/main.f855e6bc.css.map",
+    "main.e9e4a9cb.js.map": "/zenhub-dependency-graph/static/js/main.e9e4a9cb.js.map",
+    "404.8f897e5b.chunk.js.map": "/zenhub-dependency-graph/static/js/404.8f897e5b.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.073c9b0a.css",
-    "static/js/main.48d26c1a.js"
+    "static/css/main.f855e6bc.css",
+    "static/js/main.e9e4a9cb.js"
   ]
 }
