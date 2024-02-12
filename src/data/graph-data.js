@@ -7,26 +7,25 @@ import {
   GET_ALL_ORGANIZATIONS,
 } from "./queries.js";
 
+function getNonEpicIssues(issues, relationshipProperty) {
+  return issues.map((issue) =>
+    issue[relationshipProperty].nodes.filter(
+      (relatedIssue) =>
+        !issues.some((issue) => issue.number === relatedIssue.number)
+    )
+  );
+}
+
 async function getAllIssues(gqlQuery, issues, variables, appSettings) {
   const { workspaceId, repositoryGhId } = variables;
 
-  const nonEpicBlockingIssues = issues.map(({ blockingIssues }) =>
-    blockingIssues.nodes.filter(
-      (blockingIssue) =>
-        !issues.some((issue) => issue.number === blockingIssue.number)
-    )
-  );
-
-  const nonEpicBlockedIssues = issues.map(({ blockedIssues }) =>
-    blockedIssues.nodes.filter(
-      (blockedIssue) =>
-        !issues.some((issue) => issue.number === blockedIssue.number)
-    )
-  );
+  const nonEpicBlockingIssues = getNonEpicIssues(issues, "blockingIssues");
 
   const nonEpicIssues = [
-    ...nonEpicBlockedIssues,
     ...nonEpicBlockingIssues,
+    ...(appSettings.showNonEpicBlockedIssues
+      ? getNonEpicIssues(issues, "blockedIssues")
+      : []),
   ].flatMap((a) => a);
 
   const dedupedNonEpicIssues = Object.values(
