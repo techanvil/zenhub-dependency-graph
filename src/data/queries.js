@@ -9,7 +9,7 @@ export const GET_WORKSPACE_QUERY = gql`
             name
           }
           activeSprint {
-            id
+            # id
             name
           }
           sprints(filters: { state: { eq: OPEN } }) {
@@ -83,6 +83,12 @@ export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
             name
           }
         }
+        sprints {
+          nodes {
+            # id
+            name
+          }
+        }
       }
     }
   }
@@ -118,6 +124,12 @@ export const GET_ISSUE_BY_NUMBER_QUERY = gql`
       blockedIssues {
         nodes {
           number
+        }
+      }
+      sprints {
+        nodes {
+          # id
+          name
         }
       }
     }

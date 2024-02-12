@@ -19,6 +19,7 @@ export default function SVG({
   APIKey,
   appSettings,
   workspace,
+  sprint,
   epic,
   setEpicIssue,
   setNonEpicIssues,
@@ -42,6 +43,7 @@ export default function SVG({
 
     getGraphData(
       workspace,
+      sprint,
       epic,
       "https://api.zenhub.com/public/graphql/",
       APIKey,
@@ -79,6 +81,7 @@ export default function SVG({
     appSettings,
     setNonEpicIssues,
     setSelfContainedIssues,
+    sprint,
   ]);
 
   useEffect(() => {
@@ -88,7 +91,7 @@ export default function SVG({
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData, appSettings]);
+  }, [graphData, appSettings, workspace]);
 
   if (loading) {
     return <Text padding="20px">Loading...</Text>;
