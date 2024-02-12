@@ -56,6 +56,8 @@ function getOpenIssueCount(issues) {
 export default function Header({
   APIKey,
   appSettings,
+  pipelineColors,
+  savePipelineColors,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
@@ -366,7 +368,10 @@ export default function Header({
                     <PopoverCloseButton />
                     <PopoverHeader>Issue state</PopoverHeader>
                     <PopoverBody>
-                      <Legend />
+                      <Legend
+                        pipelineColors={pipelineColors}
+                        savePipelineColors={savePipelineColors}
+                      />
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>

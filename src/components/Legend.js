@@ -1,16 +1,92 @@
-import { Box, Flex, Text } from "@chakra-ui/react";
-import { pipelineColors } from "../d3/constants";
+import {
+  Box,
+  Button,
+  Flex,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverTrigger,
+  Text,
+  useDisclosure,
+} from "@chakra-ui/react";
 
-export function Legend() {
+import { useState } from "react";
+import Sketch from "@uiw/react-color-sketch";
+
+function LegendItem({ label, color, pipelineColors, savePipelineColors }) {
+  const { isOpen, onToggle, onClose } = useDisclosure();
+
+  const [hex, setHex] = useState(color);
+
+  return (
+    <Flex align="center" my={2}>
+      <Popover placement="bottom-end" isOpen={isOpen} onClose={onClose} isLazy>
+        <PopoverTrigger>
+          <Box
+            w="20px"
+            h="20px"
+            bg={color}
+            borderRadius="md"
+            mr={2}
+            onClick={onToggle}
+          />
+        </PopoverTrigger>
+        <PopoverContent>
+          <PopoverArrow />
+          <PopoverCloseButton />
+          {/* <PopoverHeader>Foo</PopoverHeader> */}
+          <PopoverBody>
+            <div>
+              <Sketch
+                style={{ marginLeft: 20 }}
+                color={hex}
+                disableAlpha
+                onChange={(color) => {
+                  setHex(color.hex);
+                }}
+              />
+              <Box pt={2}>
+                <Button
+                  colorScheme="blue"
+                  mr={3}
+                  onClick={() => {
+                    savePipelineColors({
+                      ...pipelineColors,
+                      [label]: hex,
+                    });
+                    onClose();
+                  }}
+                >
+                  Save
+                </Button>
+                <Button variant="ghost" onClick={onClose}>
+                  Close
+                </Button>
+              </Box>
+            </div>
+          </PopoverBody>
+        </PopoverContent>
+      </Popover>
+      <Text>{label}</Text>
+    </Flex>
+  );
+}
+
+export function Legend({ pipelineColors, savePipelineColors }) {
   const legendItems = Object.entries(pipelineColors);
 
   return (
     <Flex direction="column">
       {legendItems.map(([label, color], index) => (
-        <Flex key={index} align="center" my={2}>
-          <Box w="20px" h="20px" bg={color} borderRadius="md" mr={2} />
-          <Text>{label}</Text>
-        </Flex>
+        <LegendItem
+          key={index}
+          label={label}
+          color={color}
+          pipelineColors={pipelineColors}
+          savePipelineColors={savePipelineColors}
+        />
       ))}
     </Flex>
   );

@@ -14,6 +14,7 @@ import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
 import { Legend } from "./components/Legend";
+import { pipelineColorDefaults } from "./d3/constants";
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
@@ -54,6 +55,10 @@ function App() {
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
   const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
+  const [pipelineColors, savePipelineColors] = useLocalStorage(
+    "pipelineColors",
+    pipelineColorDefaults
+  );
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [sprint, saveSprint] = useParameter("sprint", "");
@@ -67,6 +72,8 @@ function App() {
     saveAPIKey,
     appSettings,
     saveAppSettings,
+    pipelineColors,
+    savePipelineColors,
     workspace,
     saveWorkspace,
     epic,
@@ -86,6 +93,8 @@ function App() {
       <Header
         APIKey={APIKey}
         appSettings={appSettings}
+        pipelineColors={pipelineColors}
+        savePipelineColors={savePipelineColors}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />

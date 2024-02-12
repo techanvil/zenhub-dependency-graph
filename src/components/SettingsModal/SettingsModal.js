@@ -20,6 +20,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { deepEquals, shallowEqual } from "../../utils/common";
+import { pipelineColorDefaults } from "../../d3/constants";
 
 export default function APIKeyModal({
   isOpen,
@@ -27,6 +28,7 @@ export default function APIKeyModal({
   APIKey,
   saveAPIKey,
   appSettings,
+  savePipelineColors,
   saveAppSettings,
 }) {
   // TODO: Clean this up.
@@ -152,8 +154,22 @@ export default function APIKeyModal({
               }}
             />
           </FormControl>
+          <FormControl pt="5">
+            <FormLabel>
+              Reset issue colours (takes effect immediately)
+            </FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                savePipelineColors(pipelineColorDefaults);
+              }}
+            >
+              Reset colours
+            </Button>
+          </FormControl>
           <FormControl pt="5" pb="5">
-            <FormLabel>Flush request cache (not really a setting)</FormLabel>
+            <FormLabel>Flush request cache</FormLabel>
             <Button
               colorScheme="blue"
               mr={1}

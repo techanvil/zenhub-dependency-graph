@@ -19,7 +19,7 @@ export const rectHeight = 35;
 // };
 
 // Pastelised colors:
-export const pipelineColors = {
+export const pipelineColorDefaults = {
   Triage: "#f1c1cf",
   Stalled: "#f4c3c2",
   Backlog: "#f8d0c1",
