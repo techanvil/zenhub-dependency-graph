@@ -18,6 +18,8 @@ import { isEmpty } from "../../utils/common";
 export default function SVG({
   APIKey,
   appSettings,
+  pipelineColors,
+  additionalColors,
   workspace,
   sprint,
   epic,
@@ -86,12 +88,18 @@ export default function SVG({
 
   useEffect(() => {
     try {
-      generateGraph(graphData, ref.current, appSettings);
+      generateGraph(
+        graphData,
+        ref.current,
+        pipelineColors,
+        additionalColors,
+        appSettings
+      );
     } catch (err) {
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData, appSettings, workspace]);
+  }, [graphData, appSettings, workspace, pipelineColors, additionalColors]);
 
   if (loading) {
     return <Text padding="20px">Loading...</Text>;

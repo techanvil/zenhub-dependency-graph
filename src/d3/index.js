@@ -10,7 +10,6 @@ import { dagStratify, sugiyama, decrossOpt } from "d3-dag";
 import { rectWidth, rectHeight } from "./constants";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
-import { pipelineColors } from "./constants";
 
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
@@ -126,6 +125,8 @@ const panZoom = {
 export const generateGraph = (
   graphData,
   svgElement,
+  pipelineColors,
+  additionalColors,
   { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
 ) => {
   try {
@@ -282,7 +283,7 @@ export const generateGraph = (
     .attr("ry", 5)
     .attr("x", -borderRectWidth / 2)
     .attr("y", -borderRectHeight / 2)
-    .attr("fill", "blue");
+    .attr("fill", additionalColors["Current sprint"]);
   // .attr("fill", (n) => getNodeColor(n));
 
   // Plot node rects
