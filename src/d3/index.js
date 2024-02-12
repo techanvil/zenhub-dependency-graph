@@ -396,19 +396,19 @@ export const generateGraph = (
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   // eslint-disable-next-line no-undef
-  // panZoom.instance = svgPanZoom("#zdg-graph", {
-  //   zoomEnabled: true,
-  //   controlIconsEnabled: true,
-  //   fit: true,
-  //   center: true,
-  //   zoomScaleSensitivity: 0.4,
-  // });
+  panZoom.instance = svgPanZoom("#zdg-graph", {
+    zoomEnabled: true,
+    controlIconsEnabled: true,
+    fit: true,
+    center: true,
+    zoomScaleSensitivity: 0.4,
+  });
 
-  // panZoom.resizeHandler = window.addEventListener("resize", function () {
-  //   panZoom.instance.resize();
-  //   panZoom.instance.fit();
-  //   panZoom.instance.center();
-  // });
+  panZoom.resizeHandler = window.addEventListener("resize", function () {
+    panZoom.instance.resize();
+    panZoom.instance.fit();
+    panZoom.instance.center();
+  });
 
   return svgSelection;
 };
