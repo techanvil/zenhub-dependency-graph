@@ -20,6 +20,7 @@ function bootstrapParameters() {
   const url = new URL(window.location);
   [
     { key: "workspace" },
+    { key: "sprint" },
     { key: "epic", parse: (v) => parseInt(v, 10) },
   ].forEach(({ key, parse = (v) => v }) => {
     if (url.searchParams.has(key)) {
