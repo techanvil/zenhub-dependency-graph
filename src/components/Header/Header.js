@@ -179,7 +179,11 @@ export default function Header({
       signal
     )
       .then((epics) => {
-        const options = epics
+        const visibleEpics = appSettings.showClosedEpics
+          ? epics
+          : epics.filter(({ closedAt }) => closedAt === null);
+
+        const options = visibleEpics
           .map(({ title: label, number: value }) => ({
             label,
             value,
@@ -199,7 +203,7 @@ export default function Header({
       });
 
     return () => controller.abort();
-  }, [APIKey, chosenWorkspace, epic]);
+  }, [APIKey, appSettings.showClosedEpics, chosenWorkspace, epic]);
 
   const extraWorkspaceProps = chosenOrganization
     ? {

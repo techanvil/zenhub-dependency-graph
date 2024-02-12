@@ -141,6 +141,7 @@ export const GET_ALL_EPICS = gql`
           issue {
             number
             title
+            closedAt
           }
         }
       }
