@@ -20,6 +20,8 @@ export default function SVG({
   appSettings,
   pipelineColors,
   additionalColors,
+  coordinateOverrides,
+  saveCoordinateOverrides,
   workspace,
   sprint,
   epic,
@@ -93,13 +95,23 @@ export default function SVG({
         ref.current,
         pipelineColors,
         additionalColors,
+        coordinateOverrides,
+        saveCoordinateOverrides,
         appSettings
       );
     } catch (err) {
       console.log("generateGraph error", err);
       setError(err);
     }
-  }, [graphData, appSettings, workspace, pipelineColors, additionalColors]);
+  }, [
+    graphData,
+    appSettings,
+    workspace,
+    pipelineColors,
+    additionalColors,
+    coordinateOverrides,
+    saveCoordinateOverrides,
+  ]);
 
   if (loading) {
     return <Text padding="20px">Loading...</Text>;

@@ -69,6 +69,10 @@ function App() {
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
+  const [coordinateOverrides, saveCoordinateOverrides] = useLocalStorage(
+    `coordinateOverrides:${epic}`,
+    {}
+  );
 
   // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
@@ -80,6 +84,8 @@ function App() {
     savePipelineColors,
     additionalColors,
     saveAdditionalColors,
+    coordinateOverrides,
+    saveCoordinateOverrides,
     workspace,
     saveWorkspace,
     epic,

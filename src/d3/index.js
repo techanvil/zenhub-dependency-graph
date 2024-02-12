@@ -3,6 +3,7 @@
  */
 import * as d3 from "d3";
 import { dagStratify, sugiyama, decrossOpt } from "d3-dag";
+import { drag as d3Drag } from "d3-drag";
 
 /**
  * Internal dependencies
@@ -127,6 +128,8 @@ export const generateGraph = (
   svgElement,
   pipelineColors,
   additionalColors,
+  coordinateOverrides,
+  saveCoordinateOverrides,
   { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
 ) => {
   try {
@@ -162,6 +165,40 @@ export const generateGraph = (
     node === undefined ? [0, 0] : [nodeWidth, nodeHeight]
   ); // set node size instead of constraining to fit
   const { width, height } = layout(dag);
+
+  function applyOverrides(roots) {
+    roots.forEach((root) => {
+      if (coordinateOverrides[root.data.id]) {
+        root.x = coordinateOverrides[root.data.id].x;
+        root.y = coordinateOverrides[root.data.id].y;
+      }
+
+      root.dataChildren.forEach((dataChild) => {
+        const { child } = dataChild;
+
+        if (coordinateOverrides[child.data.id]) {
+          child.x = coordinateOverrides[child.data.id].x;
+          child.y = coordinateOverrides[child.data.id].y;
+        }
+        // const points = [...dataChild.points];
+
+        dataChild.points.length = 0;
+        dataChild.points.push({ x: root.x, y: root.y });
+        dataChild.points.push({ x: child.x, y: child.y });
+        // dataChild.points.push(points[points.length - 1]);
+        // if (overrides[child.data.id]) {
+        //   child.x = overrides[child.data.id].x;
+        //   child.y = overrides[child.data.id].y;
+        // }
+      });
+
+      applyOverrides(root.dataChildren.map(({ child }) => child));
+    });
+  }
+
+  if (Object.keys(coordinateOverrides).length) {
+    applyOverrides(dag.proots);
+  }
 
   const svgSelection = d3.select(svgElement);
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
@@ -330,21 +367,48 @@ export const generateGraph = (
     renderSimpleIssues(nodes);
   }
 
+  // Dragging
+  function started(event) {
+    const circle = d3.select(this).classed("dragging", true);
+
+    event.on("drag", dragged).on("end", ended);
+
+    function dragged(event, d) {
+      circle
+        .raise()
+        .attr("cx", (d.x = event.x))
+        .attr("cy", (d.y = event.y))
+        .attr("transform", `translate(${event.x}, ${event.y})`);
+    }
+
+    function ended(event) {
+      circle.classed("dragging", false);
+      // console.log("ended", event.x, d3.select(this).datum().data.id);
+      saveCoordinateOverrides({
+        ...coordinateOverrides,
+        [d3.select(this).datum().data.id]: { x: event.x, y: event.y },
+      });
+    }
+  }
+
+  const drag = d3Drag();
+  nodes.call(drag.on("start", started));
+
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   // eslint-disable-next-line no-undef
-  panZoom.instance = svgPanZoom("#zdg-graph", {
-    zoomEnabled: true,
-    controlIconsEnabled: true,
-    fit: true,
-    center: true,
-    zoomScaleSensitivity: 0.4,
-  });
+  // panZoom.instance = svgPanZoom("#zdg-graph", {
+  //   zoomEnabled: true,
+  //   controlIconsEnabled: true,
+  //   fit: true,
+  //   center: true,
+  //   zoomScaleSensitivity: 0.4,
+  // });
 
-  panZoom.resizeHandler = window.addEventListener("resize", function () {
-    panZoom.instance.resize();
-    panZoom.instance.fit();
-    panZoom.instance.center();
-  });
+  // panZoom.resizeHandler = window.addEventListener("resize", function () {
+  //   panZoom.instance.resize();
+  //   panZoom.instance.fit();
+  //   panZoom.instance.center();
+  // });
 
   return svgSelection;
 };
