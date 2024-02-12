@@ -270,6 +270,21 @@ export const generateGraph = (
   //   .attr("stroke-linecap", "butt")
   //   .attr("stroke-width", 1);
 
+  // Plot node outlines for chosen sprint
+  const borderRectWidth = rectWidth + 3;
+  const borderRectHeight = rectHeight + 3;
+  nodes
+    .filter((d) => d.data.isChosenSprint)
+    .append("rect")
+    .attr("width", borderRectWidth)
+    .attr("height", borderRectHeight)
+    .attr("rx", 5)
+    .attr("ry", 5)
+    .attr("x", -borderRectWidth / 2)
+    .attr("y", -borderRectHeight / 2)
+    .attr("fill", "blue");
+  // .attr("fill", (n) => getNodeColor(n));
+
   // Plot node rects
   nodes
     .append("rect")

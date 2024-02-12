@@ -61,6 +61,8 @@ export default function Header({
   saveWorkspace,
   epic,
   saveEpic,
+  sprint,
+  saveSprint,
   epicIssue,
   nonEpicIssues,
   selfContainedIssues,
@@ -71,6 +73,39 @@ export default function Header({
   const [workspaceOptions, setWorkspaceOptions] = useState(false);
   const [epicOptions, setEpicOptions] = useState([]);
   const [chosenEpic, setChosenEpic] = useState(false);
+  const [sprintOptions, setSprintOptions] = useState([]);
+  const [chosenSprint, setChosenSprint] = useState(false);
+
+  const setChosenWorkspaceAndSprint = useCallback(
+    (workspace) => {
+      setChosenWorkspace(workspace);
+
+      if (workspace === false) {
+        setSprintOptions([]);
+        setChosenSprint(false);
+        return;
+      }
+
+      const sprintOptions = workspace.sprints
+        .map(({ name, id: value }) => ({
+          name,
+          label:
+            name === workspace.activeSprint?.name ? `${name} (current)` : name,
+          value,
+        }))
+        .sort(sortOptions);
+
+      setSprintOptions(sprintOptions);
+
+      const currentSprint = sprintOptions.find(({ name }) => name === sprint);
+      if (currentSprint) {
+        setChosenSprint(currentSprint);
+      } else {
+        setChosenSprint(false);
+      }
+    },
+    [sprint]
+  );
 
   useEffect(() => {
     if (isEmpty(APIKey)) {
@@ -112,11 +147,13 @@ export default function Header({
       );
 
       let options = workspaces
-        .map(({ name, id, zenhubOrganizationName }) => ({
+        .map(({ name, id, zenhubOrganizationName, sprints, activeSprint }) => ({
           label: `${name} (${zenhubOrganizationName})`,
           value: id,
           name,
           zenhubOrganizationName,
+          sprints,
+          activeSprint,
         }))
         .sort(sortOptions);
 
@@ -145,7 +182,7 @@ export default function Header({
         setWorkspaceOptions(options);
 
         if (options.length === 1) {
-          setChosenWorkspace(options[0]);
+          setChosenWorkspaceAndSprint(options[0]);
 
           const organization = organizationOptions.find(
             ({ label }) => label === options[0].zenhubOrganizationName
@@ -162,7 +199,13 @@ export default function Header({
       });
 
     return () => controller.abort();
-  }, [APIKey, organizationOptions, loadOptions, workspace]);
+  }, [
+    APIKey,
+    organizationOptions,
+    loadOptions,
+    workspace,
+    setChosenWorkspaceAndSprint,
+  ]);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
@@ -228,14 +271,14 @@ export default function Header({
               </WrapItem>
               <HStack>
                 <FormControl>
-                  <Box w="250px">
+                  <Box w="200px">
                     <Select
                       options={organizationOptions}
                       value={chosenOrganization}
                       onChange={(organization) => {
                         setChosenOrganization(organization);
                         setWorkspaceOptions([]);
-                        setChosenWorkspace(false);
+                        setChosenWorkspaceAndSprint(false);
                         saveWorkspace(false);
                         setEpicOptions([]);
                         setChosenEpic(false);
@@ -244,9 +287,21 @@ export default function Header({
                     />
                   </Box>
                 </FormControl>
+                <FormControl>
+                  <Box w="200px">
+                    <Select
+                      options={sprintOptions}
+                      value={chosenSprint}
+                      onChange={(chosenSprint) => {
+                        console.log({ chosenSprint });
+                        saveSprint(chosenSprint.name);
+                      }}
+                    />
+                  </Box>
+                </FormControl>
 
                 <FormControl>
-                  <Box w="250px">
+                  <Box w="200px">
                     <AsyncSelect
                       // cacheOptions
                       loadOptions={(workspaceName) =>
@@ -255,7 +310,7 @@ export default function Header({
                       defaultOptions={workspaceOptions}
                       value={chosenWorkspace}
                       onChange={(workspace) => {
-                        setChosenWorkspace(workspace);
+                        setChosenWorkspaceAndSprint(workspace);
                         saveWorkspace(workspace.name);
                       }}
                       {...extraWorkspaceProps}
@@ -263,7 +318,7 @@ export default function Header({
                   </Box>
                 </FormControl>
                 <FormControl>
-                  <Box w="250px">
+                  <Box w="200px">
                     <Select
                       options={epicOptions}
                       value={chosenEpic}

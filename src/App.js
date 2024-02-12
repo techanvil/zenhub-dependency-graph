@@ -20,6 +20,7 @@ function bootstrapParameters() {
   const url = new URL(window.location);
   [
     { key: "workspace" },
+    { key: "sprint" },
     { key: "epic", parse: (v) => parseInt(v, 10) },
   ].forEach(({ key, parse = (v) => v }) => {
     if (url.searchParams.has(key)) {
@@ -55,6 +56,7 @@ function App() {
   const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
+  const [sprint, saveSprint] = useParameter("sprint", "");
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
@@ -69,6 +71,8 @@ function App() {
     saveWorkspace,
     epic,
     saveEpic,
+    sprint,
+    saveSprint,
     epicIssue,
     setEpicIssue,
     nonEpicIssues,

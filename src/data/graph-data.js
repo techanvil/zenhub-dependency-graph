@@ -124,10 +124,18 @@ export async function getWorkspaces(
   });
 
   return workspaces.map(
-    ({ id, name, zenhubOrganization: { name: zenhubOrganizationName } }) => ({
+    ({
+      id,
+      name,
+      zenhubOrganization: { name: zenhubOrganizationName },
+      sprints,
+      activeSprint,
+    }) => ({
       id,
       name,
       zenhubOrganizationName,
+      sprints: sprints.nodes,
+      activeSprint,
     })
   );
 }
@@ -153,6 +161,7 @@ export async function getAllEpics(
 
 export async function getGraphData(
   workspaceName,
+  sprintName,
   epicIssueNumber,
   endpointUrl,
   zenhubApiKey,
@@ -204,6 +213,7 @@ export async function getGraphData(
       pipelineIssue: {
         pipeline: { name: pipelineName },
       },
+      sprints,
     }) => ({
       id: `${id}`,
       title,
@@ -212,6 +222,7 @@ export async function getGraphData(
       assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
       pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
+      isChosenSprint: sprints.nodes.some(({ name }) => name === sprintName),
     })
   );
 
