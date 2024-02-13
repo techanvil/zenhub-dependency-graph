@@ -191,7 +191,9 @@ export default function APIKeyModal({
             </Button>
           </FormControl>
           <FormControl pt="5" pb="5">
-            <FormLabel>Flush request cache</FormLabel>
+            <FormLabel>
+              Flush request cache (takes effect immediately)
+            </FormLabel>
             <Button
               colorScheme="blue"
               mr={1}
