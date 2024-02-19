@@ -254,7 +254,7 @@ export default function Header({
 
   const extraWorkspaceProps = chosenOrganization
     ? {
-        placeholder: "Start typing...",
+        placeholder: "Enter workspace name",
       }
     : {};
 
@@ -293,19 +293,6 @@ export default function Header({
                 </FormControl>
                 <FormControl>
                   <Box w="200px">
-                    <Select
-                      options={sprintOptions}
-                      value={chosenSprint}
-                      onChange={(chosenSprint) => {
-                        console.log({ chosenSprint });
-                        saveSprint(chosenSprint.name);
-                      }}
-                    />
-                  </Box>
-                </FormControl>
-
-                <FormControl>
-                  <Box w="200px">
                     <AsyncSelect
                       // cacheOptions
                       loadOptions={(workspaceName) =>
@@ -318,6 +305,18 @@ export default function Header({
                         saveWorkspace(workspace.name);
                       }}
                       {...extraWorkspaceProps}
+                    />
+                  </Box>
+                </FormControl>
+                <FormControl>
+                  <Box w="200px">
+                    <Select
+                      options={sprintOptions}
+                      value={chosenSprint}
+                      onChange={(chosenSprint) => {
+                        console.log({ chosenSprint });
+                        saveSprint(chosenSprint.name);
+                      }}
                     />
                   </Box>
                 </FormControl>
