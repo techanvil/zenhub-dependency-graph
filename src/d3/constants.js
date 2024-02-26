@@ -37,7 +37,7 @@ export const pipelineColorDefaults = {
 };
 
 export const additionalColorDefaults = {
-  "Current sprint": "#00f",
+  "Selected sprint": "#00f",
 };
 
 export const pipelineAbbreviations = {

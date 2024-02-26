@@ -331,7 +331,7 @@ export const generateGraph = (
     .attr("ry", 5)
     .attr("x", -borderRectWidth / 2)
     .attr("y", -borderRectHeight / 2)
-    .attr("fill", additionalColors["Current sprint"]);
+    .attr("fill", additionalColors["Selected sprint"]);
   // .attr("fill", (n) => getNodeColor(n));
 
   // Plot node rects
