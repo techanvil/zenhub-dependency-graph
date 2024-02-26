@@ -14,6 +14,7 @@ import {
 
 import { useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
+import { additionalColorDefaults } from "../d3/constants";
 
 function LegendItem({ label, color, colors, saveColors }) {
   const { isOpen, onToggle, onClose } = useDisclosure();
@@ -81,7 +82,6 @@ export function Legend({
   saveAdditionalColors,
 }) {
   const pipelineColorItems = Object.entries(pipelineColors);
-  const additionalColorItems = Object.entries(additionalColors);
 
   return (
     <Flex direction="column">
@@ -95,15 +95,22 @@ export function Legend({
         />
       ))}
       <hr />
-      {additionalColorItems.map(([label, color], index) => (
-        <LegendItem
-          key={index}
-          label={label}
-          color={color}
-          colors={additionalColors}
-          saveColors={saveAdditionalColors}
-        />
-      ))}
+      {
+        // Iterate over the defaults to handle name changes.
+        Object.keys(additionalColorDefaults).map((label, index) => {
+          const color =
+            additionalColors[label] || additionalColorDefaults[label];
+          return (
+            <LegendItem
+              key={index}
+              label={label}
+              color={color}
+              colors={additionalColors}
+              saveColors={saveAdditionalColors}
+            />
+          );
+        })
+      }
     </Flex>
   );
 }
