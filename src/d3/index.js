@@ -121,6 +121,9 @@ export function removeSelfContainedIssues(graphData) {
 const panZoom = {
   instance: null,
   resizeHandler: null,
+  epic: null, // Maintain zoom state when re-rendering the same epic.
+  state: null,
+  hasInteracted: false,
 };
 
 export const generateGraph = (
@@ -138,9 +141,27 @@ export const generateGraph = (
   const { showAncestorDependencies, showIssueDetails } = appSettings;
 
   try {
-    panZoom.instance?.destroy();
-    panZoom.instance = null;
-    window.removeEventListener("resize", panZoom.resizeHandler);
+    // TODO: Find a better fix for preventing pan/zoom state resetting on re-rendering the epic.
+    // This feels pretty hacky.
+    if (panZoom.instance && panZoom.epic === epic) {
+      if (panZoom.hasInteracted) {
+        panZoom.state = {
+          pan: panZoom.instance.getPan(),
+          zoom: panZoom.instance.getZoom(),
+        };
+      }
+    } else {
+      panZoom.state = null;
+      panZoom.hasInteracted = false;
+    }
+
+    if (panZoom.instance) {
+      panZoom.instance.setOnPan(null);
+      panZoom.instance.setOnZoom(null);
+      panZoom.instance.destroy();
+      panZoom.instance = null;
+      window.removeEventListener("resize", panZoom.resizeHandler);
+    }
   } catch (err) {
     console.log("panZoomInstance destroy error", err);
   }
@@ -502,6 +523,12 @@ export const generateGraph = (
     fit: true,
     center: true,
     zoomScaleSensitivity: 0.4,
+    onPan() {
+      panZoom.hasInteracted = true;
+    },
+    onZoom() {
+      panZoom.hasInteracted = true;
+    },
   });
 
   panZoom.resizeHandler = window.addEventListener("resize", function () {
@@ -509,6 +536,13 @@ export const generateGraph = (
     panZoom.instance.fit();
     panZoom.instance.center();
   });
+
+  panZoom.epic = epic;
+
+  if (panZoom.state) {
+    panZoom.instance.zoom(panZoom.state.zoom);
+    panZoom.instance.pan(panZoom.state.pan);
+  }
 
   return svgSelection;
 };
