@@ -1,4 +1,6 @@
-import { rectWidth, rectHeight, pipelineAbbreviations } from "./constants.js";
+import { simpleIssueDimensions, pipelineAbbreviations } from "./constants.js";
+
+const { rectWidth, rectHeight } = simpleIssueDimensions;
 
 function getPipelineAbbreviation(node) {
   return (
@@ -12,7 +14,7 @@ function getPipelineAbbreviation(node) {
 
 const padding = 3;
 
-export function renderSimpleIssues(nodes) {
+export function renderSimpleIssues(nodes, { showIssueEstimates }) {
   // Add issue number to nodes
   nodes
     .append("a")
@@ -28,23 +30,24 @@ export function renderSimpleIssues(nodes) {
 
   // TODO: GH issue on hover?
 
+  if (showIssueEstimates) {
+    // Add estimate to nodes
+    nodes
+      .append("text")
+      .text((d) => d.data.estimate)
+      .attr("x", -rectWidth / 2 + padding)
+      .attr("y", rectHeight / 2 - 5)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 8)
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", "black");
+  }
+
   // Add pipeline name to nodes
   nodes
     .append("text")
     .text((d) => getPipelineAbbreviation(d))
-    .attr("x", -rectWidth / 2 + padding)
-    .attr("y", rectHeight / 2 - 5)
-    .attr("font-weight", "bold")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 8)
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
-
-  // Add estimate to nodes
-  nodes
-    .append("text")
-    .text((d) => d.data.estimate)
     .attr("x", rectWidth / 2 - padding)
     .attr("y", rectHeight / 2 - 5)
     .attr("font-weight", "bold")

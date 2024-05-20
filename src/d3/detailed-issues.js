@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 
-import { rectWidth, rectHeight, pipelineAbbreviations } from "./constants.js";
+import { detailedIssueDimensions, pipelineAbbreviations } from "./constants.js";
 
 function getPipelineAbbreviation(node) {
   return (
@@ -13,6 +13,8 @@ function getPipelineAbbreviation(node) {
 }
 
 const padding = 3;
+
+const { rectWidth, rectHeight } = detailedIssueDimensions;
 
 function truncate() {
   const self = d3.select(this);
@@ -69,7 +71,7 @@ function wrapLines(text, width, maxLines) {
   });
 }
 
-export function renderDetailedIssues(nodes) {
+export function renderDetailedIssues(nodes, { showIssueEstimates }) {
   // Add issue titles to nodes
   nodes
     .append("a")
@@ -101,17 +103,19 @@ export function renderDetailedIssues(nodes) {
     .attr("fill", "black")
     .each(truncate);
 
-  // Add pipeline name to nodes
-  nodes
-    .append("text")
-    .text((d) => getPipelineAbbreviation(d))
-    .attr("x", rectWidth / 2 - padding)
-    .attr("y", 5)
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 5)
-    .attr("text-anchor", "end")
-    .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+  if (showIssueEstimates) {
+    // Add estimate to nodes
+    nodes
+      .append("text")
+      .text((d) => d.data.estimate)
+      .attr("x", rectWidth / 2 - padding)
+      .attr("y", 5)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 5)
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", "black");
+  }
 
   // Add issue number to nodes
   nodes
@@ -128,10 +132,10 @@ export function renderDetailedIssues(nodes) {
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
 
-  // Add estimate to nodes
+  // Add pipeline name to nodes
   nodes
     .append("text")
-    .text((d) => d.data.estimate)
+    .text((d) => getPipelineAbbreviation(d))
     .attr("x", rectWidth / 2 - padding)
     .attr("y", rectHeight / 2 - 5)
     .attr("font-weight", "bold")
