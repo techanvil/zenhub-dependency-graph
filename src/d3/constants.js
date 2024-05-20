@@ -1,14 +1,3 @@
-export const simpleIssueDimensions = {
-  rectWidth: 60,
-  rectHeight: 35,
-  // rectHeight: 42,
-};
-export const detailedIssueDimensions = {
-  rectWidth: 60,
-  rectHeight: 35,
-  // rectHeight: 42,
-};
-
 // const pipelineColors = {
 //   Triage: "#de425b",
 //   Stalled: "#ea6158",
