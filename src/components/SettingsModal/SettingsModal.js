@@ -47,6 +47,7 @@ export default function APIKeyModal({
         showNonEpicIssues: false,
         showNonEpicBlockedIssues: false,
         showSelfContainedIssues: false,
+        showIssueEstimates: true,
       },
       ...appSettings,
     }),
@@ -157,6 +158,17 @@ export default function APIKeyModal({
               onChange={(e) => {
                 updateAppSettings({
                   showClosedEpics: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Show issue estimates</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showIssueEstimates}
+              onChange={(e) => {
+                updateAppSettings({
+                  showIssueEstimates: e.target.checked,
                 });
               }}
             />
