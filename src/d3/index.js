@@ -8,7 +8,7 @@ import { drag as d3Drag } from "d3-drag";
 /**
  * Internal dependencies
  */
-import { simpleIssueDimensions, detailedIssueDimensions } from "./constants";
+import { getRectDimensions } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 
@@ -154,9 +154,7 @@ export const generateGraph = (
     return;
   }
 
-  const { rectWidth, rectHeight } = showIssueDetails
-    ? detailedIssueDimensions
-    : simpleIssueDimensions;
+  const { rectWidth, rectHeight } = getRectDimensions(appSettings);
 
   const dag = dagStratify()(graphData);
   const nodeWidth = rectWidth * 1.5;
