@@ -11,7 +11,12 @@ export const useParameter = (key, defaultValue) => {
   useEffect(() => {
     const url = new URL(window.location);
     if (localStorageValue) {
-      url.searchParams.set(key, localStorageValue);
+      url.searchParams.set(
+        key,
+        typeof localStorageValue === "object"
+          ? JSON.stringify(localStorageValue)
+          : localStorageValue
+      );
     } else {
       url.searchParams.delete(key);
     }
