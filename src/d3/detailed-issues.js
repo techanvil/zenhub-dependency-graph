@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 
-import { rectWidth, rectHeight, pipelineAbbreviations } from "./constants.js";
+import { getCombinedSprints, getRectDimensions, getSprintsText } from "./utils";
+import { pipelineAbbreviations } from "./constants";
 
 function getPipelineAbbreviation(node) {
   return (
@@ -14,20 +15,7 @@ function getPipelineAbbreviation(node) {
 
 const padding = 3;
 
-function truncate() {
-  const self = d3.select(this);
-
-  let textLength = self.node().getComputedTextLength(),
-    text = self.text();
-
-  while (textLength > rectWidth - 2 * padding && text.length > 0) {
-    text = text.slice(0, -1);
-    self.text(text + "\u2026");
-    textLength = self.node().getComputedTextLength();
-  }
-}
-
-function wrapLines(text, width, maxLines) {
+function wrapLines(text, width, maxLines, truncate) {
   text.each(function () {
     let text = d3.select(this),
       words = text.text().split(/\s+/).reverse(),
@@ -69,7 +57,23 @@ function wrapLines(text, width, maxLines) {
   });
 }
 
-export function renderDetailedIssues(nodes) {
+export function renderDetailedIssues(nodes, appSettings) {
+  const { showIssueEstimates, showIssueSprints } = appSettings;
+  const { rectWidth, rectHeight } = getRectDimensions(appSettings);
+
+  function truncate() {
+    const self = d3.select(this);
+
+    let textLength = self.node().getComputedTextLength(),
+      text = self.text();
+
+    while (textLength > rectWidth - 2 * padding && text.length > 0) {
+      text = text.slice(0, -1);
+      self.text(text + "\u2026");
+      textLength = self.node().getComputedTextLength();
+    }
+  }
+
   // Add issue titles to nodes
   nodes
     .append("a")
@@ -83,7 +87,7 @@ export function renderDetailedIssues(nodes) {
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black")
-    .call(wrapLines, rectWidth - padding * 2, 3);
+    .call(wrapLines, rectWidth - padding * 2, 3, truncate);
 
   // Add assignees to nodes
   nodes
@@ -101,6 +105,22 @@ export function renderDetailedIssues(nodes) {
     .attr("fill", "black")
     .each(truncate);
 
+  if (showIssueEstimates) {
+    // Add estimate to nodes
+    nodes
+      .append("text")
+      .text((d) => d.data.estimate)
+      .attr("x", rectWidth / 2 - padding)
+      .attr("y", 5)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 5)
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", "black");
+  }
+
+  const issueNumberRowY = showIssueSprints ? 11 : rectHeight / 2 - 5;
+
   // Add issue number to nodes
   nodes
     .append("a")
@@ -108,7 +128,7 @@ export function renderDetailedIssues(nodes) {
     .append("text")
     .text((d) => d.data.id)
     .attr("x", -rectWidth / 2 + padding)
-    .attr("y", rectHeight / 2 - 5)
+    .attr("y", issueNumberRowY)
     .attr("font-weight", "bold")
     .attr("font-family", "sans-serif")
     .attr("font-size", 5)
@@ -121,7 +141,7 @@ export function renderDetailedIssues(nodes) {
     .append("text")
     .text((d) => getPipelineAbbreviation(d))
     .attr("x", rectWidth / 2 - padding)
-    .attr("y", rectHeight / 2 - 5)
+    .attr("y", issueNumberRowY)
     .attr("font-weight", "bold")
     .attr("font-family", "sans-serif")
     .attr("font-size", 5)
@@ -134,11 +154,26 @@ export function renderDetailedIssues(nodes) {
     .filter((d) => d.data.isNonEpicIssue)
     .append("text")
     .text("External")
-    .attr("y", rectHeight / 2 - 5)
+    .attr("y", issueNumberRowY)
     .attr("font-weight", "bold")
     .attr("font-family", "sans-serif")
     .attr("font-size", 5)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
+
+  if (showIssueSprints) {
+    // Add issue sprints to nodes
+    nodes
+      .append("a")
+      .append("text")
+      .text((d) => getCombinedSprints(d.data.sprints))
+      .attr("x", -rectWidth / 2 + padding)
+      .attr("y", rectHeight / 2 - 5)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 5)
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", "black");
+  }
 }

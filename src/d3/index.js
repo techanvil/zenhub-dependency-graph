@@ -8,7 +8,7 @@ import { drag as d3Drag } from "d3-drag";
 /**
  * Internal dependencies
  */
-import { rectWidth, rectHeight } from "./constants";
+import { getRectDimensions } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 
@@ -133,8 +133,10 @@ export const generateGraph = (
     coordinateOverrides,
     saveCoordinateOverrides,
   },
-  { showAncestorDependencies, showIssueDetails, showNonEpicIssues }
+  appSettings
 ) => {
+  const { showAncestorDependencies, showIssueDetails } = appSettings;
+
   try {
     panZoom.instance?.destroy();
     panZoom.instance = null;
@@ -151,6 +153,8 @@ export const generateGraph = (
   if (!graphData?.length) {
     return;
   }
+
+  const { rectWidth, rectHeight } = getRectDimensions(appSettings);
 
   const dag = dagStratify()(graphData);
   const nodeWidth = rectWidth * 1.5;
@@ -373,9 +377,9 @@ export const generateGraph = (
     .attr("fill", ({ source, target }) => getArrowEndColor(source, target));
 
   if (showIssueDetails) {
-    renderDetailedIssues(nodes);
+    renderDetailedIssues(nodes, appSettings);
   } else {
-    renderSimpleIssues(nodes);
+    renderSimpleIssues(nodes, appSettings);
   }
 
   // Dragging

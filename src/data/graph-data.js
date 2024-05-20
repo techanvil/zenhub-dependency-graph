@@ -213,6 +213,7 @@ export async function getGraphData(
       pipelineIssue: {
         pipeline: { name: pipelineName },
       },
+      estimate,
       sprints,
     }) => ({
       id: `${id}`,
@@ -222,6 +223,8 @@ export async function getGraphData(
       assignees: assignees.map(({ login }) => login),
       parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
       pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
+      estimate: estimate?.value,
+      sprints: sprints.nodes.map(({ name }) => name),
       isChosenSprint: sprints.nodes.some(({ name }) => name === sprintName),
     })
   );

@@ -1,6 +1,3 @@
-export const rectWidth = 60;
-export const rectHeight = 35;
-
 // const pipelineColors = {
 //   Triage: "#de425b",
 //   Stalled: "#ea6158",

@@ -23,13 +23,18 @@ function bootstrapParameters() {
     { key: "workspace" },
     { key: "sprint" },
     { key: "epic", parse: (v) => parseInt(v, 10) },
-  ].forEach(({ key, parse = (v) => v }) => {
+    { key: "appSettings", isObject: true },
+    { key: "pipelineColors", isObject: true },
+    { key: "additionalColors", isObject: true },
+    { key: "coordinateOverrides", isObject: true },
+  ].forEach(({ key, parse = (v) => v, isObject }) => {
     if (url.searchParams.has(key)) {
+      const value = isObject
+        ? JSON.parse(url.searchParams.get(key))
+        : parse(url.searchParams.get(key));
+
       // Local storage is always JSON.stringified.
-      localStorage.setItem(
-        key,
-        JSON.stringify(parse(url.searchParams.get(key)))
-      );
+      localStorage.setItem(key, JSON.stringify(value));
     } else {
       const localValue = localStorage.getItem(key);
       if (!localValue) return;
@@ -41,7 +46,10 @@ function bootstrapParameters() {
         console.log("JSON parse error", err);
       }
       if (parsedValue) {
-        url.searchParams.set(key, localValue);
+        url.searchParams.set(
+          key,
+          isObject ? JSON.stringify(localValue) : localValue
+        );
         window.history.pushState({}, undefined, url);
       }
     }
@@ -54,16 +62,16 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
-  const [appSettings, saveAppSettings] = useLocalStorage("appSettings", {});
-  const [pipelineColors, savePipelineColors] = useLocalStorage(
+  const [appSettings, saveAppSettings] = useParameter("appSettings", {});
+  const [pipelineColors, savePipelineColors] = useParameter(
     "pipelineColors",
     pipelineColorDefaults
   );
-  const [additionalColors, saveAdditionalColors] = useLocalStorage(
+  const [additionalColors, saveAdditionalColors] = useParameter(
     "additionalColors",
     additionalColorDefaults
   );
-  const [coordinateOverrides, saveCoordinateOverrides] = useLocalStorage(
+  const [coordinateOverrides, saveCoordinateOverrides] = useParameter(
     `coordinateOverrides`,
     {}
   );
