@@ -83,6 +83,9 @@ export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
             name
           }
         }
+        estimate {
+          value
+        }
         sprints {
           nodes {
             # id
@@ -131,6 +134,9 @@ export const GET_ISSUE_BY_NUMBER_QUERY = gql`
           # id
           name
         }
+      }
+      estimate {
+        value
       }
     }
   }

@@ -101,6 +101,18 @@ export function renderDetailedIssues(nodes) {
     .attr("fill", "black")
     .each(truncate);
 
+  // Add pipeline name to nodes
+  nodes
+    .append("text")
+    .text((d) => getPipelineAbbreviation(d))
+    .attr("x", rectWidth / 2 - padding)
+    .attr("y", 5)
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 5)
+    .attr("text-anchor", "end")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black");
+
   // Add issue number to nodes
   nodes
     .append("a")
@@ -116,10 +128,10 @@ export function renderDetailedIssues(nodes) {
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
 
-  // Add pipeline name to nodes
+  // Add estimate to nodes
   nodes
     .append("text")
-    .text((d) => getPipelineAbbreviation(d))
+    .text((d) => d.data.estimate)
     .attr("x", rectWidth / 2 - padding)
     .attr("y", rectHeight / 2 - 5)
     .attr("font-weight", "bold")

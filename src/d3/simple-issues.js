@@ -32,6 +32,19 @@ export function renderSimpleIssues(nodes) {
   nodes
     .append("text")
     .text((d) => getPipelineAbbreviation(d))
+    .attr("x", -rectWidth / 2 + padding)
+    .attr("y", rectHeight / 2 - 5)
+    .attr("font-weight", "bold")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 8)
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black");
+
+  // Add estimate to nodes
+  nodes
+    .append("text")
+    .text((d) => d.data.estimate)
     .attr("x", rectWidth / 2 - padding)
     .attr("y", rectHeight / 2 - 5)
     .attr("font-weight", "bold")
