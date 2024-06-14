@@ -357,7 +357,6 @@ export default function Header({
                     <Text color="tomato">
                       <b>{closedIssues.length}</b> closed{" "}
                       {pluralise(closedIssues.length, "issue", "issues")} hidden
-                      (<b>{getOpenIssueCount(closedIssues)}</b> open)
                     </Text>
                   )}
                 </VStack>
