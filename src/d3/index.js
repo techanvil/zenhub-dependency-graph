@@ -118,6 +118,63 @@ export function removeSelfContainedIssues(graphData) {
   return selfContainedIssues;
 }
 
+function findOpenParents(node, graphData) {
+  const openParents = [];
+
+  node.parentIds?.forEach((parentId) => {
+    const parent = graphData.find((node) => node.id === parentId);
+
+    if (!parent) {
+      return;
+    }
+
+    if (parent.pipelineName !== "Closed") {
+      openParents.push(parent);
+    } else {
+      openParents.push(...findOpenParents(parent, graphData));
+    }
+  });
+
+  return openParents;
+}
+
+export function removeClosedIssues(graphData) {
+  const closedIssues = graphData?.filter(
+    (node) => node.pipelineName === "Closed"
+  );
+
+  const fullGraphData = [...graphData];
+
+  // remove closedIssues from graphData, mutating it:
+  closedIssues?.forEach((closedIssue) => {
+    const index = graphData.findIndex((node) => node.id === closedIssue.id);
+
+    if (index > -1) {
+      graphData.splice(index, 1);
+    }
+  });
+
+  closedIssues?.forEach((closedIssue) => {
+    graphData?.forEach((node) => {
+      if (node.parentIds?.includes(closedIssue.id)) {
+        node.parentIds = node.parentIds.filter(
+          (parentId) => parentId !== closedIssue.id
+        );
+
+        const openParents = findOpenParents(node, fullGraphData);
+
+        openParents.forEach((openParent) => {
+          if (!node.parentIds.includes(openParent.id)) {
+            node.parentIds.push(openParent.id);
+          }
+        });
+      }
+    });
+  });
+
+  return closedIssues;
+}
+
 const panZoom = {
   instance: null,
   resizeHandler: null,
