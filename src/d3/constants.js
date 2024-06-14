@@ -53,3 +53,10 @@ export const pipelineAbbreviations = {
   Approval: "A",
   Closed: "C",
 };
+
+window.zdgDebugInfo = {
+  ...(window.zdgDebugInfo || {}),
+  pipelineColorDefaults,
+  additionalColorDefaults,
+  pipelineAbbreviations,
+};
