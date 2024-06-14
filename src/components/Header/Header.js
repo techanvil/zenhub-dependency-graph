@@ -70,6 +70,7 @@ export default function Header({
   epicIssue,
   nonEpicIssues,
   selfContainedIssues,
+  closedIssues,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -352,6 +353,13 @@ export default function Header({
                         open)
                       </Text>
                     )}
+                  {!appSettings.showClosedIssues && closedIssues?.length > 0 && (
+                    <Text color="tomato">
+                      <b>{closedIssues.length}</b> closed{" "}
+                      {pluralise(closedIssues.length, "issue", "issues")} hidden
+                      (<b>{getOpenIssueCount(closedIssues)}</b> open)
+                    </Text>
+                  )}
                 </VStack>
               </WrapItem>
               <WrapItem spacing="3">
