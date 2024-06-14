@@ -247,6 +247,7 @@ export async function getGraphData(
   console.log("d3GraphData", d3GraphData);
 
   window.zdgDebugInfo = {
+    ...(window.zdgDebugInfo || {}),
     epicIssue,
     workspaceId,
     repositoryId,
