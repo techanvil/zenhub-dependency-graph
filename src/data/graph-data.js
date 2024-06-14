@@ -246,6 +246,16 @@ export async function getGraphData(
   console.log("linkedIssues", linkedIssues);
   console.log("d3GraphData", d3GraphData);
 
+  window.zdgDebugInfo = {
+    epicIssue,
+    workspaceId,
+    repositoryId,
+    repositoryGhId,
+    pipelines,
+    linkedIssues,
+    d3GraphData,
+  };
+
   return {
     graphData: d3GraphData,
     epicIssue,
