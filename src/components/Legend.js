@@ -79,13 +79,15 @@ function LegendItem({
         </PopoverContent>
       </Popover>
       <Text mr="auto">{label}</Text>
-      <Switch
-        // The switch shows the visible state, so we need to invert isHidden.
-        isChecked={!isHidden}
-        onChange={() => {
-          saveIsHidden(isHidden);
-        }}
-      />
+      {isHidden !== undefined && (
+        <Switch
+          // The switch shows the visible state, so we need to invert isHidden.
+          isChecked={!isHidden}
+          onChange={() => {
+            saveIsHidden(isHidden);
+          }}
+        />
+      )}
     </Flex>
   );
 }
@@ -109,7 +111,7 @@ export function Legend({
           color={color}
           colors={pipelineColors}
           saveColors={savePipelineColors}
-          isHidden={pipelineHidden[label]}
+          isHidden={!!pipelineHidden[label]}
           saveIsHidden={(isHidden) => {
             // TODO: pipelineHidden could in fact be an array rather than an object.
             const newHidden = { ...pipelineHidden };
