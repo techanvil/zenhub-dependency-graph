@@ -118,6 +118,14 @@ export function removeSelfContainedIssues(graphData) {
   return selfContainedIssues;
 }
 
+// Avoid console.log in tests.
+let doLog = false;
+const log = (...args) => {
+  if (doLog) {
+    console.log(...args);
+  }
+};
+
 function findNonPipelineParents(node, graphData, pipelineName) {
   const nonPipelineParents = [];
 
@@ -141,30 +149,41 @@ function findNonPipelineParents(node, graphData, pipelineName) {
 }
 
 export function removePipelineIssues(graphData, pipelineName) {
-  const closedIssues = graphData?.filter(
+  doLog = pipelineName === "Implementation Brief Review";
+
+  const pipelineIssues = graphData?.filter(
     (node) => node.pipelineName === pipelineName
   );
 
   const fullGraphData = [...graphData];
 
-  // remove closedIssues from graphData, mutating it:
-  closedIssues?.forEach((closedIssue) => {
-    const index = graphData.findIndex((node) => node.id === closedIssue.id);
+  // remove pipelineIssues from graphData, mutating it:
+  pipelineIssues?.forEach((pipelineIssue) => {
+    const index = graphData.findIndex((node) => node.id === pipelineIssue.id);
 
     if (index > -1) {
       graphData.splice(index, 1);
     }
   });
 
-  closedIssues?.forEach((closedIssue) => {
+  log({
+    pipelineIssues,
+    graphData,
+  });
+
+  pipelineIssues?.forEach((pipelineIssue) => {
     graphData?.forEach((node) => {
-      if (node.parentIds?.includes(closedIssue.id)) {
+      if (node.parentIds?.includes(pipelineIssue.id)) {
         node.parentIds = node.parentIds.filter(
-          (parentId) => parentId !== closedIssue.id
+          (parentId) => parentId !== pipelineIssue.id
         );
+        log({
+          node,
+          pipelineIssue,
+        });
 
         const nonPipelineParents = findNonPipelineParents(
-          node,
+          pipelineIssue,
           fullGraphData,
           pipelineName
         );
@@ -178,7 +197,7 @@ export function removePipelineIssues(graphData, pipelineName) {
     });
   });
 
-  return closedIssues;
+  return pipelineIssues;
 }
 
 const panZoom = {
