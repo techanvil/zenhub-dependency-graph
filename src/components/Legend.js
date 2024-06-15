@@ -111,6 +111,7 @@ export function Legend({
           saveColors={savePipelineColors}
           isHidden={pipelineHidden[label]}
           saveIsHidden={(isHidden) => {
+            // TODO: pipelineHidden could in fact be an array rather than an object.
             const newHidden = { ...pipelineHidden };
             if (isHidden) {
               delete newHidden[label];

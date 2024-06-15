@@ -11,7 +11,7 @@ import {
   generateGraph,
   removeNonEpicIssues,
   removeSelfContainedIssues,
-  removeClosedIssues,
+  removePipelineIssues,
 } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
@@ -21,6 +21,7 @@ export default function SVG({
   appSettings,
   pipelineColors,
   additionalColors,
+  pipelineHidden,
   coordinateOverrides,
   saveCoordinateOverrides,
   workspace,
@@ -29,7 +30,7 @@ export default function SVG({
   setEpicIssue,
   setNonEpicIssues,
   setSelfContainedIssues,
-  setClosedIssues,
+  setHiddenIssues,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -67,10 +68,13 @@ export default function SVG({
           setSelfContainedIssues(selfContainedIssues);
         }
 
-        if (!appSettings.showClosedIssues) {
-          const closedIssues = removeClosedIssues(graphData);
-          setClosedIssues(closedIssues);
-        }
+        // TODO: Remove showClosedIssues.
+        // if (!appSettings.showClosedIssues) {
+        const hiddenIssues = [];
+        Object.keys(pipelineHidden).forEach((pipelineName) => {
+          hiddenIssues.push(...removePipelineIssues(graphData, pipelineName));
+        });
+        setHiddenIssues(hiddenIssues);
 
         setGraphData(graphData);
         setEpicIssue(epicIssue);
@@ -92,8 +96,9 @@ export default function SVG({
     appSettings,
     setNonEpicIssues,
     setSelfContainedIssues,
-    setClosedIssues,
+    setHiddenIssues,
     sprint,
+    pipelineHidden,
   ]);
 
   useEffect(() => {

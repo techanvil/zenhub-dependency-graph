@@ -118,8 +118,8 @@ export function removeSelfContainedIssues(graphData) {
   return selfContainedIssues;
 }
 
-function findOpenParents(node, graphData) {
-  const openParents = [];
+function findNonPipelineParents(node, graphData, pipelineName) {
+  const nonPipelineParents = [];
 
   node.parentIds?.forEach((parentId) => {
     const parent = graphData.find((node) => node.id === parentId);
@@ -128,19 +128,21 @@ function findOpenParents(node, graphData) {
       return;
     }
 
-    if (parent.pipelineName !== "Closed") {
-      openParents.push(parent);
+    if (parent.pipelineName === pipelineName) {
+      nonPipelineParents.push(
+        ...findNonPipelineParents(parent, graphData, pipelineName)
+      );
     } else {
-      openParents.push(...findOpenParents(parent, graphData));
+      nonPipelineParents.push(parent);
     }
   });
 
-  return openParents;
+  return nonPipelineParents;
 }
 
-export function removeClosedIssues(graphData) {
+export function removePipelineIssues(graphData, pipelineName) {
   const closedIssues = graphData?.filter(
-    (node) => node.pipelineName === "Closed"
+    (node) => node.pipelineName === pipelineName
   );
 
   const fullGraphData = [...graphData];
@@ -161,9 +163,13 @@ export function removeClosedIssues(graphData) {
           (parentId) => parentId !== closedIssue.id
         );
 
-        const openParents = findOpenParents(node, fullGraphData);
+        const nonPipelineParents = findNonPipelineParents(
+          node,
+          fullGraphData,
+          pipelineName
+        );
 
-        openParents.forEach((openParent) => {
+        nonPipelineParents.forEach((openParent) => {
           if (!node.parentIds.includes(openParent.id)) {
             node.parentIds.push(openParent.id);
           }
