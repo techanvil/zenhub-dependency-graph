@@ -21,6 +21,7 @@ function LegendItem({
   label,
   color,
   colors,
+  isSolo,
   saveColors,
   isHidden,
   saveIsHidden,
@@ -81,10 +82,16 @@ function LegendItem({
       <Text mr="auto">{label}</Text>
       {isHidden !== undefined && (
         <Switch
+          title={
+            isSolo
+              ? "Ctrl+click to show all pipelines"
+              : "Ctrl+click to solo this pipeline"
+          }
           // The switch shows the visible state, so we need to invert isHidden.
           isChecked={!isHidden}
-          onChange={() => {
-            saveIsHidden(isHidden);
+          onChange={(e) => {
+            const isCtrlPressed = !!e.nativeEvent.ctrlKey;
+            saveIsHidden(isHidden, isCtrlPressed);
           }}
         />
       )}
@@ -104,26 +111,52 @@ export function Legend({
 
   return (
     <Flex direction="column">
-      {pipelineColorItems.map(([label, color], index) => (
-        <LegendItem
-          key={index}
-          label={label}
-          color={color}
-          colors={pipelineColors}
-          saveColors={savePipelineColors}
-          isHidden={!!pipelineHidden[label]}
-          saveIsHidden={(isHidden) => {
-            // TODO: pipelineHidden could in fact be an array rather than an object.
-            const newHidden = { ...pipelineHidden };
-            if (isHidden) {
-              delete newHidden[label];
-            } else {
-              newHidden[label] = true;
-            }
-            savePipelineHidden(newHidden);
-          }}
-        />
-      ))}
+      {pipelineColorItems.map(([label, color], index) => {
+        const isSolo =
+          !pipelineHidden[label] &&
+          Object.keys(pipelineHidden).length ===
+            Object.keys(pipelineColors).length - 1;
+
+        return (
+          <LegendItem
+            key={index}
+            label={label}
+            color={color}
+            colors={pipelineColors}
+            isSolo={isSolo}
+            saveColors={savePipelineColors}
+            isHidden={!!pipelineHidden[label]}
+            saveIsHidden={(isHidden, isCtrlPressed) => {
+              // TODO: pipelineHidden could in fact be an array rather than an object.
+              let newHidden = { ...pipelineHidden };
+
+              if (isCtrlPressed) {
+                if (isSolo) {
+                  newHidden = {};
+                } else {
+                  Object.keys(pipelineColors).forEach((pipelineName) => {
+                    if (pipelineName === label) {
+                      delete newHidden[pipelineName];
+                    } else {
+                      newHidden[pipelineName] = true;
+                    }
+                  });
+                }
+              } else {
+                if (isHidden) {
+                  delete newHidden[label];
+                } else {
+                  newHidden[label] = true;
+                }
+              }
+
+              console.log("newHidden", newHidden);
+
+              savePipelineHidden(newHidden);
+            }}
+          />
+        );
+      })}
       <hr />
       {
         // Iterate over the defaults to handle name changes.
