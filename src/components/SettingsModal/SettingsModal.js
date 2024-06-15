@@ -33,6 +33,7 @@ export default function APIKeyModal({
   appSettings,
   savePipelineColors,
   saveAdditionalColors,
+  savePipelineHidden,
   epic,
   coordinateOverrides,
   saveCoordinateOverrides,
@@ -224,6 +225,20 @@ export default function APIKeyModal({
               }}
             >
               Reset colours
+            </Button>
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>
+              Unhide all pipelines (takes effect immediately)
+            </FormLabel>
+            <Button
+              colorScheme="blue"
+              mr={1}
+              onClick={() => {
+                savePipelineHidden({});
+              }}
+            >
+              Unhide pipelines
             </Button>
           </FormControl>
           <FormControl pt="5" pb="5">

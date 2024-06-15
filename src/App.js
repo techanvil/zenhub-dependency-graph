@@ -26,6 +26,7 @@ function bootstrapParameters() {
     { key: "appSettings", isObject: true },
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
+    { key: "pipelineHidden", isObject: true },
     { key: "coordinateOverrides", isObject: true },
   ].forEach(({ key, parse = (v) => v, isObject }) => {
     if (url.searchParams.has(key)) {
@@ -71,6 +72,11 @@ function App() {
     "additionalColors",
     additionalColorDefaults
   );
+  // TODO: Merge pipelineColors and pipelineHidden if more pipeline settings are added.
+  const [pipelineHidden, savePipelineHidden] = useParameter(
+    "pipelineHidden",
+    {}
+  );
   const [coordinateOverrides, saveCoordinateOverrides] = useParameter(
     `coordinateOverrides`,
     {}
@@ -93,6 +99,8 @@ function App() {
     savePipelineColors,
     additionalColors,
     saveAdditionalColors,
+    pipelineHidden,
+    savePipelineHidden,
     coordinateOverrides,
     saveCoordinateOverrides,
     workspace,
@@ -120,6 +128,8 @@ function App() {
         savePipelineColors={savePipelineColors}
         additionalColors={additionalColors}
         saveAdditionalColors={saveAdditionalColors}
+        pipelineHidden={pipelineHidden}
+        savePipelineHidden={savePipelineHidden}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />

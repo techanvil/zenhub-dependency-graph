@@ -60,6 +60,8 @@ export default function Header({
   savePipelineColors,
   additionalColors,
   saveAdditionalColors,
+  pipelineHidden,
+  savePipelineHidden,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
@@ -381,6 +383,8 @@ export default function Header({
                         savePipelineColors={savePipelineColors}
                         additionalColors={additionalColors}
                         saveAdditionalColors={saveAdditionalColors}
+                        pipelineHidden={pipelineHidden}
+                        savePipelineHidden={savePipelineHidden}
                       />
                     </PopoverBody>
                   </PopoverContent>
