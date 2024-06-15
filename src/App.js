@@ -26,6 +26,7 @@ function bootstrapParameters() {
     { key: "appSettings", isObject: true },
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
+    { key: "pipelineHidden", isObject: true },
     { key: "coordinateOverrides", isObject: true },
   ].forEach(({ key, parse = (v) => v, isObject }) => {
     if (url.searchParams.has(key)) {
@@ -71,6 +72,11 @@ function App() {
     "additionalColors",
     additionalColorDefaults
   );
+  // TODO: Merge pipelineColors and pipelineHidden if more pipeline settings are added.
+  const [pipelineHidden, savePipelineHidden] = useParameter(
+    "pipelineHidden",
+    {}
+  );
   const [coordinateOverrides, saveCoordinateOverrides] = useParameter(
     `coordinateOverrides`,
     {}
@@ -81,7 +87,7 @@ function App() {
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
-  const [closedIssues, setClosedIssues] = useState();
+  const [hiddenIssues, setHiddenIssues] = useState();
 
   // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
@@ -93,6 +99,8 @@ function App() {
     savePipelineColors,
     additionalColors,
     saveAdditionalColors,
+    pipelineHidden,
+    savePipelineHidden,
     coordinateOverrides,
     saveCoordinateOverrides,
     workspace,
@@ -107,8 +115,8 @@ function App() {
     setNonEpicIssues,
     selfContainedIssues,
     setSelfContainedIssues,
-    closedIssues,
-    setClosedIssues,
+    hiddenIssues,
+    setHiddenIssues,
   };
 
   return (
@@ -120,6 +128,8 @@ function App() {
         savePipelineColors={savePipelineColors}
         additionalColors={additionalColors}
         saveAdditionalColors={saveAdditionalColors}
+        pipelineHidden={pipelineHidden}
+        savePipelineHidden={savePipelineHidden}
         onAPIKeyModalOpen={onOpen}
         {...sharedStateProps}
       />

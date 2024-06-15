@@ -60,6 +60,8 @@ export default function Header({
   savePipelineColors,
   additionalColors,
   saveAdditionalColors,
+  pipelineHidden,
+  savePipelineHidden,
   onAPIKeyModalOpen = () => {},
   workspace,
   saveWorkspace,
@@ -70,7 +72,7 @@ export default function Header({
   epicIssue,
   nonEpicIssues,
   selfContainedIssues,
-  closedIssues,
+  hiddenIssues,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -353,10 +355,12 @@ export default function Header({
                         open)
                       </Text>
                     )}
-                  {!appSettings.showClosedIssues && closedIssues?.length > 0 && (
+                  {hiddenIssues?.length > 0 && (
                     <Text color="tomato">
-                      <b>{closedIssues.length}</b> closed{" "}
-                      {pluralise(closedIssues.length, "issue", "issues")} hidden
+                      <b>{hiddenIssues.length}</b>{" "}
+                      {pluralise(hiddenIssues.length, "issue", "issues")} hidden
+                      by pipeline (<b>{getOpenIssueCount(hiddenIssues)}</b>{" "}
+                      open)
                     </Text>
                   )}
                 </VStack>
@@ -381,6 +385,8 @@ export default function Header({
                         savePipelineColors={savePipelineColors}
                         additionalColors={additionalColors}
                         saveAdditionalColors={saveAdditionalColors}
+                        pipelineHidden={pipelineHidden}
+                        savePipelineHidden={savePipelineHidden}
                       />
                     </PopoverBody>
                   </PopoverContent>

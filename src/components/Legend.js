@@ -8,6 +8,7 @@ import {
   PopoverCloseButton,
   PopoverContent,
   PopoverTrigger,
+  Switch,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -16,7 +17,14 @@ import { useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
 import { additionalColorDefaults } from "../d3/constants";
 
-function LegendItem({ label, color, colors, saveColors }) {
+function LegendItem({
+  label,
+  color,
+  colors,
+  saveColors,
+  isHidden,
+  saveIsHidden,
+}) {
   const { isOpen, onToggle, onClose } = useDisclosure();
 
   const [hex, setHex] = useState(color);
@@ -70,7 +78,16 @@ function LegendItem({ label, color, colors, saveColors }) {
           </PopoverBody>
         </PopoverContent>
       </Popover>
-      <Text>{label}</Text>
+      <Text mr="auto">{label}</Text>
+      {isHidden !== undefined && (
+        <Switch
+          // The switch shows the visible state, so we need to invert isHidden.
+          isChecked={!isHidden}
+          onChange={() => {
+            saveIsHidden(isHidden);
+          }}
+        />
+      )}
     </Flex>
   );
 }
@@ -80,6 +97,8 @@ export function Legend({
   savePipelineColors,
   additionalColors,
   saveAdditionalColors,
+  pipelineHidden,
+  savePipelineHidden,
 }) {
   const pipelineColorItems = Object.entries(pipelineColors);
 
@@ -92,6 +111,17 @@ export function Legend({
           color={color}
           colors={pipelineColors}
           saveColors={savePipelineColors}
+          isHidden={!!pipelineHidden[label]}
+          saveIsHidden={(isHidden) => {
+            // TODO: pipelineHidden could in fact be an array rather than an object.
+            const newHidden = { ...pipelineHidden };
+            if (isHidden) {
+              delete newHidden[label];
+            } else {
+              newHidden[label] = true;
+            }
+            savePipelineHidden(newHidden);
+          }}
         />
       ))}
       <hr />

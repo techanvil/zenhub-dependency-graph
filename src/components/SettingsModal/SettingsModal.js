@@ -25,14 +25,18 @@ import {
   pipelineColorDefaults,
 } from "../../d3/constants";
 
-export default function APIKeyModal({
+export default function SettingsModal({
   isOpen,
   onClose,
   APIKey,
   saveAPIKey,
   appSettings,
+  pipelineColors,
   savePipelineColors,
+  additionalColors,
   saveAdditionalColors,
+  pipelineHidden,
+  savePipelineHidden,
   epic,
   coordinateOverrides,
   saveCoordinateOverrides,
@@ -47,7 +51,6 @@ export default function APIKeyModal({
         showNonEpicIssues: false,
         showNonEpicBlockedIssues: false,
         showSelfContainedIssues: false,
-        showClosedIssues: true,
         showIssueEstimates: true,
         showIssueSprints: true,
       },
@@ -154,17 +157,6 @@ export default function APIKeyModal({
             />
           </FormControl>
           <FormControl pt="5">
-            <FormLabel>Show closed issues</FormLabel>
-            <Switch
-              isChecked={settingsState.appSettings.showClosedIssues}
-              onChange={(e) => {
-                updateAppSettings({
-                  showClosedIssues: e.target.checked,
-                });
-              }}
-            />
-          </FormControl>
-          <FormControl pt="5">
             <FormLabel>Show closed epics</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.showClosedEpics}
@@ -197,35 +189,60 @@ export default function APIKeyModal({
               }}
             />
           </FormControl>
-          <FormControl pt="5">
-            <FormLabel>Reset epic layout (takes effect immediately)</FormLabel>
-            <Button
-              colorScheme="blue"
-              mr={1}
-              onClick={() => {
-                const newCoordinateOverrides = { ...coordinateOverrides };
-                delete newCoordinateOverrides[epic];
-                saveCoordinateOverrides(newCoordinateOverrides);
-              }}
-            >
-              Reset layout
-            </Button>
-          </FormControl>
-          <FormControl pt="5">
-            <FormLabel>
-              Reset issue colours (takes effect immediately)
-            </FormLabel>
-            <Button
-              colorScheme="blue"
-              mr={1}
-              onClick={() => {
-                savePipelineColors(pipelineColorDefaults);
-                saveAdditionalColors(additionalColorDefaults);
-              }}
-            >
-              Reset colours
-            </Button>
-          </FormControl>
+          {Object.keys(coordinateOverrides[epic] || {}).length > 0 && (
+            <FormControl pt="5">
+              <FormLabel>
+                Reset epic layout (takes effect immediately)
+              </FormLabel>
+              <Button
+                colorScheme="blue"
+                mr={1}
+                onClick={() => {
+                  const newCoordinateOverrides = { ...coordinateOverrides };
+                  delete newCoordinateOverrides[epic];
+                  saveCoordinateOverrides(newCoordinateOverrides);
+                }}
+              >
+                Reset layout
+              </Button>
+            </FormControl>
+          )}
+          {!(
+            deepEquals(pipelineColors, pipelineColorDefaults) &&
+            deepEquals(additionalColors, additionalColorDefaults)
+          ) && (
+            <FormControl pt="5">
+              <FormLabel>
+                Reset issue colours (takes effect immediately)
+              </FormLabel>
+              <Button
+                colorScheme="blue"
+                mr={1}
+                onClick={() => {
+                  savePipelineColors(pipelineColorDefaults);
+                  saveAdditionalColors(additionalColorDefaults);
+                }}
+              >
+                Reset colours
+              </Button>
+            </FormControl>
+          )}
+          {Object.keys(pipelineHidden).length > 0 && (
+            <FormControl pt="5">
+              <FormLabel>
+                Unhide all pipelines (takes effect immediately)
+              </FormLabel>
+              <Button
+                colorScheme="blue"
+                mr={1}
+                onClick={() => {
+                  savePipelineHidden({});
+                }}
+              >
+                Unhide pipelines
+              </Button>
+            </FormControl>
+          )}
           <FormControl pt="5" pb="5">
             <FormLabel>
               Flush request cache (takes effect immediately)
