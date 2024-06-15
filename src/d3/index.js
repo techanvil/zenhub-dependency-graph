@@ -118,14 +118,6 @@ export function removeSelfContainedIssues(graphData) {
   return selfContainedIssues;
 }
 
-// Avoid console.log in tests.
-let doLog = false;
-const log = (...args) => {
-  if (doLog) {
-    console.log(...args);
-  }
-};
-
 function findNonPipelineParents(node, graphData, pipelineName) {
   const nonPipelineParents = [];
 
@@ -149,8 +141,6 @@ function findNonPipelineParents(node, graphData, pipelineName) {
 }
 
 export function removePipelineIssues(graphData, pipelineName) {
-  doLog = pipelineName === "Implementation Brief Review";
-
   const pipelineIssues = graphData?.filter(
     (node) => node.pipelineName === pipelineName
   );
@@ -166,21 +156,12 @@ export function removePipelineIssues(graphData, pipelineName) {
     }
   });
 
-  log({
-    pipelineIssues,
-    graphData,
-  });
-
   pipelineIssues?.forEach((pipelineIssue) => {
     graphData?.forEach((node) => {
       if (node.parentIds?.includes(pipelineIssue.id)) {
         node.parentIds = node.parentIds.filter(
           (parentId) => parentId !== pipelineIssue.id
         );
-        log({
-          node,
-          pipelineIssue,
-        });
 
         const nonPipelineParents = findNonPipelineParents(
           pipelineIssue,
