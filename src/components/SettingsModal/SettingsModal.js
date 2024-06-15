@@ -48,7 +48,6 @@ export default function APIKeyModal({
         showNonEpicIssues: false,
         showNonEpicBlockedIssues: false,
         showSelfContainedIssues: false,
-        showClosedIssues: true,
         showIssueEstimates: true,
         showIssueSprints: true,
       },
@@ -150,17 +149,6 @@ export default function APIKeyModal({
               onChange={(e) => {
                 updateAppSettings({
                   showSelfContainedIssues: e.target.checked,
-                });
-              }}
-            />
-          </FormControl>
-          <FormControl pt="5">
-            <FormLabel>Show closed issues</FormLabel>
-            <Switch
-              isChecked={settingsState.appSettings.showClosedIssues}
-              onChange={(e) => {
-                updateAppSettings({
-                  showClosedIssues: e.target.checked,
                 });
               }}
             />

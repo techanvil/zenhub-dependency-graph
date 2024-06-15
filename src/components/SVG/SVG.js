@@ -68,8 +68,6 @@ export default function SVG({
           setSelfContainedIssues(selfContainedIssues);
         }
 
-        // TODO: Remove showClosedIssues.
-        // if (!appSettings.showClosedIssues) {
         const hiddenIssues = [];
         Object.keys(pipelineHidden).forEach((pipelineName) => {
           hiddenIssues.push(...removePipelineIssues(graphData, pipelineName));

@@ -359,7 +359,8 @@ export default function Header({
                     <Text color="tomato">
                       <b>{hiddenIssues.length}</b>{" "}
                       {pluralise(hiddenIssues.length, "issue", "issues")} hidden
-                      (<b>{getOpenIssueCount(hiddenIssues)}</b> open)
+                      by pipeline (<b>{getOpenIssueCount(hiddenIssues)}</b>{" "}
+                      open)
                     </Text>
                   )}
                 </VStack>
