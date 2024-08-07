@@ -1,7 +1,13 @@
 /**
  * External dependencies
  */
-import { Box, Flex, Link, useDisclosure } from "@chakra-ui/react";
+import {
+  Box,
+  ChakraProvider,
+  Flex,
+  Link,
+  useDisclosure,
+} from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -120,51 +126,57 @@ function App() {
   };
 
   return (
-    <Box>
-      <Header
-        APIKey={APIKey}
-        appSettings={appSettings}
-        pipelineColors={pipelineColors}
-        savePipelineColors={savePipelineColors}
-        additionalColors={additionalColors}
-        saveAdditionalColors={saveAdditionalColors}
-        pipelineHidden={pipelineHidden}
-        savePipelineHidden={savePipelineHidden}
-        onAPIKeyModalOpen={onOpen}
-        {...sharedStateProps}
-      />
-      <Flex direction="row">
-        <Box flex="1">
-          {APIKey ? (
-            <SVG APIKey={APIKey} {...sharedStateProps} />
-          ) : (
-            <Box p={4}>
-              <p>
-                Please add your <strong>Zenhub API key</strong> in{" "}
-                <strong>Settings</strong>.
-              </p>
-              <p>
-                To generate your Personal API Key, go to the{" "}
-                <Link
-                  href="https://app.zenhub.com/settings/tokens"
-                  isExternal
-                  color="teal.500"
-                >
-                  API section of your Zenhub Dashboard
-                </Link>
-                .
-              </p>
-            </Box>
-          )}
-        </Box>
-        {/* TODO: Optional inline legend...
+    <ChakraProvider>
+      <Box>
+        <Header
+          APIKey={APIKey}
+          appSettings={appSettings}
+          pipelineColors={pipelineColors}
+          savePipelineColors={savePipelineColors}
+          additionalColors={additionalColors}
+          saveAdditionalColors={saveAdditionalColors}
+          pipelineHidden={pipelineHidden}
+          savePipelineHidden={savePipelineHidden}
+          onAPIKeyModalOpen={onOpen}
+          {...sharedStateProps}
+        />
+        <Flex direction="row">
+          <Box flex="1">
+            {APIKey ? (
+              <SVG APIKey={APIKey} {...sharedStateProps} />
+            ) : (
+              <Box p={4}>
+                <p>
+                  Please add your <strong>Zenhub API key</strong> in{" "}
+                  <strong>Settings</strong>.
+                </p>
+                <p>
+                  To generate your Personal API Key, go to the{" "}
+                  <Link
+                    href="https://app.zenhub.com/settings/tokens"
+                    isExternal
+                    color="teal.500"
+                  >
+                    API section of your Zenhub Dashboard
+                  </Link>
+                  .
+                </p>
+              </Box>
+            )}
+          </Box>
+          {/* TODO: Optional inline legend...
         <Box flex="0 0 250px">
           <Legend />
         </Box>
         */}
-      </Flex>
-      <SettingsModal isOpen={isOpen} onClose={onClose} {...sharedStateProps} />
-    </Box>
+        </Flex>
+        <SettingsModal
+          isOpen={isOpen}
+          onClose={onClose}
+          {...sharedStateProps}
+        />
+      </Box>
+    </ChakraProvider>
   );
 }
 
