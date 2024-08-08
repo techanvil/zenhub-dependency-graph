@@ -198,6 +198,7 @@ export const generateGraph = (
     epic,
     coordinateOverrides,
     saveCoordinateOverrides,
+    setCurrentGraphData,
   },
   appSettings
 ) => {
@@ -233,6 +234,8 @@ export const generateGraph = (
   if (!showAncestorDependencies) {
     removeAncestors(graphData);
   }
+
+  setCurrentGraphData(graphData);
 
   if (!graphData?.length) {
     return;

@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
   Text,
   useColorModeValue,
+  useDisclosure,
   VStack,
   Wrap,
   WrapItem,
@@ -63,6 +64,7 @@ export default function Header({
   pipelineHidden,
   savePipelineHidden,
   onAPIKeyModalOpen = () => {},
+  panel,
   workspace,
   saveWorkspace,
   epic,
@@ -73,6 +75,7 @@ export default function Header({
   nonEpicIssues,
   selfContainedIssues,
   hiddenIssues,
+  currentGraphData,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -272,8 +275,8 @@ export default function Header({
           <Container py={{ base: "4", lg: "5" }} maxW="100%">
             <Wrap justify="space-between" overflow="visible">
               <WrapItem alignItems="center">
-                <Heading as="h4" size="md">
-                  Zenhub Dependency Graph
+                <Heading as="h4" size="md" title="Zenhub Dependency Graph">
+                  ZDG
                 </Heading>
               </WrapItem>
               <HStack>
@@ -369,7 +372,7 @@ export default function Header({
                 <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings
                 </Button>
-                <Popover placement="bottom-end">
+                <Popover placement="bottom">
                   <PopoverTrigger>
                     <Button colorScheme="blue" mr={3}>
                       Legend
@@ -391,11 +394,43 @@ export default function Header({
                     </PopoverBody>
                   </PopoverContent>
                 </Popover>
+                {panel && (
+                  <PanelPopover {...panel} graphData={currentGraphData} />
+                )}
               </WrapItem>
             </Wrap>
           </Container>
         </Box>
       </Box>
     </>
+  );
+}
+
+function PanelPopover({ buttonTitle, PanelComponent, graphData }) {
+  const { isOpen, onToggle, onClose } = useDisclosure({
+    defaultIsOpen: true,
+  });
+
+  return (
+    <Popover
+      placement="bottom-end"
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="responsive" // See theme in App.js.
+    >
+      <PopoverTrigger>
+        <Button colorScheme="blue" mr={3} onClick={onToggle}>
+          {buttonTitle}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        {/* <PopoverHeader>Insert</PopoverHeader> */}
+        <PopoverBody>
+          <PanelComponent graphData={graphData} />
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
   );
 }

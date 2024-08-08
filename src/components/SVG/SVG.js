@@ -31,6 +31,8 @@ export default function SVG({
   setNonEpicIssues,
   setSelfContainedIssues,
   setHiddenIssues,
+  currentGraphData,
+  setCurrentGraphData,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -110,6 +112,7 @@ export default function SVG({
           epic,
           coordinateOverrides,
           saveCoordinateOverrides,
+          setCurrentGraphData,
         },
         appSettings
       );

@@ -4,6 +4,7 @@
 import {
   Box,
   ChakraProvider,
+  extendTheme,
   Flex,
   Link,
   useDisclosure,
@@ -21,6 +22,23 @@ import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
 import { Legend } from "./components/Legend";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
+
+// Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
+const theme = extendTheme({
+  components: {
+    Popover: {
+      variants: {
+        responsive: {
+          content: { width: "unset" },
+          popper: {
+            maxWidth: "unset",
+            width: "unset",
+          },
+        },
+      },
+    },
+  },
+});
 
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
@@ -65,7 +83,7 @@ function bootstrapParameters() {
 
 bootstrapParameters();
 
-function App() {
+function App({ panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
@@ -94,6 +112,7 @@ function App() {
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
   const [hiddenIssues, setHiddenIssues] = useState();
+  const [currentGraphData, setCurrentGraphData] = useState();
 
   // TODO: Provide a proper state sharing solution.
   const sharedStateProps = {
@@ -123,10 +142,12 @@ function App() {
     setSelfContainedIssues,
     hiddenIssues,
     setHiddenIssues,
+    currentGraphData,
+    setCurrentGraphData,
   };
 
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <Box>
         <Header
           APIKey={APIKey}
@@ -138,6 +159,7 @@ function App() {
           pipelineHidden={pipelineHidden}
           savePipelineHidden={savePipelineHidden}
           onAPIKeyModalOpen={onOpen}
+          panel={panel}
           {...sharedStateProps}
         />
         <Flex direction="row">
