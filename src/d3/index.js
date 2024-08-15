@@ -224,7 +224,7 @@ export const generateGraph = (
       panZoom.instance.setOnZoom(null);
       panZoom.instance.destroy();
       panZoom.instance = null;
-      window.removeEventListener("resize", panZoom.resizeHandler);
+      panZoom.resizeHandler.disconnect();
     }
   } catch (err) {
     console.log("panZoomInstance destroy error", err);
@@ -597,11 +597,15 @@ export const generateGraph = (
     },
   });
 
-  panZoom.resizeHandler = window.addEventListener("resize", function () {
+  panZoom.resizeHandler = new ResizeObserver(() => {
+    if (!panZoom.instance) {
+      return;
+    }
+
     panZoom.instance.resize();
     panZoom.instance.fit();
     panZoom.instance.center();
-  });
+  }).observe(document.getElementById("graph-container"));
 
   panZoom.epic = epic;
 

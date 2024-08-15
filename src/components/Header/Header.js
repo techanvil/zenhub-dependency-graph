@@ -6,26 +6,17 @@ import {
   Box,
   Button,
   Container,
-  Flex,
   FormControl,
   Heading,
   HStack,
-  Input,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
   Text,
   useColorModeValue,
-  useDisclosure,
   VStack,
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
 import { AsyncSelect, Select } from "chakra-react-select";
+import { useAtom } from "jotai";
 
 /**
  * Internal dependencies
@@ -36,7 +27,7 @@ import {
   getWorkspaces,
 } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { Legend } from "../Legend";
+import { activePaneAtom, PANES } from "../../store/atoms";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -57,12 +48,6 @@ function getOpenIssueCount(issues) {
 export default function Header({
   APIKey,
   appSettings,
-  pipelineColors,
-  savePipelineColors,
-  additionalColors,
-  saveAdditionalColors,
-  pipelineHidden,
-  savePipelineHidden,
   onAPIKeyModalOpen = () => {},
   panel,
   workspace,
@@ -71,11 +56,9 @@ export default function Header({
   saveEpic,
   sprint,
   saveSprint,
-  epicIssue,
   nonEpicIssues,
   selfContainedIssues,
   hiddenIssues,
-  currentGraphData,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -264,6 +247,13 @@ export default function Header({
       }
     : {};
 
+  const [activePane, setActivePane] = useAtom(activePaneAtom);
+
+  function setPane(pane) {
+    const newPane = activePane === pane ? PANES.NONE : pane;
+    setActivePane(newPane);
+  }
+
   return (
     <>
       <Box as="section" h="80px">
@@ -339,7 +329,7 @@ export default function Header({
               <WrapItem alignItems="center">
                 <VStack spacing="0">
                   {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
-                    <Text color="tomato">
+                    <Text color="tomato" fontSize="small">
                       <b>{nonEpicIssues.length}</b> non-epic{" "}
                       {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
                       hidden (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
@@ -347,7 +337,7 @@ export default function Header({
                   )}
                   {!appSettings.showSelfContainedIssues &&
                     selfContainedIssues?.length > 0 && (
-                      <Text color="tomato">
+                      <Text color="tomato" fontSize="small">
                         <b>{selfContainedIssues.length}</b> self-contained{" "}
                         {pluralise(
                           selfContainedIssues.length,
@@ -359,7 +349,7 @@ export default function Header({
                       </Text>
                     )}
                   {hiddenIssues?.length > 0 && (
-                    <Text color="tomato">
+                    <Text color="tomato" fontSize="small">
                       <b>{hiddenIssues.length}</b>{" "}
                       {pluralise(hiddenIssues.length, "issue", "issues")} hidden
                       by pipeline (<b>{getOpenIssueCount(hiddenIssues)}</b>{" "}
@@ -372,30 +362,21 @@ export default function Header({
                 <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings
                 </Button>
-                <Popover placement="bottom">
-                  <PopoverTrigger>
-                    <Button colorScheme="blue" mr={3}>
-                      Legend
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverArrow />
-                    <PopoverCloseButton />
-                    <PopoverHeader>Issue state</PopoverHeader>
-                    <PopoverBody>
-                      <Legend
-                        pipelineColors={pipelineColors}
-                        savePipelineColors={savePipelineColors}
-                        additionalColors={additionalColors}
-                        saveAdditionalColors={saveAdditionalColors}
-                        pipelineHidden={pipelineHidden}
-                        savePipelineHidden={savePipelineHidden}
-                      />
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
+                <Button
+                  colorScheme="blue"
+                  mr={3}
+                  onClick={() => setPane(PANES.LEGEND)}
+                >
+                  Legend
+                </Button>
                 {panel && (
-                  <PanelPopover {...panel} graphData={currentGraphData} />
+                  <Button
+                    colorScheme="blue"
+                    mr={3}
+                    onClick={() => setPane(PANES.EXTERNAL)}
+                  >
+                    {panel.buttonTitle}
+                  </Button>
                 )}
               </WrapItem>
             </Wrap>
@@ -403,34 +384,5 @@ export default function Header({
         </Box>
       </Box>
     </>
-  );
-}
-
-function PanelPopover({ buttonTitle, PanelComponent, graphData }) {
-  const { isOpen, onToggle, onClose } = useDisclosure({
-    defaultIsOpen: true,
-  });
-
-  return (
-    <Popover
-      placement="bottom-end"
-      isOpen={isOpen}
-      onClose={onClose}
-      variant="responsive" // See theme in App.js.
-    >
-      <PopoverTrigger>
-        <Button colorScheme="blue" mr={3} onClick={onToggle}>
-          {buttonTitle}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent>
-        <PopoverArrow />
-        <PopoverCloseButton />
-        {/* <PopoverHeader>Insert</PopoverHeader> */}
-        <PopoverBody>
-          <PanelComponent graphData={graphData} />
-        </PopoverBody>
-      </PopoverContent>
-    </Popover>
   );
 }

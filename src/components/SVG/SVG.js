@@ -102,6 +102,10 @@ export default function SVG({
   ]);
 
   useEffect(() => {
+    if (loading || error || !graphData || !ref.current) {
+      return;
+    }
+
     try {
       generateGraph(
         graphData,
@@ -129,14 +133,17 @@ export default function SVG({
     coordinateOverrides,
     saveCoordinateOverrides,
     epic,
+    setCurrentGraphData,
+    loading,
+    error,
   ]);
 
   if (loading) {
-    return <Text padding="20px">Loading...</Text>;
+    return <Text padding="20px">⏳ Loading...</Text>;
   }
 
   if (error) {
-    return <Text padding="20px">{error.toString()}</Text>;
+    return <Text padding="20px">❌ {error.toString()}</Text>;
   }
 
   return (

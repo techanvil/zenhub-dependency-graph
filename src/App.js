@@ -22,6 +22,7 @@ import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
 import { Legend } from "./components/Legend";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
+import Panel from "./Panel";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -114,7 +115,7 @@ function App({ panel }) {
   const [hiddenIssues, setHiddenIssues] = useState();
   const [currentGraphData, setCurrentGraphData] = useState();
 
-  // TODO: Provide a proper state sharing solution.
+  // TODO: Migrate these to Jotai.
   const sharedStateProps = {
     APIKey,
     saveAPIKey,
@@ -163,7 +164,7 @@ function App({ panel }) {
           {...sharedStateProps}
         />
         <Flex direction="row">
-          <Box flex="1">
+          <Box flex="1" id="graph-container">
             {APIKey ? (
               <SVG APIKey={APIKey} {...sharedStateProps} />
             ) : (
@@ -186,11 +187,7 @@ function App({ panel }) {
               </Box>
             )}
           </Box>
-          {/* TODO: Optional inline legend...
-        <Box flex="0 0 250px">
-          <Legend />
-        </Box>
-        */}
+          <Panel {...sharedStateProps} panel={panel} />
         </Flex>
         <SettingsModal
           isOpen={isOpen}
