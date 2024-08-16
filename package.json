@@ -16,6 +16,7 @@
     "d3-dag": "^0.11.5",
     "d3-drag": "^3.0.0",
     "framer-motion": "^6.5.1",
+    "jotai": "^2.9.3",
     "react": "^18.2.0",
     "react-d3-library": "^1.1.8",
     "react-dom": "^18.2.0",

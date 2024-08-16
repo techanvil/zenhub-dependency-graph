@@ -6,18 +6,13 @@ import {
   Box,
   Button,
   Container,
-  Flex,
   FormControl,
   Heading,
   HStack,
-  Input,
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverCloseButton,
-  PopoverContent,
-  PopoverHeader,
-  PopoverTrigger,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Text,
   useColorModeValue,
   VStack,
@@ -25,6 +20,7 @@ import {
   WrapItem,
 } from "@chakra-ui/react";
 import { AsyncSelect, Select } from "chakra-react-select";
+import { useAtom } from "jotai";
 
 /**
  * Internal dependencies
@@ -35,7 +31,7 @@ import {
   getWorkspaces,
 } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { Legend } from "../Legend";
+import { activePaneAtom, PANES } from "../../store/atoms";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -56,20 +52,15 @@ function getOpenIssueCount(issues) {
 export default function Header({
   APIKey,
   appSettings,
-  pipelineColors,
-  savePipelineColors,
-  additionalColors,
-  saveAdditionalColors,
-  pipelineHidden,
-  savePipelineHidden,
   onAPIKeyModalOpen = () => {},
+  authentication,
+  panel,
   workspace,
   saveWorkspace,
   epic,
   saveEpic,
   sprint,
   saveSprint,
-  epicIssue,
   nonEpicIssues,
   selfContainedIssues,
   hiddenIssues,
@@ -261,6 +252,13 @@ export default function Header({
       }
     : {};
 
+  const [activePane, setActivePane] = useAtom(activePaneAtom);
+
+  function setPane(pane) {
+    const newPane = activePane === pane ? PANES.NONE : pane;
+    setActivePane(newPane);
+  }
+
   return (
     <>
       <Box as="section" h="80px">
@@ -272,8 +270,8 @@ export default function Header({
           <Container py={{ base: "4", lg: "5" }} maxW="100%">
             <Wrap justify="space-between" overflow="visible">
               <WrapItem alignItems="center">
-                <Heading as="h4" size="md">
-                  Zenhub Dependency Graph
+                <Heading as="h4" size="md" title="Zenhub Dependency Graph">
+                  ZDG
                 </Heading>
               </WrapItem>
               <HStack>
@@ -336,7 +334,7 @@ export default function Header({
               <WrapItem alignItems="center">
                 <VStack spacing="0">
                   {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
-                    <Text color="tomato">
+                    <Text color="tomato" fontSize="small">
                       <b>{nonEpicIssues.length}</b> non-epic{" "}
                       {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
                       hidden (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
@@ -344,7 +342,7 @@ export default function Header({
                   )}
                   {!appSettings.showSelfContainedIssues &&
                     selfContainedIssues?.length > 0 && (
-                      <Text color="tomato">
+                      <Text color="tomato" fontSize="small">
                         <b>{selfContainedIssues.length}</b> self-contained{" "}
                         {pluralise(
                           selfContainedIssues.length,
@@ -356,7 +354,7 @@ export default function Header({
                       </Text>
                     )}
                   {hiddenIssues?.length > 0 && (
-                    <Text color="tomato">
+                    <Text color="tomato" fontSize="small">
                       <b>{hiddenIssues.length}</b>{" "}
                       {pluralise(hiddenIssues.length, "issue", "issues")} hidden
                       by pipeline (<b>{getOpenIssueCount(hiddenIssues)}</b>{" "}
@@ -366,36 +364,76 @@ export default function Header({
                 </VStack>
               </WrapItem>
               <WrapItem spacing="3">
-                <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
+                {/* <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings
+                </Button> */}
+                <Button
+                  colorScheme="blue"
+                  mr={3}
+                  onClick={() => setPane(PANES.LEGEND)}
+                >
+                  Legend
                 </Button>
-                <Popover placement="bottom-end">
-                  <PopoverTrigger>
-                    <Button colorScheme="blue" mr={3}>
-                      Legend
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverArrow />
-                    <PopoverCloseButton />
-                    <PopoverHeader>Issue state</PopoverHeader>
-                    <PopoverBody>
-                      <Legend
-                        pipelineColors={pipelineColors}
-                        savePipelineColors={savePipelineColors}
-                        additionalColors={additionalColors}
-                        saveAdditionalColors={saveAdditionalColors}
-                        pipelineHidden={pipelineHidden}
-                        savePipelineHidden={savePipelineHidden}
-                      />
-                    </PopoverBody>
-                  </PopoverContent>
-                </Popover>
+                {panel && (
+                  <Button
+                    colorScheme="blue"
+                    mr={3}
+                    onClick={() => setPane(PANES.EXTERNAL)}
+                  >
+                    {panel.buttonTitle}
+                  </Button>
+                )}
+                {authentication ? (
+                  <Menu>
+                    <MenuButton as={Button} colorScheme="blue">
+                      {/*rightIcon={<ChevronDownIcon />}> */}
+                      User
+                    </MenuButton>
+                    <MenuList>
+                      <AuthenticationMenuItem authentication={authentication} />
+                      <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
+                    </MenuList>
+                  </Menu>
+                ) : (
+                  <Button colorScheme="blue" onClick={onAPIKeyModalOpen}>
+                    Settings
+                  </Button>
+                )}
               </WrapItem>
             </Wrap>
           </Container>
         </Box>
       </Box>
     </>
+  );
+}
+
+function AuthenticationMenuItem({ authentication }) {
+  if (!authentication) {
+    return null;
+  }
+
+  if (authentication.session) {
+    return (
+      <MenuItem onClick={authentication.signOut}>
+        <img
+          style={{
+            width: "2em",
+            height: "2em",
+            marginRight: "0.5em",
+            borderRadius: "50%",
+          }}
+          src={authentication.session.user.image}
+          alt={authentication.session.user.name}
+        />
+        {authentication.signOutLabel || "Sign out"}
+      </MenuItem>
+    );
+  }
+
+  return (
+    <MenuItem onClick={authentication.signIn}>
+      {authentication.signInLabel || "Sign in"}
+    </MenuItem>
   );
 }

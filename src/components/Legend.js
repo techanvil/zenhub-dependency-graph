@@ -79,7 +79,9 @@ function LegendItem({
           </PopoverBody>
         </PopoverContent>
       </Popover>
-      <Text mr="auto">{label}</Text>
+      <Text pr={3} mr="auto">
+        {label}
+      </Text>
       {isHidden !== undefined && (
         <Switch
           title={
