@@ -261,7 +261,7 @@ export default function Header({
 
   return (
     <>
-      <Box as="section" h="80px">
+      <Box as="section" h="var(--header-height)">
         <Box
           as="nav"
           bg="bg-surface"

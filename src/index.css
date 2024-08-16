@@ -1,6 +1,9 @@
-html {
+:root {
   /* Set root font size to adjust Chakra font sizes */
   font-size: 14px;
+
+  --header-height: 70px;
+  --main-height: calc(100vh - 70px);
 }
 
 body {
