@@ -12,7 +12,11 @@ export default function Panel({ panel, ...sharedStateProps }) {
   // }
 
   return (
-    <Box p={activePane === PANES.NONE ? 0 : "1rem"}>
+    <Box
+      maxH="var(--main-height)"
+      p={activePane === PANES.NONE ? 0 : "1rem"}
+      overflow="scroll"
+    >
       {/* { activePane === PANES.SETTINGS && <Settings /> } */}
       {activePane === PANES.LEGEND && <Legend {...sharedStateProps} />}
       {panel && <ExternalPanel {...sharedStateProps} panel={panel} />}

@@ -147,7 +147,7 @@ export default function SVG({
   }
 
   return (
-    <Box h="calc(100vh - 80px)">
+    <Box h="var(--main-height)">
       <svg id="zdg-graph" style={{ width: "100%", height: "100%" }} ref={ref} />
     </Box>
   );

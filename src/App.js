@@ -15,7 +15,6 @@ import {
  */
 import Header from "./components/Header/Header";
 import SettingsModal from "./components/SettingsModal/SettingsModal";
-import "./App.css";
 import SVG from "./components/SVG/SVG";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
