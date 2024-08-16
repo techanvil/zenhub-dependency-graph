@@ -9,6 +9,10 @@ import {
   FormControl,
   Heading,
   HStack,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Text,
   useColorModeValue,
   VStack,
@@ -49,6 +53,7 @@ export default function Header({
   APIKey,
   appSettings,
   onAPIKeyModalOpen = () => {},
+  authentication,
   panel,
   workspace,
   saveWorkspace,
@@ -359,9 +364,9 @@ export default function Header({
                 </VStack>
               </WrapItem>
               <WrapItem spacing="3">
-                <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
+                {/* <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings
-                </Button>
+                </Button> */}
                 <Button
                   colorScheme="blue"
                   mr={3}
@@ -378,6 +383,16 @@ export default function Header({
                     {panel.buttonTitle}
                   </Button>
                 )}
+                <Menu>
+                  <MenuButton as={Button} colorScheme="blue">
+                    {/*rightIcon={<ChevronDownIcon />}> */}
+                    User
+                  </MenuButton>
+                  <MenuList>
+                    <AuthenticationMenuItem authentication={authentication} />
+                    <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
+                  </MenuList>
+                </Menu>
               </WrapItem>
             </Wrap>
           </Container>
@@ -385,4 +400,30 @@ export default function Header({
       </Box>
     </>
   );
+}
+
+function AuthenticationMenuItem({ authentication }) {
+  if (!authentication) {
+    return null;
+  }
+
+  if (authentication.session) {
+    return (
+      <MenuItem onClick={authentication.signOut}>
+        <img
+          style={{
+            width: "2em",
+            height: "2em",
+            marginRight: "0.5em",
+            borderRadius: "50%",
+          }}
+          src={authentication.session.user.image}
+          alt={authentication.session.user.name}
+        />
+        Sign out
+      </MenuItem>
+    );
+  }
+
+  return <MenuItem onClick={authentication.signIn}>Sign in</MenuItem>;
 }

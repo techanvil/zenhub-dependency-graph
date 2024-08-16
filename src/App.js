@@ -84,7 +84,7 @@ function bootstrapParameters() {
 
 bootstrapParameters();
 
-function App({ panel }) {
+function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
@@ -160,6 +160,7 @@ function App({ panel }) {
           pipelineHidden={pipelineHidden}
           savePipelineHidden={savePipelineHidden}
           onAPIKeyModalOpen={onOpen}
+          authentication={authentication}
           panel={panel}
           {...sharedStateProps}
         />
@@ -187,7 +188,11 @@ function App({ panel }) {
               </Box>
             )}
           </Box>
-          <Panel {...sharedStateProps} panel={panel} />
+          <Panel
+            {...sharedStateProps}
+            authentication={authentication}
+            panel={panel}
+          />
         </Flex>
         <SettingsModal
           isOpen={isOpen}
