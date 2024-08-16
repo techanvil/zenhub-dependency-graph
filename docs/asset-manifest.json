@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/zenhub-dependency-graph/static/css/main.f855e6bc.css",
-    "main.js": "/zenhub-dependency-graph/static/js/main.d535bc2a.js",
+    "main.css": "/zenhub-dependency-graph/static/css/main.cfade272.css",
+    "main.js": "/zenhub-dependency-graph/static/js/main.b57d5a58.js",
     "static/js/404.8f897e5b.chunk.js": "/zenhub-dependency-graph/static/js/404.8f897e5b.chunk.js",
     "index.html": "/zenhub-dependency-graph/index.html",
-    "main.f855e6bc.css.map": "/zenhub-dependency-graph/static/css/main.f855e6bc.css.map",
-    "main.d535bc2a.js.map": "/zenhub-dependency-graph/static/js/main.d535bc2a.js.map",
+    "main.cfade272.css.map": "/zenhub-dependency-graph/static/css/main.cfade272.css.map",
+    "main.b57d5a58.js.map": "/zenhub-dependency-graph/static/js/main.b57d5a58.js.map",
     "404.8f897e5b.chunk.js.map": "/zenhub-dependency-graph/static/js/404.8f897e5b.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f855e6bc.css",
-    "static/js/main.d535bc2a.js"
+    "static/css/main.cfade272.css",
+    "static/js/main.b57d5a58.js"
   ]
 }
