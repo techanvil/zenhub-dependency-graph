@@ -383,16 +383,22 @@ export default function Header({
                     {panel.buttonTitle}
                   </Button>
                 )}
-                <Menu>
-                  <MenuButton as={Button} colorScheme="blue">
-                    {/*rightIcon={<ChevronDownIcon />}> */}
-                    User
-                  </MenuButton>
-                  <MenuList>
-                    <AuthenticationMenuItem authentication={authentication} />
-                    <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
-                  </MenuList>
-                </Menu>
+                {authentication ? (
+                  <Menu>
+                    <MenuButton as={Button} colorScheme="blue">
+                      {/*rightIcon={<ChevronDownIcon />}> */}
+                      User
+                    </MenuButton>
+                    <MenuList>
+                      <AuthenticationMenuItem authentication={authentication} />
+                      <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
+                    </MenuList>
+                  </Menu>
+                ) : (
+                  <Button colorScheme="blue" onClick={onAPIKeyModalOpen}>
+                    Settings
+                  </Button>
+                )}
               </WrapItem>
             </Wrap>
           </Container>

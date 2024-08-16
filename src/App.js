@@ -172,7 +172,12 @@ function App({ authentication, panel }) {
               <Box p={4}>
                 <p>
                   Please add your <strong>Zenhub API key</strong> in{" "}
-                  <strong>Settings</strong>.
+                  {authentication ? (
+                    <strong>User &gt; Settings</strong>
+                  ) : (
+                    <strong>Settings</strong>
+                  )}
+                  .
                 </p>
                 <p>
                   To generate your Personal API Key, go to the{" "}

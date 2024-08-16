@@ -15,7 +15,7 @@ export default function Panel({ panel, ...sharedStateProps }) {
     <Box p={activePane === PANES.NONE ? 0 : "1rem"}>
       {/* { activePane === PANES.SETTINGS && <Settings /> } */}
       {activePane === PANES.LEGEND && <Legend {...sharedStateProps} />}
-      <ExternalPanel {...sharedStateProps} panel={panel} />
+      {panel && <ExternalPanel {...sharedStateProps} panel={panel} />}
     </Box>
   );
 }
