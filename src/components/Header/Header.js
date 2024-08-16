@@ -420,10 +420,14 @@ function AuthenticationMenuItem({ authentication }) {
           src={authentication.session.user.image}
           alt={authentication.session.user.name}
         />
-        Sign out
+        {authentication.signOutLabel || "Sign out"}
       </MenuItem>
     );
   }
 
-  return <MenuItem onClick={authentication.signIn}>Sign in</MenuItem>;
+  return (
+    <MenuItem onClick={authentication.signIn}>
+      {authentication.signInLabel || "Sign in"}
+    </MenuItem>
+  );
 }
