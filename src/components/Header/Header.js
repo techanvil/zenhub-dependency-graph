@@ -331,7 +331,11 @@ export default function Header({
                   </Box>
                 </FormControl>
               </HStack>
-              <WrapItem alignItems="center">
+              <WrapItem
+                alignItems="center"
+                maxH="36px" // Hack to avoid expanding the header height
+                overflow="visible" // when there are three lines of text.
+              >
                 <VStack spacing="0">
                   {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
                     <Text color="tomato" fontSize="small">
