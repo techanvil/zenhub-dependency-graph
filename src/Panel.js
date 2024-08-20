@@ -13,13 +13,16 @@ export default function Panel({ panel, ...sharedStateProps }) {
 
   return (
     <Box
+      className="panel-scroll-wrapper"
       maxH="var(--main-height)"
-      p={activePane === PANES.NONE ? 0 : "1rem"}
       overflow="scroll"
+      display={activePane === PANES.NONE ? "none" : "block"}
     >
-      {/* { activePane === PANES.SETTINGS && <Settings /> } */}
-      {activePane === PANES.LEGEND && <Legend {...sharedStateProps} />}
-      {panel && <ExternalPanel {...sharedStateProps} panel={panel} />}
+      <Box p="1rem">
+        {/* { activePane === PANES.SETTINGS && <Settings /> } */}
+        {activePane === PANES.LEGEND && <Legend {...sharedStateProps} />}
+        {panel && <ExternalPanel {...sharedStateProps} panel={panel} />}
+      </Box>
     </Box>
   );
 }
