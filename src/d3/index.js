@@ -261,10 +261,6 @@ export const generateGraph = (
   const { width, height } = layout(dag);
 
   function applyOverrides(roots, overrides) {
-    if (!roots) {
-      return;
-    }
-
     roots.forEach((root) => {
       if (overrides[root.data.id]) {
         root.x = overrides[root.data.id].x;
@@ -298,7 +294,7 @@ export const generateGraph = (
   }
 
   if (Object.keys(coordinateOverrides[epic] || {}).length) {
-    applyOverrides(dag.proots, coordinateOverrides[epic]);
+    applyOverrides(dag.proots || [dag], coordinateOverrides[epic]);
   }
 
   const svgSelection = d3.select(svgElement);
@@ -612,7 +608,7 @@ export const generateGraph = (
       panZoom.instance.center();
     } catch (err) {
       // TODO: Fix the underlying cause of this error.
-      console.warn("panZoom error on resize", err);
+      console.log("panZoom error on resize", err);
     }
   }).observe(document.getElementById("graph-container"));
 
