@@ -224,7 +224,7 @@ export const generateGraph = (
       panZoom.instance.setOnZoom(null);
       panZoom.instance.destroy();
       panZoom.instance = null;
-      panZoom.resizeHandler.disconnect();
+      panZoom.resizeHandler?.disconnect();
     }
   } catch (err) {
     console.log("panZoomInstance destroy error", err);
@@ -261,6 +261,10 @@ export const generateGraph = (
   const { width, height } = layout(dag);
 
   function applyOverrides(roots, overrides) {
+    if (!roots) {
+      return;
+    }
+
     roots.forEach((root) => {
       if (overrides[root.data.id]) {
         root.x = overrides[root.data.id].x;
@@ -602,9 +606,14 @@ export const generateGraph = (
       return;
     }
 
-    panZoom.instance.resize();
-    panZoom.instance.fit();
-    panZoom.instance.center();
+    try {
+      panZoom.instance.resize();
+      panZoom.instance.fit();
+      panZoom.instance.center();
+    } catch (err) {
+      // TODO: Fix the underlying cause of this error.
+      console.warn("panZoom error on resize", err);
+    }
   }).observe(document.getElementById("graph-container"));
 
   panZoom.epic = epic;
