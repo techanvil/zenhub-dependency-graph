@@ -12,6 +12,12 @@ import { getRectDimensions } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 
+function toFixedDecimalPlaces(value, decimalPlaces) {
+  return Number(
+    Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
+  );
+}
+
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
     // Hit vertical edge of box1
@@ -481,18 +487,22 @@ export const generateGraph = (
     event.on("drag", dragged).on("end", ended);
 
     function dragged(event, d) {
+      // Round to 1 decimal place to cut down on space when persisting the values.
+      const newX = toFixedDecimalPlaces(event.x, 1);
+      const newY = toFixedDecimalPlaces(event.y, 1);
+
       node
         .raise()
-        // .attr("cx", (d.x = event.x))
+        // .attr("cx", (d.x = newX))
         // .attr("cy", (d.y = event.y))
-        .attr("transform", `translate(${event.x}, ${event.y})`);
+        .attr("transform", `translate(${newX}, ${newY})`);
 
       function getSourceAndTarget(l) {
         if (l.source === d) {
-          return [{ ...l.source, x: event.x, y: event.y }, l.target];
+          return [{ ...l.source, x: newX, y: newY }, l.target];
         }
 
-        return [l.source, { ...l.target, x: event.x, y: event.y }];
+        return [l.source, { ...l.target, x: newX, y: newY }];
       }
 
       svgSelection
@@ -570,14 +580,18 @@ export const generateGraph = (
     }
 
     function ended(event) {
+      // Round to 1 decimal place to cut down on space when persisting the values.
+      const newX = toFixedDecimalPlaces(event.x, 1);
+      const newY = toFixedDecimalPlaces(event.y, 1);
+
       node.classed("dragging", false);
-      // console.log("ended", event.x, d3.select(this).datum().data.id);
+      // console.log("ended", newX, d3.select(this).datum().data.id);
       saveCoordinateOverrides({
         ...coordinateOverrides,
         [epic]: {
           ...coordinateOverrides[epic],
           // TODO do we have a `d` arg?
-          [d3.select(this).datum().data.id]: { x: event.x, y: event.y },
+          [d3.select(this).datum().data.id]: { x: newX, y: newY },
         },
       });
     }
