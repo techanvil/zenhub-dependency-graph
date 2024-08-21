@@ -22,6 +22,7 @@ import { useState } from "react";
 import { Legend } from "./components/Legend";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
+import { toFixedDecimalPlaces } from "./d3";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -50,21 +51,33 @@ function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
     typeof firstValue(firstValue(coordinateOverrides)) === "object";
 
   if (isOldFormat) {
-    // Support coordinateOverrides[epic] to migrate legacy data.
-    return coordinateOverrides[epic]
-      ? Object.entries(coordinateOverrides[epic]).reduce(
-          (overrides, [key, value]) => {
-            // Reduce decimal places to one to save space.
-            overrides[key] = {
-              x: value.x.toFixed(1),
-              y: value.y.toFixed(1),
-            };
+    // Migrate legacy coordinateOverrides to new format.
+    Object.entries(coordinateOverrides).forEach(
+      ([epicNumber, epicOverrides]) => {
+        localStorage.setItem(
+          `coordinateOverrides-${epicNumber}`,
+          JSON.stringify(
+            Object.entries(epicOverrides).reduce(
+              (overrides, [issueNumber, coordinates]) => {
+                overrides[issueNumber] = {
+                  x: toFixedDecimalPlaces(parseFloat(coordinates.x), 1),
+                  y: toFixedDecimalPlaces(parseFloat(coordinates.y), 1),
+                };
 
-            return overrides;
-          },
-          {}
-        )
-      : {};
+                return overrides;
+              },
+              {}
+            )
+          )
+        );
+      }
+    );
+
+    localStorage.removeItem("coordinateOverrides");
+
+    return JSON.parse(
+      localStorage.getItem(`coordinateOverrides-${epic}`) || "{}"
+    );
   }
 
   return coordinateOverrides;

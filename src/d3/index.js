@@ -12,7 +12,7 @@ import { getRectDimensions } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 
-function toFixedDecimalPlaces(value, decimalPlaces) {
+export function toFixedDecimalPlaces(value, decimalPlaces) {
   return Number(
     Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
   );
