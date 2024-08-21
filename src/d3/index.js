@@ -220,9 +220,14 @@ export const generateGraph = (
     }
 
     if (panZoom.instance) {
-      panZoom.instance.setOnPan(null);
-      panZoom.instance.setOnZoom(null);
-      panZoom.instance.destroy();
+      try {
+        panZoom.instance.setOnPan(null);
+        panZoom.instance.setOnZoom(null);
+        panZoom.instance.destroy();
+      } catch (err) {
+        // TODO: Fix the underlying cause of this error.
+        console.log("panZoomInstance destroy error", err);
+      }
       panZoom.instance = null;
       panZoom.resizeHandler?.disconnect();
     }
@@ -582,41 +587,48 @@ export const generateGraph = (
   nodes.call(drag.on("start", started));
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
-  // eslint-disable-next-line no-undef
-  panZoom.instance = svgPanZoom("#zdg-graph", {
-    zoomEnabled: true,
-    controlIconsEnabled: true,
-    fit: true,
-    center: true,
-    zoomScaleSensitivity: 0.4,
-    onPan() {
-      panZoom.hasInteracted = true;
-    },
-    onZoom() {
-      panZoom.hasInteracted = true;
-    },
-  });
+  if (typeof svgPanZoom === "function") {
+    // eslint-disable-next-line no-undef
+    panZoom.instance = svgPanZoom("#zdg-graph", {
+      zoomEnabled: true,
+      controlIconsEnabled: true,
+      fit: true,
+      center: true,
+      zoomScaleSensitivity: 0.4,
+      onPan() {
+        panZoom.hasInteracted = true;
+      },
+      onZoom() {
+        panZoom.hasInteracted = true;
+      },
+    });
 
-  panZoom.resizeHandler = new ResizeObserver(() => {
-    if (!panZoom.instance) {
-      return;
+    panZoom.resizeHandler = new ResizeObserver(() => {
+      if (!panZoom.instance) {
+        return;
+      }
+
+      try {
+        panZoom.instance.resize();
+        panZoom.instance.fit();
+        panZoom.instance.center();
+      } catch (err) {
+        // TODO: Fix the underlying cause of this error.
+        console.log("panZoom error on resize", err);
+      }
+    }).observe(document.getElementById("graph-container"));
+
+    panZoom.epic = epic;
+
+    if (panZoom.state) {
+      try {
+        panZoom.instance.zoom(panZoom.state.zoom);
+        panZoom.instance.pan(panZoom.state.pan);
+      } catch (err) {
+        // This is a safety net, the error should not occur.
+        console.log("panZoom error on re-render", err);
+      }
     }
-
-    try {
-      panZoom.instance.resize();
-      panZoom.instance.fit();
-      panZoom.instance.center();
-    } catch (err) {
-      // TODO: Fix the underlying cause of this error.
-      console.log("panZoom error on resize", err);
-    }
-  }).observe(document.getElementById("graph-container"));
-
-  panZoom.epic = epic;
-
-  if (panZoom.state) {
-    panZoom.instance.zoom(panZoom.state.zoom);
-    panZoom.instance.pan(panZoom.state.pan);
   }
 
   return svgSelection;
