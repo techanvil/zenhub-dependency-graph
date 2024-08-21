@@ -618,7 +618,7 @@ export const generateGraph = (
           const newWidth = entries[0].target.clientWidth;
           const newHeight = entries[0].target.clientHeight;
 
-          if (!prevWidth && !prevHeight) {
+          if (prevWidth === undefined || prevHeight === undefined) {
             prevWidth = newWidth;
             prevHeight = newHeight;
             return;
