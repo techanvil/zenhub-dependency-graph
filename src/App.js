@@ -40,6 +40,36 @@ const theme = extendTheme({
   },
 });
 
+function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
+  function firstValue(obj) {
+    return Object.values(obj)[0];
+  }
+
+  const isOldFormat =
+    typeof firstValue(coordinateOverrides) === "object" &&
+    typeof firstValue(firstValue(coordinateOverrides)) === "object";
+
+  if (isOldFormat) {
+    // Support coordinateOverrides[epic] to migrate legacy data.
+    return coordinateOverrides[epic]
+      ? Object.entries(coordinateOverrides[epic]).reduce(
+          (overrides, [key, value]) => {
+            // Reduce decimal places to one to save space.
+            overrides[key] = {
+              x: value.x.toFixed(1),
+              y: value.y.toFixed(1),
+            };
+
+            return overrides;
+          },
+          {}
+        )
+      : {};
+  }
+
+  return coordinateOverrides;
+}
+
 // TODO: Make this and the parameter hooks nicer.
 function bootstrapParameters() {
   const url = new URL(window.location);
@@ -51,34 +81,68 @@ function bootstrapParameters() {
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
     { key: "pipelineHidden", isObject: true },
-    { key: "coordinateOverrides", isObject: true },
-  ].forEach(({ key, parse = (v) => v, isObject }) => {
-    if (url.searchParams.has(key)) {
-      const value = isObject
-        ? JSON.parse(url.searchParams.get(key))
-        : parse(url.searchParams.get(key));
+    {
+      key: "coordinateOverrides",
+      isObject: true,
+      toLocalStorage: (coordinateOverrides) => {
+        // By now the epic should be set. If not, bail out.
+        const epic = url.searchParams.get("epic");
+        if (!epic) return null;
 
-      // Local storage is always JSON.stringified.
-      localStorage.setItem(key, JSON.stringify(value));
-    } else {
-      const localValue = localStorage.getItem(key);
-      if (!localValue) return;
+        return {
+          localStorageKey: `coordinateOverrides-${epic}`,
+          localStorageValue: coordinateOverridesToLocalStorageValue(
+            coordinateOverrides,
+            epic
+          ),
+        };
+      },
+      fromLocalStorage: () => {
+        const epic = url.searchParams.get("epic");
+        if (!epic) return null;
 
-      let parsedValue;
-      try {
-        parsedValue = JSON.parse(localValue);
-      } catch (err) {
-        console.log("JSON parse error", err);
-      }
-      if (parsedValue) {
-        url.searchParams.set(
-          key,
-          isObject ? JSON.stringify(localValue) : localValue
+        return {
+          localStorageKey: `coordinateOverrides-${epic}`,
+        };
+      },
+    },
+  ].forEach(
+    ({ key, parse = (v) => v, isObject, toLocalStorage, fromLocalStorage }) => {
+      if (url.searchParams.has(key)) {
+        const value = isObject
+          ? JSON.parse(url.searchParams.get(key))
+          : parse(url.searchParams.get(key));
+
+        const { localStorageKey, localStorageValue } =
+          toLocalStorage?.(value) || {};
+
+        // Local storage is always JSON.stringified.
+        localStorage.setItem(
+          localStorageKey || key,
+          JSON.stringify(localStorageValue || value)
         );
-        window.history.pushState({}, undefined, url);
+      } else {
+        const { localStorageKey } = fromLocalStorage?.() || {};
+
+        const localValue = localStorage.getItem(localStorageKey || key);
+        if (!localValue) return;
+
+        let parsedValue;
+        try {
+          parsedValue = JSON.parse(localValue);
+        } catch (err) {
+          console.log("JSON parse error", err);
+        }
+        if (parsedValue) {
+          url.searchParams.set(
+            key,
+            isObject ? JSON.stringify(localValue) : localValue
+          );
+          window.history.pushState({}, undefined, url);
+        }
       }
     }
-  });
+  );
 }
 
 bootstrapParameters();
@@ -88,6 +152,9 @@ function App({ authentication, panel }) {
 
   const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
   const [appSettings, saveAppSettings] = useParameter("appSettings", {});
+  const [workspace, saveWorkspace] = useParameter("workspace", "");
+  const [epic, saveEpic] = useParameter("epic", "");
+  const [sprint, saveSprint] = useParameter("sprint", "");
   const [pipelineColors, savePipelineColors] = useParameter(
     "pipelineColors",
     pipelineColorDefaults
@@ -102,12 +169,10 @@ function App({ authentication, panel }) {
     {}
   );
   const [coordinateOverrides, saveCoordinateOverrides] = useParameter(
-    `coordinateOverrides`,
-    {}
+    `coordinateOverrides-${epic}`,
+    {},
+    `coordinateOverrides`
   );
-  const [workspace, saveWorkspace] = useParameter("workspace", "");
-  const [epic, saveEpic] = useParameter("epic", "");
-  const [sprint, saveSprint] = useParameter("sprint", "");
   const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
   const [nonEpicIssues, setNonEpicIssues] = useState();
   const [selfContainedIssues, setSelfContainedIssues] = useState();
