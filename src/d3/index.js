@@ -583,6 +583,7 @@ export const generateGraph = (
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   if (typeof svgPanZoom === "function") {
+    // eslint-disable-next-line no-undef
     panZoom.instance = svgPanZoom("#zdg-graph", {
       zoomEnabled: true,
       controlIconsEnabled: true,
