@@ -326,7 +326,17 @@ export default function Header({
                     <Select
                       options={epicOptions}
                       value={chosenEpic}
-                      onChange={(chosenEpic) => saveEpic(chosenEpic.value)}
+                      onChange={(chosenEpic) => {
+                        // Clear the coordinate overrides from the query string when changing epics,
+                        // so the coords for the new epic can be loaded from localStorage.
+                        // TODO, a big refactor is needed to handle params and state better.
+
+                        const url = new URL(window.location);
+                        url.searchParams.delete("coordinateOverrides");
+                        window.history.pushState({}, undefined, url);
+
+                        saveEpic(chosenEpic.value);
+                      }}
                     />
                   </Box>
                 </FormControl>
