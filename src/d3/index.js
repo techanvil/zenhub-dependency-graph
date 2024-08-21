@@ -220,9 +220,14 @@ export const generateGraph = (
     }
 
     if (panZoom.instance) {
-      panZoom.instance.setOnPan(null);
-      panZoom.instance.setOnZoom(null);
-      panZoom.instance.destroy();
+      try {
+        panZoom.instance.setOnPan(null);
+        panZoom.instance.setOnZoom(null);
+        panZoom.instance.destroy();
+      } catch (err) {
+        // TODO: Fix the underlying cause of this error.
+        console.log("panZoomInstance destroy error", err);
+      }
       panZoom.instance = null;
       panZoom.resizeHandler?.disconnect();
     }
@@ -616,8 +621,13 @@ export const generateGraph = (
     panZoom.epic = epic;
 
     if (panZoom.state) {
-      panZoom.instance.zoom(panZoom.state.zoom);
-      panZoom.instance.pan(panZoom.state.pan);
+      try {
+        panZoom.instance.zoom(panZoom.state.zoom);
+        panZoom.instance.pan(panZoom.state.pan);
+      } catch (err) {
+        // This is a safety net, the error should not occur.
+        console.log("panZoom error on re-render", err);
+      }
     }
   }
 
