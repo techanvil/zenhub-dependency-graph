@@ -304,8 +304,8 @@ export const generateGraph = (
     });
   }
 
-  if (Object.keys(coordinateOverrides[epic] || {}).length) {
-    applyOverrides(dag.proots || [dag], coordinateOverrides[epic]);
+  if (Object.keys(coordinateOverrides || {}).length) {
+    applyOverrides(dag.proots || [dag], coordinateOverrides);
   }
 
   const svgSelection = d3.select(svgElement);
@@ -588,11 +588,8 @@ export const generateGraph = (
       // console.log("ended", newX, d3.select(this).datum().data.id);
       saveCoordinateOverrides({
         ...coordinateOverrides,
-        [epic]: {
-          ...coordinateOverrides[epic],
-          // TODO do we have a `d` arg?
-          [d3.select(this).datum().data.id]: { x: newX, y: newY },
-        },
+        // TODO do we have a `d` arg?
+        [d3.select(this).datum().data.id]: { x: newX, y: newY },
       });
     }
   }
