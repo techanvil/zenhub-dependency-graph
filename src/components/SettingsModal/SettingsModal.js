@@ -189,7 +189,7 @@ export default function SettingsModal({
               }}
             />
           </FormControl>
-          {Object.keys(coordinateOverrides[epic] || {}).length > 0 && (
+          {Object.keys(coordinateOverrides || {}).length > 0 && (
             <FormControl pt="5">
               <FormLabel>
                 Reset epic layout (takes effect immediately)
@@ -198,9 +198,7 @@ export default function SettingsModal({
                 colorScheme="blue"
                 mr={1}
                 onClick={() => {
-                  const newCoordinateOverrides = { ...coordinateOverrides };
-                  delete newCoordinateOverrides[epic];
-                  saveCoordinateOverrides(newCoordinateOverrides);
+                  saveCoordinateOverrides(null);
                 }}
               >
                 Reset layout
