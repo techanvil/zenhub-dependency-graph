@@ -603,20 +603,45 @@ export const generateGraph = (
       },
     });
 
-    panZoom.resizeHandler = new ResizeObserver(() => {
-      if (!panZoom.instance) {
-        return;
-      }
+    panZoom.resizeHandler = new ResizeObserver(
+      (() => {
+        let prevWidth, prevHeight;
 
-      try {
-        panZoom.instance.resize();
-        panZoom.instance.fit();
-        panZoom.instance.center();
-      } catch (err) {
-        // TODO: Fix the underlying cause of this error.
-        console.log("panZoom error on resize", err);
-      }
-    }).observe(document.getElementById("graph-container"));
+        return (entries) => {
+          if (!(panZoom.instance || entries?.[0])) {
+            return;
+          }
+
+          // Ensure the panZoom instance is only updated when the container size changes, as the ResizeObserver
+          // can trigger for other reasons.
+
+          const newWidth = entries[0].target.clientWidth;
+          const newHeight = entries[0].target.clientHeight;
+
+          if (!prevWidth && !prevHeight) {
+            prevWidth = newWidth;
+            prevHeight = newHeight;
+            return;
+          }
+
+          if (newWidth === prevWidth && newHeight === prevHeight) {
+            return;
+          }
+
+          prevWidth = newWidth;
+          prevHeight = newHeight;
+
+          try {
+            panZoom.instance.resize();
+            panZoom.instance.fit();
+            panZoom.instance.center();
+          } catch (err) {
+            // TODO: Fix the underlying cause of this error.
+            console.log("panZoom error on resize", err);
+          }
+        };
+      })()
+    ).observe(document.getElementById("graph-container"));
 
     panZoom.epic = epic;
 
