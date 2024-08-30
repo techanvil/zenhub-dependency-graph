@@ -485,6 +485,7 @@ export const generateGraph = (
   const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
   svgSelection
     .append("g")
+    .attr("class", "zdg-graph-arrows")
     .selectAll("path")
     .data(dag.links())
     .enter()
@@ -585,7 +586,7 @@ export const generateGraph = (
           const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
 
           outlineSelection = panZoomViewport
-            .append("rect")
+            .insert("rect", "g")
             .attr("rx", 5)
             .attr("ry", 5);
         }
@@ -658,7 +659,7 @@ export const generateGraph = (
 
       svgSelection
         .selectChild("g")
-        .selectChild("g:nth-child(3)") // arrows
+        .selectChild("g.zdg-graph-arrows") // arrows
         .selectAll("path")
         .filter((l) => {
           return l.source === d || l.target === d;
