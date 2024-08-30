@@ -794,8 +794,6 @@ export const generateGraph = (
         const node = d3.select(this);
 
         // Round to 1 decimal place to cut down on space when persisting the values.
-        // let newX = toFixedDecimalPlaces(event.x, 1);
-        // let newY = toFixedDecimalPlaces(event.y, 1);
         let newX = toFixedDecimalPlaces(d.x + totalDx, 1);
         let newY = toFixedDecimalPlaces(d.y + totalDy, 1);
 
@@ -804,7 +802,6 @@ export const generateGraph = (
         }
 
         node.classed("dragging", false);
-        // console.log("ended", newX, d3.select(this).datum().data.id);
 
         newCoords[d.data.id] = { x: newX, y: newY };
         // [d3.select(this).datum().data.id]: { x: newX, y: newY },
@@ -922,10 +919,6 @@ export const generateGraph = (
           });
       })
   );
-
-  // nodes.call(drag.on("start", started));
-
-  // const onStart = (event) => started(event);
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   if (typeof svgPanZoom === "function") {
