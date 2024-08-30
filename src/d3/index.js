@@ -12,6 +12,10 @@ import { getRectDimensions } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 
+const log = (...args) => {
+  console.log("[drag]", ...args);
+};
+
 export function toFixedDecimalPlaces(value, decimalPlaces) {
   return Number(
     Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
@@ -280,7 +284,7 @@ export const generateGraph = (
   layout = layout.nodeSize((node) =>
     node === undefined ? [0, 0] : [nodeWidth, nodeHeight]
   ); // set node size instead of constraining to fit
-  const { width, height } = layout(dag);
+  const { width: dagWidth, height: dagHeight } = layout(dag);
 
   function getCoordinates({ x, y }) {
     if (snapToGrid) {
@@ -370,8 +374,16 @@ export const generateGraph = (
   const issueOpacities = getOverlaidIssueOpacities(dag);
 
   const svgSelection = d3.select(svgElement);
-  svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
+  svgSelection.attr("viewBox", [0, 0, dagWidth, dagHeight].join(" "));
   const defs = svgSelection.append("defs"); // For gradients
+
+  // Provide a hidden rectangle to keep the padding around the graph when pan/zoom has setup.
+  // It doesn't resize when dragging outside the area though...
+  const box = svgSelection
+    .append("rect")
+    .attr("width", dagWidth)
+    .attr("height", dagHeight)
+    .attr("fill", "none");
 
   const steps = dag.size();
   const interp = d3.interpolateRainbow;
@@ -571,6 +583,8 @@ export const generateGraph = (
 
   // Dragging
   function started(event) {
+    log("nodes", event);
+
     const node = d3.select(this).classed("dragging", true);
 
     event.on("drag", dragged).on("end", ended);
@@ -734,7 +748,157 @@ export const generateGraph = (
   }
 
   const drag = d3Drag();
-  nodes.call(drag.on("start", started));
+  const drag2 = d3Drag();
+
+  nodes.call(
+    drag.on("start", started)
+    // drag.on("start", (event) => {
+    //   // log("nodes", event);
+    //   return started(event);
+    // })
+  );
+
+  function getLassooedNodes(x, y, width, height) {
+    // const lassooedNodes = [];
+
+    // nodes.each((d) => {
+    return nodes.filter((d) => {
+      const { x: nodeX, y: nodeY } = d;
+
+      if (
+        nodeX >= x &&
+        nodeX <= x + width &&
+        nodeY >= y &&
+        nodeY <= y + height
+      ) {
+        log({
+          this: this,
+          d,
+        });
+
+        return true;
+        //lassooedNodes.push(d3.select(this));
+      }
+
+      return false;
+    });
+
+    // return lassooedNodes;
+  }
+
+  let lassooSelection = null;
+  let lassooedNodes = null;
+
+  svgSelection.call(
+    // box.call(
+    drag2
+      // Setting the filter doesn't work but the default is to cancel if the ctrl key is pressed.
+      // .filter((event) => {
+      //   return !event.altKey;
+      // })
+      .on("start", (startEvent) => {
+        log("svgSelection", startEvent);
+
+        if (!lassooSelection) {
+          const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
+
+          lassooSelection = panZoomViewport
+            .insert("rect", "g")
+            .attr("rx", 5)
+            .attr("ry", 5);
+        }
+
+        if (lassooedNodes) {
+          lassooedNodes.classed("lassooed", false);
+          lassooedNodes = null;
+        }
+
+        const pan = panZoom.instance.getPan();
+        const zoom = panZoom.instance.getZoom();
+
+        const svgRatio =
+          document.getElementById("graph-container").getBoundingClientRect()
+            .width / dagWidth;
+
+        log({
+          pan,
+          zoom,
+          x: startEvent.x,
+          y: startEvent.y,
+          svgRatio,
+        });
+
+        const newX = (startEvent.x - pan.x) / svgRatio / zoom;
+        const newY = (startEvent.y - pan.y) / svgRatio / zoom;
+
+        let width = 0,
+          height = 0;
+
+        lassooSelection
+          .attr("width", width)
+          .attr("height", height)
+          .attr("x", newX)
+          .attr("y", newY)
+          .attr("stroke", "#2378ae")
+          .attr("stroke-dasharray", "6,3")
+          .attr("stroke-linecap", "butt")
+          .attr("stroke-width", 1)
+          .attr("fill", "rgba(0,0,0,0)");
+
+        startEvent
+          .on("drag", (dragEvent) => {
+            log("drag", dragEvent);
+
+            width += dragEvent.dx / svgRatio / zoom;
+            height += dragEvent.dy / svgRatio / zoom;
+
+            lassooSelection.attr("width", width).attr("height", height);
+
+            if (lassooedNodes) {
+              lassooedNodes.classed("lassooed", false);
+            }
+
+            lassooedNodes = getLassooedNodes(newX, newY, width, height);
+            lassooedNodes.classed("lassooed", true);
+
+            // panZoom.instance.panBy({ x: event.dx, y: event.dy });
+          })
+          .on("end", (endEvent) => {
+            log("end", endEvent);
+
+            if (!lassooedNodes) {
+              return;
+            }
+
+            // lassooSelection.attr("width", 0).attr("height", 0);
+
+            // Fit lassoo to nodes.
+            let startX = Infinity,
+              startY = Infinity,
+              endX = -Infinity,
+              endY = -Infinity;
+
+            lassooedNodes.each((d) => {
+              const { x, y } = d;
+
+              startX = Math.min(startX, x);
+              startY = Math.min(startY, y);
+              endX = Math.max(endX, x);
+              endY = Math.max(endY, y);
+            });
+
+            lassooSelection
+              .attr("width", endX - startX + nodeWidth)
+              .attr("height", endY - startY + nodeHeight)
+              .attr("x", startX - nodeWidth / 2)
+              .attr("y", startY - nodeHeight / 2);
+          });
+      })
+  );
+
+  // nodes.call(drag.on("start", started));
+
+  // const onStart = (event) => started(event);
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   if (typeof svgPanZoom === "function") {
@@ -745,6 +909,7 @@ export const generateGraph = (
       fit: true,
       center: true,
       zoomScaleSensitivity: 0.4,
+      // eventsListenerElement: document.getElementById("graph-container"),
       onPan() {
         panZoom.hasInteracted = true;
       },
