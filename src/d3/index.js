@@ -586,18 +586,13 @@ export const generateGraph = (
   }
 
   let outlineSelection = null;
-  let draggingNodes = null;
 
   // Dragging
   function started(event) {
     const isDraggingSelection =
       lassooedNodes && lassooedNodes.nodes().includes(this);
 
-    if (isDraggingSelection) {
-      draggingNodes = lassooedNodes;
-    } else {
-      draggingNodes = d3.select(this);
-    }
+    const draggingNodes = isDraggingSelection ? lassooedNodes : d3.select(this);
 
     draggingNodes.classed("dragging", true);
 
