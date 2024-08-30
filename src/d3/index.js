@@ -579,195 +579,260 @@ export const generateGraph = (
     return issues;
   }
 
+  function getMinMaxNodeCoordinates(nodes) {
+    let startX = Infinity,
+      startY = Infinity,
+      endX = -Infinity,
+      endY = -Infinity;
+
+    nodes.each((d) => {
+      const { x, y } = d;
+
+      startX = Math.min(startX, x);
+      startY = Math.min(startY, y);
+      endX = Math.max(endX, x);
+      endY = Math.max(endY, y);
+    });
+
+    return { startX, startY, endX, endY };
+  }
+
   let outlineSelection = null;
+  let draggingNodes = null;
 
   // Dragging
   function started(event) {
-    log("nodes", event);
+    // log("nodes", event);
 
-    const node = d3.select(this).classed("dragging", true);
+    const isDraggingSelection =
+      lassooedNodes && lassooedNodes.nodes().includes(this);
+
+    if (isDraggingSelection) {
+      log("dragged node is in lassooedNodes");
+      draggingNodes = lassooedNodes;
+    } else {
+      log("dragged node is not in lassooedNodes");
+      draggingNodes = d3.select(this);
+    }
+
+    // const node = d3.select(this);
+    // const node = d3.select(this).classed("dragging", true);
+    draggingNodes.classed("dragging", true);
 
     event.on("drag", dragged).on("end", ended);
 
     let totalDx = 0;
     let totalDy = 0;
 
-    function dragged(event, d) {
+    function dragged(event, draggedDatum) {
       totalDx += event.dx;
       totalDy += event.dy;
 
-      // Round to 1 decimal place to cut down on space when persisting the values.
-      const newX = toFixedDecimalPlaces(d.x + totalDx, 1);
-      const newY = toFixedDecimalPlaces(d.y + totalDy, 1);
+      log({
+        draggingNodes,
+      });
 
-      node
-        .raise()
-        // .attr("cx", (d.x = newX))
-        // .attr("cy", (d.y = event.y))
-        .attr("transform", `translate(${newX}, ${newY})`);
+      // HERE
+      draggingNodes.each(function (d) {
+        const node = d3.select(this);
 
-      if (snapToGrid) {
+        // Round to 1 decimal place to cut down on space when persisting the values.
+        const newX = toFixedDecimalPlaces(d.x + totalDx, 1);
+        const newY = toFixedDecimalPlaces(d.y + totalDy, 1);
+
+        log({
+          this: this,
+          id: node.datum().data.id,
+          newX,
+          newY,
+        });
+
+        node
+          .raise()
+          // .attr("cx", (d.x = newX))
+          // .attr("cy", (d.y = event.y))
+          .attr("transform", `translate(${newX}, ${newY})`);
+
+        if (snapToGrid && !isDraggingSelection) {
+          const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+
+          const issuesAtTarget = findIssuesAtTarget(
+            dag.proots || [dag],
+            d.data.id,
+            gridX,
+            gridY
+          );
+
+          const targetIssueHasOutline = issuesAtTarget.some(
+            ({ data }) => data.isChosenSprint
+          );
+
+          const padding = targetIssueHasOutline ? 10 : 5;
+
+          const borderRectWidth = rectWidth + padding;
+          const borderRectHeight = rectHeight + padding;
+
+          if (!outlineSelection) {
+            const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
+
+            outlineSelection = panZoomViewport
+              .insert("rect", "g")
+              .attr("rx", 5)
+              .attr("ry", 5);
+          }
+
+          outlineSelection
+            // .attr("transform", `translate(${newX}, ${newY})`)
+            .attr("width", borderRectWidth)
+            .attr("height", borderRectHeight)
+            .attr("x", gridX - borderRectWidth / 2)
+            .attr("y", gridY - borderRectHeight / 2)
+            .attr("stroke", "#2378ae")
+            .attr("stroke-dasharray", "6,3")
+            .attr("stroke-linecap", "butt")
+            .attr("stroke-width", 1)
+            .attr("fill", "rgba(0,0,0,0)");
+        }
+
+        function getSourceAndTarget(l) {
+          if (l.source === d) {
+            return [{ ...l.source, x: newX, y: newY }, l.target];
+          }
+
+          return [l.source, { ...l.target, x: newX, y: newY }];
+        }
+
+        svgSelection
+          .selectChild("g")
+          .selectChild("g") // links
+          .selectAll("path")
+          .filter((l) => {
+            return l.source === d || l.target === d;
+          })
+          .attr("d", (l) => {
+            const [source, target] = getSourceAndTarget(l);
+
+            const [dx, dy] = getIntersection(
+              source.x - target.x,
+              source.y - target.y,
+              target.x,
+              target.y,
+              (rectWidth + arrowSize / 3) / 2,
+              (rectHeight + arrowSize / 3) / 2
+            );
+
+            // Stroke is already defined so we can just update the gradient here.
+            const grad = defs
+              .select(
+                `linearGradient#${encodeURIComponent(
+                  `s-${source.data.id}--${target.data.id}`
+                )}`
+              )
+              .attr("x1", source.x)
+              .attr("x2", dx)
+              .attr("y1", source.y)
+              .attr("y2", dy);
+            grad
+              .select("stop")
+              .attr("offset", "0%")
+              .attr("stop-color", getNodeColor(source));
+            grad
+              .select("stop:nth-child(2)")
+              .attr("offset", "100%")
+              .attr("stop-color", getArrowEndColor(source, target));
+
+            return line([
+              { x: source.x, y: source.y },
+              { x: dx, y: dy },
+            ]);
+          });
+
+        svgSelection
+          .selectChild("g")
+          .selectChild("g.zdg-graph-arrows") // arrows
+          .selectAll("path")
+          .filter((l) => {
+            return l.source === d || l.target === d;
+          })
+          .attr("transform", (l) => {
+            const [start, end] = getSourceAndTarget(l);
+            const rdx = start.x - end.x;
+            const rdy = start.y - end.y;
+            const [dx, dy] = getIntersection(
+              start.x - end.x,
+              start.y - end.y,
+              end.x,
+              end.y,
+              (rectWidth + arrowSize / 3) / 2,
+              (rectHeight + arrowSize / 3) / 2
+            );
+            // This is the angle of the last line segment
+            const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
+            return `translate(${dx}, ${dy}) rotate(${angle})`;
+          })
+          .attr("fill", (l) => {
+            const [source, target] = getSourceAndTarget(l);
+            return getArrowEndColor(source, target);
+          });
+      });
+
+      if (snapToGrid && isDraggingSelection) {
+        // Round to 1 decimal place to cut down on space when persisting the values.
+        const newX = toFixedDecimalPlaces(draggedDatum.x + totalDx, 1);
+        const newY = toFixedDecimalPlaces(draggedDatum.y + totalDy, 1);
+
         const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
 
-        const issuesAtTarget = findIssuesAtTarget(
-          dag.proots || [dag],
-          d.data.id,
-          gridX,
-          gridY
-        );
+        const deltaX = gridX - draggedDatum.x;
+        const deltaY = gridY - draggedDatum.y;
 
-        const targetIssueHasOutline = issuesAtTarget.some(
-          ({ data }) => data.isChosenSprint
-        );
+        const { startX, startY } = getMinMaxNodeCoordinates(lassooedNodes);
 
-        const padding = targetIssueHasOutline ? 10 : 5;
-
-        const borderRectWidth = rectWidth + padding;
-        const borderRectHeight = rectHeight + padding;
-
-        if (!outlineSelection) {
-          const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
-
-          outlineSelection = panZoomViewport
-            .insert("rect", "g")
-            .attr("rx", 5)
-            .attr("ry", 5);
-        }
-
-        outlineSelection
-          // .attr("transform", `translate(${newX}, ${newY})`)
-          .attr("width", borderRectWidth)
-          .attr("height", borderRectHeight)
-          .attr("x", gridX - borderRectWidth / 2)
-          .attr("y", gridY - borderRectHeight / 2)
-          .attr("stroke", "#2378ae")
-          .attr("stroke-dasharray", "6,3")
-          .attr("stroke-linecap", "butt")
-          .attr("stroke-width", 1)
-          .attr("fill", "rgba(0,0,0,0)");
+        lassooSelection
+          .attr("x", startX + deltaX - nodeWidth / 2)
+          .attr("y", startY + deltaY - nodeHeight / 2);
       }
-
-      function getSourceAndTarget(l) {
-        if (l.source === d) {
-          return [{ ...l.source, x: newX, y: newY }, l.target];
-        }
-
-        return [l.source, { ...l.target, x: newX, y: newY }];
-      }
-
-      svgSelection
-        .selectChild("g")
-        .selectChild("g") // links
-        .selectAll("path")
-        .filter((l) => {
-          return l.source === d || l.target === d;
-        })
-        .attr("d", (l) => {
-          const [source, target] = getSourceAndTarget(l);
-
-          const [dx, dy] = getIntersection(
-            source.x - target.x,
-            source.y - target.y,
-            target.x,
-            target.y,
-            (rectWidth + arrowSize / 3) / 2,
-            (rectHeight + arrowSize / 3) / 2
-          );
-
-          // Stroke is already defined so we can just update the gradient here.
-          const grad = defs
-            .select(
-              `linearGradient#${encodeURIComponent(
-                `s-${source.data.id}--${target.data.id}`
-              )}`
-            )
-            .attr("x1", source.x)
-            .attr("x2", dx)
-            .attr("y1", source.y)
-            .attr("y2", dy);
-          grad
-            .select("stop")
-            .attr("offset", "0%")
-            .attr("stop-color", getNodeColor(source));
-          grad
-            .select("stop:nth-child(2)")
-            .attr("offset", "100%")
-            .attr("stop-color", getArrowEndColor(source, target));
-
-          return line([
-            { x: source.x, y: source.y },
-            { x: dx, y: dy },
-          ]);
-        });
-
-      svgSelection
-        .selectChild("g")
-        .selectChild("g.zdg-graph-arrows") // arrows
-        .selectAll("path")
-        .filter((l) => {
-          return l.source === d || l.target === d;
-        })
-        .attr("transform", (l) => {
-          const [start, end] = getSourceAndTarget(l);
-          const rdx = start.x - end.x;
-          const rdy = start.y - end.y;
-          const [dx, dy] = getIntersection(
-            start.x - end.x,
-            start.y - end.y,
-            end.x,
-            end.y,
-            (rectWidth + arrowSize / 3) / 2,
-            (rectHeight + arrowSize / 3) / 2
-          );
-          // This is the angle of the last line segment
-          const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
-          return `translate(${dx}, ${dy}) rotate(${angle})`;
-        })
-        .attr("fill", (l) => {
-          const [source, target] = getSourceAndTarget(l);
-          return getArrowEndColor(source, target);
-        });
     }
 
     function ended(event, d) {
       totalDx += event.dx;
       totalDy += event.dy;
 
-      // Round to 1 decimal place to cut down on space when persisting the values.
-      // let newX = toFixedDecimalPlaces(event.x, 1);
-      // let newY = toFixedDecimalPlaces(event.y, 1);
-      let newX = toFixedDecimalPlaces(d.x + totalDx, 1);
-      let newY = toFixedDecimalPlaces(d.y + totalDy, 1);
+      const newCoords = {};
 
-      if (snapToGrid) {
-        [newX, newY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
-      }
+      draggingNodes.each(function (d) {
+        const node = d3.select(this);
 
-      node.classed("dragging", false);
-      // console.log("ended", newX, d3.select(this).datum().data.id);
+        // Round to 1 decimal place to cut down on space when persisting the values.
+        // let newX = toFixedDecimalPlaces(event.x, 1);
+        // let newY = toFixedDecimalPlaces(event.y, 1);
+        let newX = toFixedDecimalPlaces(d.x + totalDx, 1);
+        let newY = toFixedDecimalPlaces(d.y + totalDy, 1);
+
+        if (snapToGrid) {
+          [newX, newY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+        }
+
+        node.classed("dragging", false);
+        // console.log("ended", newX, d3.select(this).datum().data.id);
+
+        newCoords[d.data.id] = { x: newX, y: newY };
+        // [d3.select(this).datum().data.id]: { x: newX, y: newY },
+      });
+
       saveCoordinateOverrides({
         ...coordinateOverrides,
-        [d.data.id]: { x: newX, y: newY },
-        // [d3.select(this).datum().data.id]: { x: newX, y: newY },
+        ...newCoords,
       });
     }
   }
 
-  const drag = d3Drag();
-  const drag2 = d3Drag();
+  const nodesDrag = d3Drag();
+  const lassooDrag = d3Drag();
 
-  nodes.call(
-    drag.on("start", started)
-    // drag.on("start", (event) => {
-    //   // log("nodes", event);
-    //   return started(event);
-    // })
-  );
+  nodes.call(nodesDrag.on("start", started));
 
   function getLassooedNodes(x, y, width, height) {
-    // const lassooedNodes = [];
-
-    // nodes.each((d) => {
     return nodes.filter((d) => {
       const { x: nodeX, y: nodeY } = d;
 
@@ -777,19 +842,11 @@ export const generateGraph = (
         nodeY >= y &&
         nodeY <= y + height
       ) {
-        log({
-          this: this,
-          d,
-        });
-
         return true;
-        //lassooedNodes.push(d3.select(this));
       }
 
       return false;
     });
-
-    // return lassooedNodes;
   }
 
   let lassooSelection = null;
@@ -797,13 +854,13 @@ export const generateGraph = (
 
   svgSelection.call(
     // box.call(
-    drag2
+    lassooDrag
       // Setting the filter doesn't work but the default is to cancel if the ctrl key is pressed.
       // .filter((event) => {
       //   return !event.altKey;
       // })
       .on("start", (startEvent) => {
-        log("svgSelection", startEvent);
+        // log("svgSelection", startEvent);
 
         if (!lassooSelection) {
           const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
@@ -853,7 +910,7 @@ export const generateGraph = (
 
         startEvent
           .on("drag", (dragEvent) => {
-            log("drag", dragEvent);
+            // log("drag", dragEvent);
 
             width += dragEvent.dx / svgRatio / zoom;
             height += dragEvent.dy / svgRatio / zoom;
@@ -870,7 +927,7 @@ export const generateGraph = (
             // panZoom.instance.panBy({ x: event.dx, y: event.dy });
           })
           .on("end", (endEvent) => {
-            log("end", endEvent);
+            // log("end", endEvent);
 
             if (!lassooedNodes) {
               return;
@@ -879,19 +936,8 @@ export const generateGraph = (
             // lassooSelection.attr("width", 0).attr("height", 0);
 
             // Fit lassoo to nodes.
-            let startX = Infinity,
-              startY = Infinity,
-              endX = -Infinity,
-              endY = -Infinity;
-
-            lassooedNodes.each((d) => {
-              const { x, y } = d;
-
-              startX = Math.min(startX, x);
-              startY = Math.min(startY, y);
-              endX = Math.max(endX, x);
-              endY = Math.max(endY, y);
-            });
+            const { startX, startY, endX, endY } =
+              getMinMaxNodeCoordinates(lassooedNodes);
 
             lassooSelection
               .attr("width", endX - startX + nodeWidth)
