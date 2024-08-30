@@ -12,10 +12,6 @@ import { getRectDimensions } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 
-const log = (...args) => {
-  console.log("[drag]", ...args);
-};
-
 export function toFixedDecimalPlaces(value, decimalPlaces) {
   return Number(
     Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
@@ -377,14 +373,6 @@ export const generateGraph = (
   svgSelection.attr("viewBox", [0, 0, dagWidth, dagHeight].join(" "));
   const defs = svgSelection.append("defs"); // For gradients
 
-  // Provide a hidden rectangle to keep the padding around the graph when pan/zoom has setup.
-  // It doesn't resize when dragging outside the area though...
-  const box = svgSelection
-    .append("rect")
-    .attr("width", dagWidth)
-    .attr("height", dagHeight)
-    .attr("fill", "none");
-
   const steps = dag.size();
   const interp = d3.interpolateRainbow;
   const colorMap = new Map();
@@ -602,21 +590,15 @@ export const generateGraph = (
 
   // Dragging
   function started(event) {
-    // log("nodes", event);
-
     const isDraggingSelection =
       lassooedNodes && lassooedNodes.nodes().includes(this);
 
     if (isDraggingSelection) {
-      log("dragged node is in lassooedNodes");
       draggingNodes = lassooedNodes;
     } else {
-      log("dragged node is not in lassooedNodes");
       draggingNodes = d3.select(this);
     }
 
-    // const node = d3.select(this);
-    // const node = d3.select(this).classed("dragging", true);
     draggingNodes.classed("dragging", true);
 
     event.on("drag", dragged).on("end", ended);
@@ -628,13 +610,8 @@ export const generateGraph = (
       totalDx += event.dx;
       totalDy += event.dy;
 
-      log({
-        draggingNodes,
-      });
-
       const newCoordinatesByDataMap = new Map();
 
-      // HERE
       draggingNodes.each(function (d) {
         const node = d3.select(this);
 
@@ -643,13 +620,6 @@ export const generateGraph = (
         const newY = toFixedDecimalPlaces(d.y + totalDy, 1);
 
         newCoordinatesByDataMap.set(d, { x: newX, y: newY });
-
-        log({
-          this: this,
-          id: node.datum().data.id,
-          newX,
-          newY,
-        });
 
         node
           .raise()
@@ -878,15 +848,12 @@ export const generateGraph = (
   let lassooedNodes = null;
 
   svgSelection.call(
-    // box.call(
     lassooDrag
       // Setting the filter doesn't work but the default is to cancel if the ctrl key is pressed.
       // .filter((event) => {
       //   return !event.altKey;
       // })
       .on("start", (startEvent) => {
-        // log("svgSelection", startEvent);
-
         if (!lassooSelection) {
           const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
 
@@ -908,14 +875,6 @@ export const generateGraph = (
           document.getElementById("graph-container").getBoundingClientRect()
             .width / dagWidth;
 
-        log({
-          pan,
-          zoom,
-          x: startEvent.x,
-          y: startEvent.y,
-          svgRatio,
-        });
-
         const newX = (startEvent.x - pan.x) / svgRatio / zoom;
         const newY = (startEvent.y - pan.y) / svgRatio / zoom;
 
@@ -935,8 +894,6 @@ export const generateGraph = (
 
         startEvent
           .on("drag", (dragEvent) => {
-            // log("drag", dragEvent);
-
             width += dragEvent.dx / svgRatio / zoom;
             height += dragEvent.dy / svgRatio / zoom;
 
@@ -952,8 +909,6 @@ export const generateGraph = (
             // panZoom.instance.panBy({ x: event.dx, y: event.dy });
           })
           .on("end", (endEvent) => {
-            // log("end", endEvent);
-
             if (!lassooedNodes) {
               return;
             }
