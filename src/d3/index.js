@@ -18,6 +18,12 @@ export function toFixedDecimalPlaces(value, decimalPlaces) {
   );
 }
 
+const log = (...args) => {
+  console.log("[grid]", ...args);
+};
+
+const snapToGrid = true;
+
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
     // Hit vertical edge of box1
@@ -579,10 +585,46 @@ export const generateGraph = (
         });
     }
 
+    function roundToGrid(x, y) {
+      let newX = x - nodeWidth / 2;
+      let newY = y - nodeHeight / 2;
+      // let newX = x;
+      // let newY = y;
+
+      newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
+      newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
+
+      return [newX, newY];
+    }
+
     function ended(event) {
       // Round to 1 decimal place to cut down on space when persisting the values.
-      const newX = toFixedDecimalPlaces(event.x, 1);
-      const newY = toFixedDecimalPlaces(event.y, 1);
+      let newX = toFixedDecimalPlaces(event.x, 1);
+      let newY = toFixedDecimalPlaces(event.y, 1);
+
+      // log({
+      //   x: event.x,
+      //   y: event.y,
+      //   newX,
+      //   newY,
+      //   nodeWidth,
+      //   nodeHeight,
+      // });
+
+      if (snapToGrid) {
+        [newX, newY] = roundToGrid(newX, newY);
+        // newX -= nodeWidth / 2;
+        // newY -= nodeHeight / 2;
+
+        // newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
+        // newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
+      }
+
+      // log({
+      //   newX,
+      //   newY,
+      //   id: d3.select(this).datum().data.id,
+      // });
 
       node.classed("dragging", false);
       // console.log("ended", newX, d3.select(this).datum().data.id);
