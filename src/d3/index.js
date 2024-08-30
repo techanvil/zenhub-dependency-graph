@@ -187,6 +187,16 @@ export function removePipelineIssues(graphData, pipelineName) {
   return pipelineIssues;
 }
 
+function roundToGrid(nodeWidth, nodeHeight, x, y) {
+  let newX = x - nodeWidth / 2;
+  let newY = y - nodeHeight / 2;
+
+  newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
+  newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
+
+  return [newX, newY];
+}
+
 const panZoom = {
   instance: null,
   resizeHandler: null,
@@ -208,7 +218,8 @@ export const generateGraph = (
   },
   appSettings
 ) => {
-  const { showAncestorDependencies, showIssueDetails } = appSettings;
+  const { snapToGrid, showIssueDetails, showAncestorDependencies } =
+    appSettings;
 
   try {
     // TODO: Find a better fix for preventing pan/zoom state resetting on re-rendering the epic.
@@ -271,19 +282,25 @@ export const generateGraph = (
   ); // set node size instead of constraining to fit
   const { width, height } = layout(dag);
 
+  function getCoordinates({ x, y }) {
+    if (snapToGrid) {
+      return roundToGrid(nodeWidth, nodeHeight, x, y);
+    }
+
+    return [x, y];
+  }
+
   function applyOverrides(roots, overrides) {
     roots.forEach((root) => {
       if (overrides[root.data.id]) {
-        root.x = overrides[root.data.id].x;
-        root.y = overrides[root.data.id].y;
+        [root.x, root.y] = getCoordinates(overrides[root.data.id]);
       }
 
       root.dataChildren.forEach((dataChild) => {
         const { child } = dataChild;
 
         if (overrides[child.data.id]) {
-          child.x = overrides[child.data.id].x;
-          child.y = overrides[child.data.id].y;
+          [child.x, child.y] = getCoordinates(overrides[child.data.id]);
         }
         // const points = [...dataChild.points];
 
@@ -307,6 +324,50 @@ export const generateGraph = (
   if (Object.keys(coordinateOverrides || {}).length) {
     applyOverrides(dag.proots || [dag], coordinateOverrides);
   }
+
+  function getOverlaidIssueOpacities(dag) {
+    function getCoordinateKeysToNodeData(roots, coordinateKeysToNodeData = {}) {
+      roots.forEach((root) => {
+        const coordinateKey = `${root.x},${root.y}`;
+
+        coordinateKeysToNodeData[coordinateKey] =
+          coordinateKeysToNodeData[coordinateKey] || [];
+
+        if (!coordinateKeysToNodeData[coordinateKey].includes(root.data)) {
+          coordinateKeysToNodeData[coordinateKey].push(root.data);
+        }
+
+        root.dataChildren?.forEach((dataChild) => {
+          const { child } = dataChild;
+
+          getCoordinateKeysToNodeData([child], coordinateKeysToNodeData);
+        });
+      });
+
+      return coordinateKeysToNodeData;
+    }
+
+    const coordinateKeysToNodeData = getCoordinateKeysToNodeData(
+      dag.proots || [dag]
+    );
+
+    return Object.entries(coordinateKeysToNodeData).reduce(
+      (opacities, [coordinateKey, dataList]) => {
+        if (dataList.length > 1) {
+          const opacity = 1 / dataList.length;
+
+          dataList.forEach((data) => {
+            opacities[data.id] = opacity;
+          });
+        }
+
+        return opacities;
+      },
+      {}
+    );
+  }
+
+  const issueOpacities = getOverlaidIssueOpacities(dag);
 
   const svgSelection = d3.select(svgElement);
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
@@ -406,7 +467,8 @@ export const generateGraph = (
     .data(dag.descendants())
     .enter()
     .append("g")
-    .attr("transform", ({ x, y }) => `translate(${x}, ${y})`);
+    .attr("transform", ({ x, y }) => `translate(${x}, ${y})`)
+    .attr("opacity", (d) => issueOpacities[d.data.id] || 1);
 
   // Plot node outlines
   // nodes
@@ -451,6 +513,7 @@ export const generateGraph = (
   const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
   svgSelection
     .append("g")
+    .attr("class", "zdg-graph-arrows")
     .selectAll("path")
     .data(dag.links())
     .enter()
@@ -480,6 +543,32 @@ export const generateGraph = (
     renderSimpleIssues(nodes, appSettings);
   }
 
+  function findIssuesAtTarget(roots, currentIssueId, x, y) {
+    const issues = [];
+
+    roots.forEach((root) => {
+      if (root.x === x && root.y === y && root.data.id !== currentIssueId) {
+        issues.push(root);
+      }
+
+      root.dataChildren.forEach((dataChild) => {
+        const { child } = dataChild;
+
+        if (
+          child.x === x &&
+          child.y === y &&
+          child.data.id !== currentIssueId
+        ) {
+          issues.push(child);
+        }
+      });
+    });
+
+    return issues;
+  }
+
+  let outlineSelection = null;
+
   // Dragging
   function started(event) {
     const node = d3.select(this).classed("dragging", true);
@@ -496,6 +585,52 @@ export const generateGraph = (
         // .attr("cx", (d.x = newX))
         // .attr("cy", (d.y = event.y))
         .attr("transform", `translate(${newX}, ${newY})`);
+
+      if (snapToGrid) {
+        const [newX, newY] = roundToGrid(
+          nodeWidth,
+          nodeHeight,
+          event.x,
+          event.y
+        );
+
+        const issuesAtTarget = findIssuesAtTarget(
+          dag.proots || [dag],
+          d.data.id,
+          newX,
+          newY
+        );
+
+        const targetIssueHasOutline = issuesAtTarget.some(
+          ({ data }) => data.isChosenSprint
+        );
+
+        const padding = targetIssueHasOutline ? 10 : 5;
+
+        const borderRectWidth = rectWidth + padding;
+        const borderRectHeight = rectHeight + padding;
+
+        if (!outlineSelection) {
+          const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
+
+          outlineSelection = panZoomViewport
+            .insert("rect", "g")
+            .attr("rx", 5)
+            .attr("ry", 5);
+        }
+
+        outlineSelection
+          // .attr("transform", `translate(${newX}, ${newY})`)
+          .attr("width", borderRectWidth)
+          .attr("height", borderRectHeight)
+          .attr("x", newX - borderRectWidth / 2)
+          .attr("y", newY - borderRectHeight / 2)
+          .attr("stroke", "#2378ae")
+          .attr("stroke-dasharray", "6,3")
+          .attr("stroke-linecap", "butt")
+          .attr("stroke-width", 1)
+          .attr("fill", "rgba(0,0,0,0)");
+      }
 
       function getSourceAndTarget(l) {
         if (l.source === d) {
@@ -552,7 +687,7 @@ export const generateGraph = (
 
       svgSelection
         .selectChild("g")
-        .selectChild("g:nth-child(3)") // arrows
+        .selectChild("g.zdg-graph-arrows") // arrows
         .selectAll("path")
         .filter((l) => {
           return l.source === d || l.target === d;
@@ -581,8 +716,12 @@ export const generateGraph = (
 
     function ended(event) {
       // Round to 1 decimal place to cut down on space when persisting the values.
-      const newX = toFixedDecimalPlaces(event.x, 1);
-      const newY = toFixedDecimalPlaces(event.y, 1);
+      let newX = toFixedDecimalPlaces(event.x, 1);
+      let newY = toFixedDecimalPlaces(event.y, 1);
+
+      if (snapToGrid) {
+        [newX, newY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+      }
 
       node.classed("dragging", false);
       // console.log("ended", newX, d3.select(this).datum().data.id);
