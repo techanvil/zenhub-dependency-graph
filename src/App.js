@@ -22,7 +22,7 @@ import { useState } from "react";
 import { Legend } from "./components/Legend";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
-import { toFixedDecimalPlaces } from "./d3";
+import { toFixedDecimalPlaces } from "./d3/utils";
 import { appSettingDefaults } from "./constants";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
