@@ -329,6 +329,52 @@ export const generateGraph = (
     applyOverrides(dag.proots || [dag], coordinateOverrides);
   }
 
+  function getOverlaidIssueOpacities(dag) {
+    function getCoordinateKeysToNodeData(roots, coordinateKeysToNodeData = {}) {
+      roots.forEach((root) => {
+        const coordinateKey = `${root.x},${root.y}`;
+
+        coordinateKeysToNodeData[coordinateKey] =
+          coordinateKeysToNodeData[coordinateKey] || [];
+
+        if (!coordinateKeysToNodeData[coordinateKey].includes(root.data)) {
+          coordinateKeysToNodeData[coordinateKey].push(root.data);
+        }
+
+        root.dataChildren?.forEach((dataChild) => {
+          const { child } = dataChild;
+
+          getCoordinateKeysToNodeData([child], coordinateKeysToNodeData);
+        });
+      });
+
+      return coordinateKeysToNodeData;
+    }
+
+    const coordinateKeysToNodeData = getCoordinateKeysToNodeData(
+      dag.proots || [dag]
+    );
+
+    return Object.entries(coordinateKeysToNodeData).reduce(
+      (opacities, [coordinateKey, dataList]) => {
+        if (dataList.length > 1) {
+          log(`Overlaid issues at ${coordinateKey}:`, dataList);
+
+          const opacity = 1 / dataList.length;
+
+          dataList.forEach((data) => {
+            opacities[data.id] = opacity;
+          });
+        }
+
+        return opacities;
+      },
+      {}
+    );
+  }
+
+  const issueOpacities = getOverlaidIssueOpacities(dag);
+
   log("dimensions", {
     dag,
     width,
@@ -438,7 +484,8 @@ export const generateGraph = (
     .data(dag.descendants())
     .enter()
     .append("g")
-    .attr("transform", ({ x, y }) => `translate(${x}, ${y})`);
+    .attr("transform", ({ x, y }) => `translate(${x}, ${y})`)
+    .attr("opacity", (d) => issueOpacities[d.data.id] || 1);
 
   // Plot node outlines
   // nodes
