@@ -314,6 +314,17 @@ export const generateGraph = (
     applyOverrides(dag.proots || [dag], coordinateOverrides);
   }
 
+  log("dimensions", {
+    dag,
+    width,
+    height,
+    rectWidth,
+    rectHeight,
+    nodeWidth,
+    nodeHeight,
+    arrowSize,
+  });
+
   const svgSelection = d3.select(svgElement);
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
   const defs = svgSelection.append("defs"); // For gradients
@@ -486,6 +497,44 @@ export const generateGraph = (
     renderSimpleIssues(nodes, appSettings);
   }
 
+  function roundToGrid(x, y) {
+    let newX = x - nodeWidth / 2;
+    let newY = y - nodeHeight / 2;
+    // let newX = x;
+    // let newY = y;
+
+    newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
+    newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
+
+    return [newX, newY];
+  }
+
+  function findIssuesAtTarget(roots, currentIssueId, x, y) {
+    const issues = [];
+
+    roots.forEach((root) => {
+      if (root.x === x && root.y === y && root.data.id !== currentIssueId) {
+        issues.push(root);
+      }
+
+      root.dataChildren.forEach((dataChild) => {
+        const { child } = dataChild;
+
+        if (
+          child.x === x &&
+          child.y === y &&
+          child.data.id !== currentIssueId
+        ) {
+          issues.push(child);
+        }
+      });
+    });
+
+    return issues;
+  }
+
+  let outlineSelection = null;
+
   // Dragging
   function started(event) {
     const node = d3.select(this).classed("dragging", true);
@@ -502,6 +551,56 @@ export const generateGraph = (
         // .attr("cx", (d.x = newX))
         // .attr("cy", (d.y = event.y))
         .attr("transform", `translate(${newX}, ${newY})`);
+
+      // HERE: Draw outline if snapping to grid
+      if (snapToGrid) {
+        const [newX, newY] = roundToGrid(event.x, event.y);
+
+        const issuesAtTarget = findIssuesAtTarget(
+          dag.proots || [dag],
+          d.data.id,
+          newX,
+          newY
+        );
+
+        log({
+          x: event.x,
+          y: event.y,
+          newX,
+          newY,
+          issuesAtTarget,
+        });
+
+        const targetIssueHasOutline = issuesAtTarget.some(
+          ({ data }) => data.isChosenSprint
+        );
+
+        const padding = targetIssueHasOutline ? 10 : 5;
+
+        const borderRectWidth = rectWidth + padding;
+        const borderRectHeight = rectHeight + padding;
+
+        if (!outlineSelection) {
+          const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
+
+          outlineSelection = panZoomViewport
+            .append("rect")
+            .attr("rx", 5)
+            .attr("ry", 5);
+        }
+
+        outlineSelection
+          // .attr("transform", `translate(${newX}, ${newY})`)
+          .attr("width", borderRectWidth)
+          .attr("height", borderRectHeight)
+          .attr("x", newX - borderRectWidth / 2)
+          .attr("y", newY - borderRectHeight / 2)
+          .attr("stroke", "#2378ae")
+          .attr("stroke-dasharray", "6,3")
+          .attr("stroke-linecap", "butt")
+          .attr("stroke-width", 1)
+          .attr("fill", "rgba(0,0,0,0)");
+      }
 
       function getSourceAndTarget(l) {
         if (l.source === d) {
@@ -585,46 +684,14 @@ export const generateGraph = (
         });
     }
 
-    function roundToGrid(x, y) {
-      let newX = x - nodeWidth / 2;
-      let newY = y - nodeHeight / 2;
-      // let newX = x;
-      // let newY = y;
-
-      newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
-      newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
-
-      return [newX, newY];
-    }
-
     function ended(event) {
       // Round to 1 decimal place to cut down on space when persisting the values.
       let newX = toFixedDecimalPlaces(event.x, 1);
       let newY = toFixedDecimalPlaces(event.y, 1);
 
-      // log({
-      //   x: event.x,
-      //   y: event.y,
-      //   newX,
-      //   newY,
-      //   nodeWidth,
-      //   nodeHeight,
-      // });
-
       if (snapToGrid) {
         [newX, newY] = roundToGrid(newX, newY);
-        // newX -= nodeWidth / 2;
-        // newY -= nodeHeight / 2;
-
-        // newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
-        // newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
       }
-
-      // log({
-      //   newX,
-      //   newY,
-      //   id: d3.select(this).datum().data.id,
-      // });
 
       node.classed("dragging", false);
       // console.log("ended", newX, d3.select(this).datum().data.id);
