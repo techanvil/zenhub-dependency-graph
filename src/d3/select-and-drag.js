@@ -9,6 +9,8 @@ import {
   toFixedDecimalPlaces,
 } from "./utils";
 
+const outlineColor = "#2378ae";
+
 function findIssuesAtTarget(roots, currentIssueId, x, y) {
   const issues = [];
 
@@ -143,7 +145,7 @@ export function setupSelectAndDrag(
             .attr("height", borderRectHeight)
             .attr("x", gridX - borderRectWidth / 2)
             .attr("y", gridY - borderRectHeight / 2)
-            .attr("stroke", "#2378ae")
+            .attr("stroke", outlineColor)
             .attr("stroke-dasharray", "6,3")
             .attr("stroke-linecap", "butt")
             .attr("stroke-width", 1)
@@ -334,6 +336,22 @@ export function setupSelectAndDrag(
       //   return !event.altKey;
       // })
       .on("start", (startEvent) => {
+        // If alt or shift is pressed, pan instead of lassoo.
+        // Pan will also work if the drag is started with the ctrl key pressed due to the default filter in d3-drag.
+        if (startEvent.sourceEvent.altKey || startEvent.sourceEvent.shiftKey) {
+          startEvent.on("drag", (dragEvent) => {
+            if (
+              startEvent.sourceEvent.altKey ||
+              startEvent.sourceEvent.shiftKey
+            ) {
+              panZoom.instance.panBy({ x: dragEvent.dx, y: dragEvent.dy });
+              return;
+            }
+          });
+
+          return;
+        }
+
         if (!lassooSelection) {
           const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
 
@@ -366,7 +384,7 @@ export function setupSelectAndDrag(
           .attr("height", height)
           .attr("x", newX)
           .attr("y", newY)
-          .attr("stroke", "#2378ae")
+          .attr("stroke", outlineColor)
           .attr("stroke-dasharray", "6,3")
           .attr("stroke-linecap", "butt")
           .attr("stroke-width", 1)
@@ -385,8 +403,6 @@ export function setupSelectAndDrag(
 
             lassooedNodes = getLassooedNodes(newX, newY, width, height);
             lassooedNodes.classed("lassooed", true);
-
-            // panZoom.instance.panBy({ x: event.dx, y: event.dy });
           })
           .on("end", (endEvent) => {
             if (!lassooedNodes) {
