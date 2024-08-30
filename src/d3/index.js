@@ -632,6 +632,8 @@ export const generateGraph = (
         draggingNodes,
       });
 
+      const newCoordinatesByDataMap = new Map();
+
       // HERE
       draggingNodes.each(function (d) {
         const node = d3.select(this);
@@ -639,6 +641,8 @@ export const generateGraph = (
         // Round to 1 decimal place to cut down on space when persisting the values.
         const newX = toFixedDecimalPlaces(d.x + totalDx, 1);
         const newY = toFixedDecimalPlaces(d.y + totalDy, 1);
+
+        newCoordinatesByDataMap.set(d, { x: newX, y: newY });
 
         log({
           this: this,
@@ -654,6 +658,8 @@ export const generateGraph = (
           .attr("transform", `translate(${newX}, ${newY})`);
 
         if (snapToGrid && !isDraggingSelection) {
+          // Draw the dashed outline of the target node position.
+
           const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
 
           const issuesAtTarget = findIssuesAtTarget(
@@ -693,98 +699,26 @@ export const generateGraph = (
             .attr("stroke-width", 1)
             .attr("fill", "rgba(0,0,0,0)");
         }
-
-        function getSourceAndTarget(l) {
-          if (l.source === d) {
-            return [{ ...l.source, x: newX, y: newY }, l.target];
-          }
-
-          return [l.source, { ...l.target, x: newX, y: newY }];
-        }
-
-        svgSelection
-          .selectChild("g")
-          .selectChild("g") // links
-          .selectAll("path")
-          .filter((l) => {
-            return l.source === d || l.target === d;
-          })
-          .attr("d", (l) => {
-            const [source, target] = getSourceAndTarget(l);
-
-            const [dx, dy] = getIntersection(
-              source.x - target.x,
-              source.y - target.y,
-              target.x,
-              target.y,
-              (rectWidth + arrowSize / 3) / 2,
-              (rectHeight + arrowSize / 3) / 2
-            );
-
-            // Stroke is already defined so we can just update the gradient here.
-            const grad = defs
-              .select(
-                `linearGradient#${encodeURIComponent(
-                  `s-${source.data.id}--${target.data.id}`
-                )}`
-              )
-              .attr("x1", source.x)
-              .attr("x2", dx)
-              .attr("y1", source.y)
-              .attr("y2", dy);
-            grad
-              .select("stop")
-              .attr("offset", "0%")
-              .attr("stop-color", getNodeColor(source));
-            grad
-              .select("stop:nth-child(2)")
-              .attr("offset", "100%")
-              .attr("stop-color", getArrowEndColor(source, target));
-
-            return line([
-              { x: source.x, y: source.y },
-              { x: dx, y: dy },
-            ]);
-          });
-
-        svgSelection
-          .selectChild("g")
-          .selectChild("g.zdg-graph-arrows") // arrows
-          .selectAll("path")
-          .filter((l) => {
-            return l.source === d || l.target === d;
-          })
-          .attr("transform", (l) => {
-            const [start, end] = getSourceAndTarget(l);
-            const rdx = start.x - end.x;
-            const rdy = start.y - end.y;
-            const [dx, dy] = getIntersection(
-              start.x - end.x,
-              start.y - end.y,
-              end.x,
-              end.y,
-              (rectWidth + arrowSize / 3) / 2,
-              (rectHeight + arrowSize / 3) / 2
-            );
-            // This is the angle of the last line segment
-            const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
-            return `translate(${dx}, ${dy}) rotate(${angle})`;
-          })
-          .attr("fill", (l) => {
-            const [source, target] = getSourceAndTarget(l);
-            return getArrowEndColor(source, target);
-          });
       });
 
-      if (snapToGrid && isDraggingSelection) {
-        // Round to 1 decimal place to cut down on space when persisting the values.
+      if (isDraggingSelection) {
+        // Draw the dashed outline of the lassooed nodes.
+
         const newX = toFixedDecimalPlaces(draggedDatum.x + totalDx, 1);
         const newY = toFixedDecimalPlaces(draggedDatum.y + totalDy, 1);
 
-        const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+        let deltaX;
+        let deltaY;
 
-        const deltaX = gridX - draggedDatum.x;
-        const deltaY = gridY - draggedDatum.y;
+        if (snapToGrid) {
+          const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+
+          deltaX = gridX - draggedDatum.x;
+          deltaY = gridY - draggedDatum.y;
+        } else {
+          deltaX = totalDx;
+          deltaY = totalDy;
+        }
 
         const { startX, startY } = getMinMaxNodeCoordinates(lassooedNodes);
 
@@ -792,6 +726,97 @@ export const generateGraph = (
           .attr("x", startX + deltaX - nodeWidth / 2)
           .attr("y", startY + deltaY - nodeHeight / 2);
       }
+
+      // Update the lines and arrows.
+
+      function getSourceAndTarget(l) {
+        function getNewPathPoint(p) {
+          const newCoords = newCoordinatesByDataMap.get(p);
+
+          return newCoords ? { ...p, ...newCoords } : p;
+        }
+
+        return [getNewPathPoint(l.source), getNewPathPoint(l.target)];
+      }
+
+      svgSelection
+        .selectChild("g")
+        .selectChild("g") // links
+        .selectAll("path")
+        .filter((l) => {
+          return (
+            newCoordinatesByDataMap.has(l.source) ||
+            newCoordinatesByDataMap.has(l.target)
+          );
+        })
+        .attr("d", (l) => {
+          const [source, target] = getSourceAndTarget(l);
+
+          const [dx, dy] = getIntersection(
+            source.x - target.x,
+            source.y - target.y,
+            target.x,
+            target.y,
+            (rectWidth + arrowSize / 3) / 2,
+            (rectHeight + arrowSize / 3) / 2
+          );
+
+          // Stroke is already defined so we can just update the gradient here.
+          const grad = defs
+            .select(
+              `linearGradient#${encodeURIComponent(
+                `s-${source.data.id}--${target.data.id}`
+              )}`
+            )
+            .attr("x1", source.x)
+            .attr("x2", dx)
+            .attr("y1", source.y)
+            .attr("y2", dy);
+          grad
+            .select("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", getNodeColor(source));
+          grad
+            .select("stop:nth-child(2)")
+            .attr("offset", "100%")
+            .attr("stop-color", getArrowEndColor(source, target));
+
+          return line([
+            { x: source.x, y: source.y },
+            { x: dx, y: dy },
+          ]);
+        });
+
+      svgSelection
+        .selectChild("g")
+        .selectChild("g.zdg-graph-arrows") // arrows
+        .selectAll("path")
+        .filter((l) => {
+          return (
+            newCoordinatesByDataMap.has(l.source) ||
+            newCoordinatesByDataMap.has(l.target)
+          );
+        })
+        .attr("transform", (l) => {
+          const [start, end] = getSourceAndTarget(l);
+          const rdx = start.x - end.x;
+          const rdy = start.y - end.y;
+          const [dx, dy] = getIntersection(
+            start.x - end.x,
+            start.y - end.y,
+            end.x,
+            end.y,
+            (rectWidth + arrowSize / 3) / 2,
+            (rectHeight + arrowSize / 3) / 2
+          );
+          // This is the angle of the last line segment
+          const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
+          return `translate(${dx}, ${dy}) rotate(${angle})`;
+        })
+        .attr("fill", (l) => {
+          const [source, target] = getSourceAndTarget(l);
+          return getArrowEndColor(source, target);
+        });
     }
 
     function ended(event, d) {
