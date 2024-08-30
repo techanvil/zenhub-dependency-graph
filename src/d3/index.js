@@ -589,10 +589,16 @@ export const generateGraph = (
 
     event.on("drag", dragged).on("end", ended);
 
+    let totalDx = 0;
+    let totalDy = 0;
+
     function dragged(event, d) {
+      totalDx += event.dx;
+      totalDy += event.dy;
+
       // Round to 1 decimal place to cut down on space when persisting the values.
-      const newX = toFixedDecimalPlaces(event.x, 1);
-      const newY = toFixedDecimalPlaces(event.y, 1);
+      const newX = toFixedDecimalPlaces(d.x + totalDx, 1);
+      const newY = toFixedDecimalPlaces(d.y + totalDy, 1);
 
       node
         .raise()
@@ -601,18 +607,13 @@ export const generateGraph = (
         .attr("transform", `translate(${newX}, ${newY})`);
 
       if (snapToGrid) {
-        const [newX, newY] = roundToGrid(
-          nodeWidth,
-          nodeHeight,
-          event.x,
-          event.y
-        );
+        const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
 
         const issuesAtTarget = findIssuesAtTarget(
           dag.proots || [dag],
           d.data.id,
-          newX,
-          newY
+          gridX,
+          gridY
         );
 
         const targetIssueHasOutline = issuesAtTarget.some(
@@ -637,8 +638,8 @@ export const generateGraph = (
           // .attr("transform", `translate(${newX}, ${newY})`)
           .attr("width", borderRectWidth)
           .attr("height", borderRectHeight)
-          .attr("x", newX - borderRectWidth / 2)
-          .attr("y", newY - borderRectHeight / 2)
+          .attr("x", gridX - borderRectWidth / 2)
+          .attr("y", gridY - borderRectHeight / 2)
           .attr("stroke", "#2378ae")
           .attr("stroke-dasharray", "6,3")
           .attr("stroke-linecap", "butt")
@@ -728,10 +729,15 @@ export const generateGraph = (
         });
     }
 
-    function ended(event) {
+    function ended(event, d) {
+      totalDx += event.dx;
+      totalDy += event.dy;
+
       // Round to 1 decimal place to cut down on space when persisting the values.
-      let newX = toFixedDecimalPlaces(event.x, 1);
-      let newY = toFixedDecimalPlaces(event.y, 1);
+      // let newX = toFixedDecimalPlaces(event.x, 1);
+      // let newY = toFixedDecimalPlaces(event.y, 1);
+      let newX = toFixedDecimalPlaces(d.x + totalDx, 1);
+      let newY = toFixedDecimalPlaces(d.y + totalDy, 1);
 
       if (snapToGrid) {
         [newX, newY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
@@ -741,8 +747,8 @@ export const generateGraph = (
       // console.log("ended", newX, d3.select(this).datum().data.id);
       saveCoordinateOverrides({
         ...coordinateOverrides,
-        // TODO do we have a `d` arg?
-        [d3.select(this).datum().data.id]: { x: newX, y: newY },
+        [d.data.id]: { x: newX, y: newY },
+        // [d3.select(this).datum().data.id]: { x: newX, y: newY },
       });
     }
   }
