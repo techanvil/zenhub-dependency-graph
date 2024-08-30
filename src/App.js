@@ -23,6 +23,7 @@ import { Legend } from "./components/Legend";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
 import { toFixedDecimalPlaces } from "./d3";
+import { appSettingDefaults } from "./constants";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -90,7 +91,14 @@ function bootstrapParameters() {
     { key: "workspace" },
     { key: "sprint" },
     { key: "epic", parse: (v) => parseInt(v, 10) },
-    { key: "appSettings", isObject: true },
+    {
+      key: "appSettings",
+      isObject: true,
+      parse: (appSettings) => ({
+        ...appSettingDefaults,
+        ...appSettings,
+      }),
+    },
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
     { key: "pipelineHidden", isObject: true },
@@ -123,7 +131,7 @@ function bootstrapParameters() {
     ({ key, parse = (v) => v, isObject, toLocalStorage, fromLocalStorage }) => {
       if (url.searchParams.has(key)) {
         const value = isObject
-          ? JSON.parse(url.searchParams.get(key))
+          ? parse(JSON.parse(url.searchParams.get(key)))
           : parse(url.searchParams.get(key));
 
         const { localStorageKey, localStorageValue } =

@@ -22,9 +22,6 @@ const log = (...args) => {
   console.log("[grid]", ...args);
 };
 
-// const snapToGrid = false;
-const snapToGrid = true;
-
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
     // Hit vertical edge of box1
@@ -225,7 +222,8 @@ export const generateGraph = (
   },
   appSettings
 ) => {
-  const { showAncestorDependencies, showIssueDetails } = appSettings;
+  const { snapToGrid, showIssueDetails, showAncestorDependencies } =
+    appSettings;
 
   try {
     // TODO: Find a better fix for preventing pan/zoom state resetting on re-rendering the epic.
