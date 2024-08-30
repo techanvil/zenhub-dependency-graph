@@ -2,6 +2,10 @@
 
 https://techanvil.github.io/zenhub-dependency-graph/
 
+For the ZDG integration with Gemini, see https://github.com/techanvil/chrysalis/
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

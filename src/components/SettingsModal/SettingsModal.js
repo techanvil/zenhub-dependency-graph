@@ -24,6 +24,7 @@ import {
   additionalColorDefaults,
   pipelineColorDefaults,
 } from "../../d3/constants";
+import { appSettingDefaults } from "../../constants";
 
 export default function SettingsModal({
   isOpen,
@@ -45,15 +46,7 @@ export default function SettingsModal({
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(
     () => ({
-      ...{
-        showAncestorDependencies: false,
-        showIssueDetails: false,
-        showNonEpicIssues: false,
-        showNonEpicBlockedIssues: false,
-        showSelfContainedIssues: false,
-        showIssueEstimates: true,
-        showIssueSprints: true,
-      },
+      ...appSettingDefaults,
       ...appSettings,
     }),
     [appSettings]
@@ -122,6 +115,17 @@ export default function SettingsModal({
               </Link>
               .
             </FormHelperText>
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Snap to grid</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.snapToGrid}
+              onChange={(e) => {
+                updateAppSettings({
+                  snapToGrid: e.target.checked,
+                });
+              }}
+            />
           </FormControl>
           <FormControl pt="5">
             <FormLabel>Show issue details</FormLabel>
