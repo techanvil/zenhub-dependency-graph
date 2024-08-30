@@ -22,6 +22,7 @@ const log = (...args) => {
   console.log("[grid]", ...args);
 };
 
+// const snapToGrid = false;
 const snapToGrid = true;
 
 function getIntersection(dx, dy, cx, cy, w, h) {
@@ -193,6 +194,16 @@ export function removePipelineIssues(graphData, pipelineName) {
   return pipelineIssues;
 }
 
+function roundToGrid(nodeWidth, nodeHeight, x, y) {
+  let newX = x - nodeWidth / 2;
+  let newY = y - nodeHeight / 2;
+
+  newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
+  newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
+
+  return [newX, newY];
+}
+
 const panZoom = {
   instance: null,
   resizeHandler: null,
@@ -277,19 +288,25 @@ export const generateGraph = (
   ); // set node size instead of constraining to fit
   const { width, height } = layout(dag);
 
+  function getCoordinates({ x, y }) {
+    if (snapToGrid) {
+      return roundToGrid(nodeWidth, nodeHeight, x, y);
+    }
+
+    return [x, y];
+  }
+
   function applyOverrides(roots, overrides) {
     roots.forEach((root) => {
       if (overrides[root.data.id]) {
-        root.x = overrides[root.data.id].x;
-        root.y = overrides[root.data.id].y;
+        [root.x, root.y] = getCoordinates(overrides[root.data.id]);
       }
 
       root.dataChildren.forEach((dataChild) => {
         const { child } = dataChild;
 
         if (overrides[child.data.id]) {
-          child.x = overrides[child.data.id].x;
-          child.y = overrides[child.data.id].y;
+          [child.x, child.y] = getCoordinates(overrides[child.data.id]);
         }
         // const points = [...dataChild.points];
 
@@ -497,16 +514,6 @@ export const generateGraph = (
     renderSimpleIssues(nodes, appSettings);
   }
 
-  function roundToGrid(x, y) {
-    let newX = x - nodeWidth / 2;
-    let newY = y - nodeHeight / 2;
-
-    newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
-    newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
-
-    return [newX, newY];
-  }
-
   function findIssuesAtTarget(roots, currentIssueId, x, y) {
     const issues = [];
 
@@ -551,7 +558,12 @@ export const generateGraph = (
         .attr("transform", `translate(${newX}, ${newY})`);
 
       if (snapToGrid) {
-        const [newX, newY] = roundToGrid(event.x, event.y);
+        const [newX, newY] = roundToGrid(
+          nodeWidth,
+          nodeHeight,
+          event.x,
+          event.y
+        );
 
         const issuesAtTarget = findIssuesAtTarget(
           dag.proots || [dag],
@@ -679,7 +691,7 @@ export const generateGraph = (
       let newY = toFixedDecimalPlaces(event.y, 1);
 
       if (snapToGrid) {
-        [newX, newY] = roundToGrid(newX, newY);
+        [newX, newY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
       }
 
       node.classed("dragging", false);
