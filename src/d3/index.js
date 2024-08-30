@@ -18,10 +18,6 @@ export function toFixedDecimalPlaces(value, decimalPlaces) {
   );
 }
 
-const log = (...args) => {
-  console.log("[grid]", ...args);
-};
-
 function getIntersection(dx, dy, cx, cy, w, h) {
   if (Math.abs(dy / dx) < h / w) {
     // Hit vertical edge of box1
@@ -358,8 +354,6 @@ export const generateGraph = (
     return Object.entries(coordinateKeysToNodeData).reduce(
       (opacities, [coordinateKey, dataList]) => {
         if (dataList.length > 1) {
-          log(`Overlaid issues at ${coordinateKey}:`, dataList);
-
           const opacity = 1 / dataList.length;
 
           dataList.forEach((data) => {
@@ -374,17 +368,6 @@ export const generateGraph = (
   }
 
   const issueOpacities = getOverlaidIssueOpacities(dag);
-
-  log("dimensions", {
-    dag,
-    width,
-    height,
-    rectWidth,
-    rectHeight,
-    nodeWidth,
-    nodeHeight,
-    arrowSize,
-  });
 
   const svgSelection = d3.select(svgElement);
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
