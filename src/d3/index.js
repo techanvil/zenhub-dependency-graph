@@ -500,8 +500,6 @@ export const generateGraph = (
   function roundToGrid(x, y) {
     let newX = x - nodeWidth / 2;
     let newY = y - nodeHeight / 2;
-    // let newX = x;
-    // let newY = y;
 
     newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
     newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
@@ -552,7 +550,6 @@ export const generateGraph = (
         // .attr("cy", (d.y = event.y))
         .attr("transform", `translate(${newX}, ${newY})`);
 
-      // HERE: Draw outline if snapping to grid
       if (snapToGrid) {
         const [newX, newY] = roundToGrid(event.x, event.y);
 
@@ -562,14 +559,6 @@ export const generateGraph = (
           newX,
           newY
         );
-
-        log({
-          x: event.x,
-          y: event.y,
-          newX,
-          newY,
-          issuesAtTarget,
-        });
 
         const targetIssueHasOutline = issuesAtTarget.some(
           ({ data }) => data.isChosenSprint
