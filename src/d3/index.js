@@ -573,8 +573,8 @@ export const generateGraph = (
             return;
           }
 
-          // Ensure the panZoom instance is only updated when the container size changes, as the ResizeObserver
-          // can trigger for other reasons.
+          // Ensure the panZoom instance is only updated when the container size changes, as the
+          // handler is triggered when the observer is first connected.
 
           const newWidth = entries[0].target.clientWidth;
           const newHeight = entries[0].target.clientHeight;
