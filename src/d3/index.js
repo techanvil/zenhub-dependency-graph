@@ -554,6 +554,16 @@ export const generateGraph = (
       },
     });
 
+    function restorePanZoomState() {
+      try {
+        panZoom.instance.zoom(panZoom.state.zoom);
+        panZoom.instance.pan(panZoom.state.pan);
+      } catch (err) {
+        // This is a safety net, the error should not occur.
+        console.log("panZoom error on re-render", err);
+      }
+    }
+
     panZoom.resizeHandler = new ResizeObserver(
       (() => {
         let prevWidth, prevHeight;
@@ -579,31 +589,41 @@ export const generateGraph = (
             return;
           }
 
-          prevWidth = newWidth;
-          prevHeight = newHeight;
-
           try {
+            const pan = panZoom.instance.getPan();
+            const zoom = panZoom.instance.getZoom();
+
+            const ratio = newWidth / prevWidth;
+
+            panZoom.state = {
+              pan: {
+                x: pan.x * ratio,
+                y: pan.y * ratio,
+              },
+              zoom: zoom * ratio,
+            };
+
             panZoom.instance.resize();
             panZoom.instance.fit();
             panZoom.instance.center();
+
+            restorePanZoomState();
           } catch (err) {
             // TODO: Fix the underlying cause of this error.
             console.log("panZoom error on resize", err);
           }
+
+          prevWidth = newWidth;
+          prevHeight = newHeight;
         };
       })()
-    ).observe(document.getElementById("graph-container"));
+    );
+    panZoom.resizeHandler.observe(document.getElementById("graph-container"));
 
     panZoom.epic = epic;
 
     if (panZoom.state) {
-      try {
-        panZoom.instance.zoom(panZoom.state.zoom);
-        panZoom.instance.pan(panZoom.state.pan);
-      } catch (err) {
-        // This is a safety net, the error should not occur.
-        console.log("panZoom error on re-render", err);
-      }
+      restorePanZoomState();
     }
   }
 
