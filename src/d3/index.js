@@ -370,7 +370,7 @@ export const generateGraph = (
   const links = dag.links();
 
   // Plot edges
-  svgSelection
+  const lines = svgSelection
     .append("g")
     .selectAll("path")
     .data(links)
@@ -480,7 +480,7 @@ export const generateGraph = (
 
   // Draw arrows
   const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
-  svgSelection
+  const arrows = svgSelection
     .append("g")
     .attr("class", "zdg-graph-arrows")
     .selectAll("path")
@@ -507,6 +507,36 @@ export const generateGraph = (
     .attr("fill", ({ source, target }) =>
       getArrowEndColor(source, target, pipelineColors, colorMap)
     );
+
+    // Highlight blocked and blocking issues on hover.
+    nodes
+      .on( 'mouseenter', ( _e, { data } ) => {
+        const { id, parentIds } = data;
+  
+        nodes
+          .filter( ( d ) =>
+              ! [ ...parentIds, id ].includes( d.data.id ) &&
+              ! d.data.parentIds.includes( id )
+          )
+          .attr( 'opacity', '0.2' );
+
+        lines
+          .filter( ( { source, target } ) =>
+            ! [ source.data.id, target.data.id ].includes( id )
+          )
+          .attr( 'opacity', '0.2' );
+
+        arrows
+          .filter( ( { source, target } ) =>
+            ! [ source.data.id, target.data.id ].includes( id )
+          )
+          .attr( 'opacity', '0.2' );
+      } )
+      .on( 'mouseleave', () => {
+        nodes.attr( 'opacity', ( d ) => issueOpacities[ d.data.id ] || 1 );
+        lines.attr( 'opacity', '1' );
+        arrows.attr( 'opacity', '1' );
+      } );
 
   if (showIssueDetails) {
     renderDetailedIssues(nodes, appSettings);
