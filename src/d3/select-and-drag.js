@@ -9,6 +9,10 @@ import {
   toFixedDecimalPlaces,
 } from "./utils";
 
+export const selectAndDragState = {
+  isLassooing: false,
+};
+
 const outlineColor = "#2378ae";
 
 function findIssuesAtTarget(roots, currentIssueId, x, y) {
@@ -71,6 +75,8 @@ export function setupSelectAndDrag(
   },
   appSettings
 ) {
+  selectAndDragState.isLassooing = false;
+
   const { snapToGrid } = appSettings;
 
   let outlineSelection = null;
@@ -353,6 +359,10 @@ export function setupSelectAndDrag(
           return;
         }
 
+        // Set to false initially to allow a click to clear the lassoo.
+        // The flag will be set to true in the drag event handler.
+        selectAndDragState.isLassooing = false;
+
         if (!lassooSelection) {
           const panZoomViewport = d3.select(".svg-pan-zoom_viewport");
 
@@ -363,7 +373,7 @@ export function setupSelectAndDrag(
         }
 
         if (lassooedNodes) {
-          lassooedNodes.classed("lassooed", false);
+          lassooedNodes.classed("zdg-lassooed", false);
           lassooedNodes = null;
         }
 
@@ -400,17 +410,19 @@ export function setupSelectAndDrag(
 
         startEvent
           .on("drag", (dragEvent) => {
+            selectAndDragState.isLassooing = true;
+
             width += dragEvent.dx / svgRatio / zoom;
             height += dragEvent.dy / svgRatio / zoom;
 
             lassooSelection.attr("width", width).attr("height", height);
 
             if (lassooedNodes) {
-              lassooedNodes.classed("lassooed", false);
+              lassooedNodes.classed("zdg-lassooed", false);
             }
 
             lassooedNodes = getLassooedNodes(newX, newY, width, height);
-            lassooedNodes.classed("lassooed", true);
+            lassooedNodes.classed("zdg-lassooed", true);
           })
           .on("end", (endEvent) => {
             if (!lassooedNodes) {

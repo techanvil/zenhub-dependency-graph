@@ -20,6 +20,13 @@ code {
     monospace;
 }
 
-.lassooed {
+.zdg-lassooed > .zdg-issue {
   opacity: 0.5;
+}
+
+/* Fade transition for highlighting issues */
+.zdg-issue,
+.zdg-line,
+.zdg-arrow {
+  transition: opacity 0.2s ease-in-out;
 }
