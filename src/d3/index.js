@@ -519,6 +519,7 @@ export const generateGraph = (
       arrowSize,
       colorMap,
       dag,
+      dagHeight,
       dagWidth,
       defs,
       line,
