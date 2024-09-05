@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/zenhub-dependency-graph/static/css/main.36f2951b.css",
-    "main.js": "/zenhub-dependency-graph/static/js/main.3c75f5dd.js",
+    "main.js": "/zenhub-dependency-graph/static/js/main.5e3f8a09.js",
     "static/js/404.8f897e5b.chunk.js": "/zenhub-dependency-graph/static/js/404.8f897e5b.chunk.js",
     "index.html": "/zenhub-dependency-graph/index.html",
     "main.36f2951b.css.map": "/zenhub-dependency-graph/static/css/main.36f2951b.css.map",
-    "main.3c75f5dd.js.map": "/zenhub-dependency-graph/static/js/main.3c75f5dd.js.map",
+    "main.5e3f8a09.js.map": "/zenhub-dependency-graph/static/js/main.5e3f8a09.js.map",
     "404.8f897e5b.chunk.js.map": "/zenhub-dependency-graph/static/js/404.8f897e5b.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.36f2951b.css",
-    "static/js/main.3c75f5dd.js"
+    "static/js/main.5e3f8a09.js"
   ]
 }
