@@ -25,7 +25,8 @@ code {
 }
 
 /* Fade transition for highlighting issues */
-svg#zdg-graph > g:not( #svg-pan-zoom-controls ) > g > g,
-svg#zdg-graph > g:not( #svg-pan-zoom-controls ) > g > path {
+.zdg-issue,
+.zdg-line,
+.zdg-arrow {
   transition: opacity 0.2s ease-in-out;
 }

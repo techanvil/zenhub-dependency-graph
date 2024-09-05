@@ -380,6 +380,7 @@ export const generateGraph = (
     .data(links)
     .enter()
     .append("path")
+    .attr("class", "zdg-line")
     .attr("d", ({ points }) => {
       const linePoints = [...points];
       const target = linePoints.pop();
@@ -512,6 +513,7 @@ export const generateGraph = (
     .data(dag.links())
     .enter()
     .append("path")
+    .attr("class", "zdg-arrow")
     .attr("d", arrow)
     .attr("transform", ({ source, target, points }) => {
       const [end, start] = points.reverse();
