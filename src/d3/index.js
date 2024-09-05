@@ -16,7 +16,7 @@ import {
 } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
-import { setupSelectAndDrag } from "./select-and-drag";
+import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
   const node = graphData.find(({ id }) => id === nodeId);
@@ -539,6 +539,10 @@ export const generateGraph = (
   if (highlightRelatedIssues) {
     nodes
       .on("mouseenter", (_e, { data }) => {
+        if (selectAndDragState.isLassooing) {
+          return;
+        }
+
         const { id, parentIds } = data;
 
         issues
@@ -565,6 +569,10 @@ export const generateGraph = (
           .attr("opacity", "0.3");
       })
       .on("mouseleave", () => {
+        if (selectAndDragState.isLassooing) {
+          return;
+        }
+
         issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
         lines.attr("opacity", "1");
         arrows.attr("opacity", "1");
