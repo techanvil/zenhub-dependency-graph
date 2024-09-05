@@ -228,12 +228,18 @@ export const generateGraph = (
       } catch (err) {
         // TODO: Fix the underlying cause of this error.
         console.log("panZoomInstance destroy error", err);
+
+        // TODO: This is a bit of a nuclear option, we should recover more gracefully.
+        window.location.reload();
       }
       panZoom.instance = null;
       panZoom.resizeHandler?.disconnect();
     }
   } catch (err) {
     console.log("panZoomInstance destroy error", err);
+
+    // TODO: This is a bit of a nuclear option, we should recover more gracefully.
+    window.location.reload();
   }
   d3.selectAll("svg > *").remove();
 
@@ -633,6 +639,9 @@ export const generateGraph = (
       } catch (err) {
         // This is a safety net, the error should not occur.
         console.log("panZoom error on re-render", err);
+
+        // TODO: This is a bit of a nuclear option, we should recover more gracefully.
+        window.location.reload();
       }
     }
 
@@ -683,6 +692,9 @@ export const generateGraph = (
           } catch (err) {
             // TODO: Fix the underlying cause of this error.
             console.log("panZoom error on resize", err);
+
+            // TODO: This is a bit of a nuclear option, we should recover more gracefully.
+            window.location.reload();
           }
 
           prevWidth = newWidth;
