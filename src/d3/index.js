@@ -519,19 +519,19 @@ export const generateGraph = (
             ! parentIds.includes( d.data.id ) &&
             ! d.data.parentIds.includes( id )
           )
-          .attr( 'opacity', '0.2' );
+          .attr( 'opacity', '0.3' );
 
         lines
           .filter( ( { source, target } ) =>
             source.data.id !== id && target.data.id !== id
           )
-          .attr( 'opacity', '0.2' );
+          .attr( 'opacity', '0.3' );
 
         arrows
           .filter( ( { source, target } ) =>
             source.data.id !== id && target.data.id !== id
           )
-          .attr( 'opacity', '0.2' );
+          .attr( 'opacity', '0.3' );
       } )
       .on( 'mouseleave', () => {
         nodes.attr( 'opacity', ( d ) => issueOpacities[ d.data.id ] || 1 );
