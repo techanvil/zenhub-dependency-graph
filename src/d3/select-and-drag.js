@@ -58,6 +58,7 @@ export function setupSelectAndDrag(
     arrowSize,
     colorMap,
     dag,
+    dagHeight,
     dagWidth,
     defs,
     line,
@@ -379,9 +380,16 @@ export function setupSelectAndDrag(
         const pan = panZoom.instance.getPan();
         const zoom = panZoom.instance.getZoom();
 
+        const containerRect = document
+          .getElementById("graph-container")
+          .getBoundingClientRect();
+
+        const containerAspectRatio = containerRect.width / containerRect.height;
+
         const svgRatio =
-          document.getElementById("graph-container").getBoundingClientRect()
-            .width / dagWidth;
+          containerAspectRatio > 1
+            ? containerRect.height / dagHeight
+            : containerRect.width / dagWidth;
 
         const newX = (startEvent.x - pan.x) / svgRatio / zoom;
         const newY = (startEvent.y - pan.y) / svgRatio / zoom;
