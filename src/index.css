@@ -20,7 +20,7 @@ code {
     monospace;
 }
 
-.lassooed {
+.zdg-lassooed > .zdg-issue {
   opacity: 0.5;
 }
 

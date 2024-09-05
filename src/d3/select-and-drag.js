@@ -362,7 +362,7 @@ export function setupSelectAndDrag(
         }
 
         if (lassooedNodes) {
-          lassooedNodes.classed("lassooed", false);
+          lassooedNodes.classed("zdg-lassooed", false);
           lassooedNodes = null;
         }
 
@@ -398,11 +398,11 @@ export function setupSelectAndDrag(
             lassooSelection.attr("width", width).attr("height", height);
 
             if (lassooedNodes) {
-              lassooedNodes.classed("lassooed", false);
+              lassooedNodes.classed("zdg-lassooed", false);
             }
 
             lassooedNodes = getLassooedNodes(newX, newY, width, height);
-            lassooedNodes.classed("lassooed", true);
+            lassooedNodes.classed("zdg-lassooed", true);
           })
           .on("end", (endEvent) => {
             if (!lassooedNodes) {

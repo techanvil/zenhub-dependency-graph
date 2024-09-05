@@ -198,8 +198,12 @@ export const generateGraph = (
   },
   appSettings
 ) => {
-  const { highlightRelatedIssues, snapToGrid, showIssueDetails, showAncestorDependencies } =
-    appSettings;
+  const {
+    highlightRelatedIssues,
+    snapToGrid,
+    showIssueDetails,
+    showAncestorDependencies,
+  } = appSettings;
 
   try {
     // TODO: Find a better fix for preventing pan/zoom state resetting on re-rendering the epic.
@@ -430,14 +434,35 @@ export const generateGraph = (
     });
 
   // Select nodes
-  const nodes = svgSelection
+  const issues = svgSelection
     .append("g")
     .selectAll("g")
     .data(dag.descendants())
     .enter()
     .append("g")
     .attr("transform", ({ x, y }) => `translate(${x}, ${y})`)
-    .attr("opacity", (d) => issueOpacities[d.data.id] || 1);
+    // Append a white background rect which retains full opacity to avoid showing lines through opaque nodes.
+    // TODO: DRY the rect creation?
+    .append("rect")
+    .attr("width", rectWidth)
+    .attr("height", rectHeight)
+    .attr("rx", 5)
+    .attr("ry", 5)
+    .attr("x", -rectWidth / 2)
+    .attr("y", -rectHeight / 2)
+    .attr("fill", "white")
+    .select(function () {
+      return this.parentNode;
+    })
+
+    // Append the issue group element that will contain the issue details.
+    .append("g")
+    .attr("opacity", (d) => issueOpacities[d.data.id] || 1)
+    .attr("class", "zdg-issue");
+
+  const nodes = issues.select(function () {
+    return this.parentNode;
+  });
 
   // Plot node outlines
   // nodes
@@ -455,7 +480,7 @@ export const generateGraph = (
   // Plot node outlines for chosen sprint
   const borderRectWidth = rectWidth + 3;
   const borderRectHeight = rectHeight + 3;
-  nodes
+  issues
     .filter((d) => d.data.isChosenSprint)
     .append("rect")
     .attr("width", borderRectWidth)
@@ -468,7 +493,7 @@ export const generateGraph = (
   // .attr("fill", (n) => getNodeColor(n, pipelineColors, colorMap));
 
   // Plot node rects
-  nodes
+  issues
     .append("rect")
     .attr("width", rectWidth)
     .attr("height", rectHeight)
@@ -509,42 +534,45 @@ export const generateGraph = (
     );
 
   // Highlight blocked and blocking issues on hover.
-  if ( highlightRelatedIssues ) {
+  if (highlightRelatedIssues) {
     nodes
-      .on( 'mouseenter', ( _e, { data } ) => {
+      .on("mouseenter", (_e, { data }) => {
         const { id, parentIds } = data;
 
-        nodes
-          .filter( ( d ) =>
-            id !== d.data.id &&
-            ! parentIds.includes( d.data.id ) &&
-            ! d.data.parentIds.includes( id )
+        issues
+          .filter(
+            (d) =>
+              id !== d.data.id &&
+              !parentIds.includes(d.data.id) &&
+              !d.data.parentIds.includes(id)
           )
-          .attr( 'opacity', '0.3' );
+          .attr("opacity", "0.3");
 
         lines
-          .filter( ( { source, target } ) =>
-            source.data.id !== id && target.data.id !== id
+          .filter(
+            ({ source, target }) =>
+              source.data.id !== id && target.data.id !== id
           )
-          .attr( 'opacity', '0.3' );
+          .attr("opacity", "0.3");
 
         arrows
-          .filter( ( { source, target } ) =>
-            source.data.id !== id && target.data.id !== id
+          .filter(
+            ({ source, target }) =>
+              source.data.id !== id && target.data.id !== id
           )
-          .attr( 'opacity', '0.3' );
-      } )
-      .on( 'mouseleave', () => {
-        nodes.attr( 'opacity', ( d ) => issueOpacities[ d.data.id ] || 1 );
-        lines.attr( 'opacity', '1' );
-        arrows.attr( 'opacity', '1' );
-      } );
+          .attr("opacity", "0.3");
+      })
+      .on("mouseleave", () => {
+        issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
+        lines.attr("opacity", "1");
+        arrows.attr("opacity", "1");
+      });
   }
 
   if (showIssueDetails) {
-    renderDetailedIssues(nodes, appSettings);
+    renderDetailedIssues(issues, appSettings);
   } else {
-    renderSimpleIssues(nodes, appSettings);
+    renderSimpleIssues(issues, appSettings);
   }
 
   setupSelectAndDrag(
