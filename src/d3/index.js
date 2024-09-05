@@ -508,36 +508,36 @@ export const generateGraph = (
       getArrowEndColor(source, target, pipelineColors, colorMap)
     );
 
-    // Highlight blocked and blocking issues on hover.
-    nodes
-      .on( 'mouseenter', ( _e, { data } ) => {
-        const { id, parentIds } = data;
-  
-        nodes
-          .filter( ( d ) =>
-            id !== d.data.id &&
-            ! parentIds.includes( d.data.id ) &&
-            ! d.data.parentIds.includes( id )
-          )
-          .attr( 'opacity', '0.3' );
+  // Highlight blocked and blocking issues on hover.
+  nodes
+    .on( 'mouseenter', ( _e, { data } ) => {
+      const { id, parentIds } = data;
 
-        lines
-          .filter( ( { source, target } ) =>
-            source.data.id !== id && target.data.id !== id
-          )
-          .attr( 'opacity', '0.3' );
+      nodes
+        .filter( ( d ) =>
+          id !== d.data.id &&
+          ! parentIds.includes( d.data.id ) &&
+          ! d.data.parentIds.includes( id )
+        )
+        .attr( 'opacity', '0.3' );
 
-        arrows
-          .filter( ( { source, target } ) =>
-            source.data.id !== id && target.data.id !== id
-          )
-          .attr( 'opacity', '0.3' );
-      } )
-      .on( 'mouseleave', () => {
-        nodes.attr( 'opacity', ( d ) => issueOpacities[ d.data.id ] || 1 );
-        lines.attr( 'opacity', '1' );
-        arrows.attr( 'opacity', '1' );
-      } );
+      lines
+        .filter( ( { source, target } ) =>
+          source.data.id !== id && target.data.id !== id
+        )
+        .attr( 'opacity', '0.3' );
+
+      arrows
+        .filter( ( { source, target } ) =>
+          source.data.id !== id && target.data.id !== id
+        )
+        .attr( 'opacity', '0.3' );
+    } )
+    .on( 'mouseleave', () => {
+      nodes.attr( 'opacity', ( d ) => issueOpacities[ d.data.id ] || 1 );
+      lines.attr( 'opacity', '1' );
+      arrows.attr( 'opacity', '1' );
+    } );
 
   if (showIssueDetails) {
     renderDetailedIssues(nodes, appSettings);
