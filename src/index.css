@@ -20,6 +20,13 @@ code {
     monospace;
 }
 
+.zdg-drop-target,
+.zdg-lassoo {
+  /* transition: transform 0.2s ease-in-out; */
+  transition: transform 0.1s ease-in;
+  /* transition: transform 0.2s cubic-bezier(0.075, 0.82, 0.165, 1); */
+}
+
 .zdg-lassooed > .zdg-issue {
   opacity: 0.5;
 }

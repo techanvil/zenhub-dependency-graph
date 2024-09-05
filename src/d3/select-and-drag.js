@@ -154,16 +154,22 @@ export function setupSelectAndDrag(
 
             outlineSelection = panZoomViewport
               .insert("rect", "g")
+              .attr("class", "zdg-drop-target")
               .attr("rx", 5)
-              .attr("ry", 5);
+              .attr("ry", 5)
+              .attr("x", 0)
+              .attr("y", 0);
           }
 
           outlineSelection
-            // .attr("transform", `translate(${newX}, ${newY})`)
             .attr("width", borderRectWidth)
             .attr("height", borderRectHeight)
-            .attr("x", gridX - borderRectWidth / 2)
-            .attr("y", gridY - borderRectHeight / 2)
+            .attr(
+              "transform",
+              `translate(${gridX - borderRectWidth / 2}, ${
+                gridY - borderRectHeight / 2
+              })`
+            )
             .attr("stroke", outlineColor)
             .attr("stroke-dasharray", "6,3")
             .attr("stroke-linecap", "butt")
@@ -193,9 +199,12 @@ export function setupSelectAndDrag(
 
         const { startX, startY } = getMinMaxNodeCoordinates(lassooedNodes);
 
-        lassooSelection
-          .attr("x", startX + deltaX - nodeWidth / 2)
-          .attr("y", startY + deltaY - nodeHeight / 2);
+        lassooSelection.attr(
+          "transform",
+          `translate(${startX + deltaX - nodeWidth / 2}, ${
+            startY + deltaY - nodeHeight / 2
+          })`
+        );
       }
 
       // Update the lines and arrows.
@@ -380,8 +389,11 @@ export function setupSelectAndDrag(
 
           lassooSelection = panZoomViewport
             .insert("rect", "g")
+            .attr("class", "zdg-lassoo")
             .attr("rx", 5)
-            .attr("ry", 5);
+            .attr("ry", 5)
+            .attr("x", 0)
+            .attr("y", 0);
         }
 
         if (lassooedNodes) {
@@ -417,8 +429,7 @@ export function setupSelectAndDrag(
         lassooSelection
           .attr("width", width)
           .attr("height", height)
-          .attr("x", newX)
-          .attr("y", newY)
+          .attr("transform", `translate(${newX}, ${newY})`)
           .attr("stroke", outlineColor)
           .attr("stroke-dasharray", "6,3")
           .attr("stroke-linecap", "butt")
@@ -455,8 +466,12 @@ export function setupSelectAndDrag(
             lassooSelection
               .attr("width", endX - startX + nodeWidth)
               .attr("height", endY - startY + nodeHeight)
-              .attr("x", startX - nodeWidth / 2)
-              .attr("y", startY - nodeHeight / 2);
+              .attr(
+                "transform",
+                `translate(${startX - nodeWidth / 2}, ${
+                  startY - nodeHeight / 2
+                })`
+              );
           });
       })
   );
