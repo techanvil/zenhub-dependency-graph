@@ -193,6 +193,17 @@ export default function SettingsModal({
               }}
             />
           </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Highlight blocked & blocking issues</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.highlightRelatedIssues}
+              onChange={(e) => {
+                updateAppSettings({
+                  highlightRelatedIssues: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
           {Object.keys(coordinateOverrides || {}).length > 0 && (
             <FormControl pt="5">
               <FormLabel>

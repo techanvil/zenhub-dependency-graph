@@ -16,7 +16,7 @@ import {
 } from "./utils";
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
-import { setupSelectAndDrag } from "./select-and-drag";
+import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
   const node = graphData.find(({ id }) => id === nodeId);
@@ -198,8 +198,12 @@ export const generateGraph = (
   },
   appSettings
 ) => {
-  const { snapToGrid, showIssueDetails, showAncestorDependencies } =
-    appSettings;
+  const {
+    highlightRelatedIssues,
+    snapToGrid,
+    showIssueDetails,
+    showAncestorDependencies,
+  } = appSettings;
 
   try {
     // TODO: Find a better fix for preventing pan/zoom state resetting on re-rendering the epic.
@@ -370,12 +374,13 @@ export const generateGraph = (
   const links = dag.links();
 
   // Plot edges
-  svgSelection
+  const lines = svgSelection
     .append("g")
     .selectAll("path")
     .data(links)
     .enter()
     .append("path")
+    .attr("class", "zdg-line")
     .attr("d", ({ points }) => {
       const linePoints = [...points];
       const target = linePoints.pop();
@@ -430,14 +435,35 @@ export const generateGraph = (
     });
 
   // Select nodes
-  const nodes = svgSelection
+  const issues = svgSelection
     .append("g")
     .selectAll("g")
     .data(dag.descendants())
     .enter()
     .append("g")
     .attr("transform", ({ x, y }) => `translate(${x}, ${y})`)
-    .attr("opacity", (d) => issueOpacities[d.data.id] || 1);
+    // Append a white background rect which retains full opacity to avoid showing lines through opaque nodes.
+    // TODO: DRY the rect creation?
+    .append("rect")
+    .attr("width", rectWidth)
+    .attr("height", rectHeight)
+    .attr("rx", 5)
+    .attr("ry", 5)
+    .attr("x", -rectWidth / 2)
+    .attr("y", -rectHeight / 2)
+    .attr("fill", "white")
+    .select(function () {
+      return this.parentNode;
+    })
+
+    // Append the issue group element that will contain the issue details.
+    .append("g")
+    .attr("opacity", (d) => issueOpacities[d.data.id] || 1)
+    .attr("class", "zdg-issue");
+
+  const nodes = issues.select(function () {
+    return this.parentNode;
+  });
 
   // Plot node outlines
   // nodes
@@ -455,7 +481,7 @@ export const generateGraph = (
   // Plot node outlines for chosen sprint
   const borderRectWidth = rectWidth + 3;
   const borderRectHeight = rectHeight + 3;
-  nodes
+  issues
     .filter((d) => d.data.isChosenSprint)
     .append("rect")
     .attr("width", borderRectWidth)
@@ -468,7 +494,7 @@ export const generateGraph = (
   // .attr("fill", (n) => getNodeColor(n, pipelineColors, colorMap));
 
   // Plot node rects
-  nodes
+  issues
     .append("rect")
     .attr("width", rectWidth)
     .attr("height", rectHeight)
@@ -480,13 +506,14 @@ export const generateGraph = (
 
   // Draw arrows
   const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
-  svgSelection
+  const arrows = svgSelection
     .append("g")
     .attr("class", "zdg-graph-arrows")
     .selectAll("path")
     .data(dag.links())
     .enter()
     .append("path")
+    .attr("class", "zdg-arrow")
     .attr("d", arrow)
     .attr("transform", ({ source, target, points }) => {
       const [end, start] = points.reverse();
@@ -508,10 +535,54 @@ export const generateGraph = (
       getArrowEndColor(source, target, pipelineColors, colorMap)
     );
 
+  // Highlight blocked and blocking issues on hover.
+  if (highlightRelatedIssues) {
+    nodes
+      .on("mouseenter", (_e, { data }) => {
+        if (selectAndDragState.isLassooing) {
+          return;
+        }
+
+        const { id, parentIds } = data;
+
+        issues
+          .filter(
+            (d) =>
+              id !== d.data.id &&
+              !parentIds.includes(d.data.id) &&
+              !d.data.parentIds.includes(id)
+          )
+          .attr("opacity", "0.3");
+
+        lines
+          .filter(
+            ({ source, target }) =>
+              source.data.id !== id && target.data.id !== id
+          )
+          .attr("opacity", "0.3");
+
+        arrows
+          .filter(
+            ({ source, target }) =>
+              source.data.id !== id && target.data.id !== id
+          )
+          .attr("opacity", "0.3");
+      })
+      .on("mouseleave", () => {
+        if (selectAndDragState.isLassooing) {
+          return;
+        }
+
+        issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
+        lines.attr("opacity", "1");
+        arrows.attr("opacity", "1");
+      });
+  }
+
   if (showIssueDetails) {
-    renderDetailedIssues(nodes, appSettings);
+    renderDetailedIssues(issues, appSettings);
   } else {
-    renderSimpleIssues(nodes, appSettings);
+    renderSimpleIssues(issues, appSettings);
   }
 
   setupSelectAndDrag(
