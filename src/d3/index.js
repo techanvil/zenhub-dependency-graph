@@ -363,6 +363,15 @@ export const generateGraph = (
   svgSelection.attr("viewBox", [0, 0, dagWidth, dagHeight].join(" "));
   const defs = svgSelection.append("defs"); // For gradients
 
+  // Add a full width/height rectangle to ensure svgPanZoom doesn't crop the viewport,
+  // making it easier to determine the dimensions to use for lassoing.
+  // TODO: See if there's a better way to handle this.
+  svgSelection
+    .append("rect")
+    .attr("width", dagWidth)
+    .attr("height", dagHeight)
+    .attr("fill", "rgba(0,0,0,0)");
+
   const steps = dag.size();
   const interp = d3.interpolateRainbow;
   const colorMap = new Map();

@@ -53,6 +53,18 @@ function getMinMaxNodeCoordinates(nodes) {
   return { startX, startY, endX, endY };
 }
 
+function getSvgRatio(containerRect, panZoomViewportRect, dagWidth, dagHeight) {
+  if (panZoomViewportRect.width === containerRect.width) {
+    return containerRect.width / dagWidth;
+  }
+
+  if (panZoomViewportRect.height === containerRect.height) {
+    return containerRect.height / dagHeight;
+  }
+
+  return containerRect.width / dagWidth;
+}
+
 export function setupSelectAndDrag(
   {
     arrowSize,
@@ -384,12 +396,17 @@ export function setupSelectAndDrag(
           .getElementById("graph-container")
           .getBoundingClientRect();
 
-        const containerAspectRatio = containerRect.width / containerRect.height;
+        const panZoomViewport = document.querySelector(
+          ".svg-pan-zoom_viewport"
+        );
+        const panZoomViewportRect = panZoomViewport.getBoundingClientRect();
 
-        const svgRatio =
-          containerAspectRatio > 1
-            ? containerRect.height / dagHeight
-            : containerRect.width / dagWidth;
+        const svgRatio = getSvgRatio(
+          containerRect,
+          panZoomViewportRect,
+          dagWidth,
+          dagHeight
+        );
 
         const newX = (startEvent.x - pan.x) / svgRatio / zoom;
         const newY = (startEvent.y - pan.y) / svgRatio / zoom;
