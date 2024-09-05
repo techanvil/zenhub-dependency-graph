@@ -7,4 +7,5 @@ export const appSettingDefaults = {
   showIssueSprints: true,
   showAncestorDependencies: false,
   showNonEpicBlockedIssues: false,
+  highlightRelatedIssues: false,
 };
