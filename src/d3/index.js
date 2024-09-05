@@ -515,20 +515,21 @@ export const generateGraph = (
   
         nodes
           .filter( ( d ) =>
-              ! [ ...parentIds, id ].includes( d.data.id ) &&
-              ! d.data.parentIds.includes( id )
+            id !== d.data.id &&
+            ! parentIds.includes( d.data.id ) &&
+            ! d.data.parentIds.includes( id )
           )
           .attr( 'opacity', '0.2' );
 
         lines
           .filter( ( { source, target } ) =>
-            ! [ source.data.id, target.data.id ].includes( id )
+            source.data.id !== id && target.data.id !== id
           )
           .attr( 'opacity', '0.2' );
 
         arrows
           .filter( ( { source, target } ) =>
-            ! [ source.data.id, target.data.id ].includes( id )
+            source.data.id !== id && target.data.id !== id
           )
           .attr( 'opacity', '0.2' );
       } )
