@@ -33,6 +33,7 @@ import {
 import { isEmpty } from "../../utils/common";
 import {
   activePaneAtom,
+  hiddenIssuesAtom,
   nonEpicIssuesAtom,
   PANES,
   selfContainedIssuesAtom,
@@ -66,7 +67,6 @@ export default function Header({
   saveEpic,
   sprint,
   saveSprint,
-  hiddenIssues,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -79,6 +79,7 @@ export default function Header({
 
   const nonEpicIssues = useAtomValue(nonEpicIssuesAtom);
   const selfContainedIssues = useAtomValue(selfContainedIssuesAtom);
+  const hiddenIssues = useAtomValue(hiddenIssuesAtom);
   const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(

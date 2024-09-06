@@ -193,7 +193,6 @@ function App({ authentication, panel }) {
     {},
     `coordinateOverrides`
   );
-  const [hiddenIssues, setHiddenIssues] = useState();
   const [currentGraphData, setCurrentGraphData] = useState();
 
   // TODO: Migrate these to Jotai.
@@ -216,8 +215,6 @@ function App({ authentication, panel }) {
     saveEpic,
     sprint,
     saveSprint,
-    hiddenIssues,
-    setHiddenIssues,
     currentGraphData,
     setCurrentGraphData,
   };

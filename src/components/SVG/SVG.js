@@ -16,7 +16,11 @@ import {
 } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { nonEpicIssuesAtom, selfContainedIssuesAtom } from "../../store/atoms";
+import {
+  hiddenIssuesAtom,
+  nonEpicIssuesAtom,
+  selfContainedIssuesAtom,
+} from "../../store/atoms";
 
 export default function SVG({
   APIKey,
@@ -29,7 +33,6 @@ export default function SVG({
   workspace,
   sprint,
   epic,
-  setHiddenIssues,
   setCurrentGraphData,
 }) {
   const ref = useRef();
@@ -39,6 +42,7 @@ export default function SVG({
 
   const setNonEpicIssues = useSetAtom(nonEpicIssuesAtom);
   const setSelfContainedIssues = useSetAtom(selfContainedIssuesAtom);
+  const setHiddenIssues = useSetAtom(hiddenIssuesAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
