@@ -2,6 +2,7 @@
  * External dependencies
  */
 import { useEffect, useMemo, useState } from "react";
+import { useAtom } from "jotai";
 import {
   Button,
   FormControl,
@@ -19,18 +20,17 @@ import {
   Switch,
   Text,
 } from "@chakra-ui/react";
-import { deepEquals, shallowEqual } from "../../utils/common";
+import { deepEquals } from "../../utils/common";
 import {
   additionalColorDefaults,
   pipelineColorDefaults,
 } from "../../d3/constants";
 import { appSettingDefaults } from "../../constants";
+import { APIKeyAtom } from "../../store/atoms";
 
 export default function SettingsModal({
   isOpen,
   onClose,
-  APIKey,
-  saveAPIKey,
   appSettings,
   pipelineColors,
   savePipelineColors,
@@ -43,6 +43,8 @@ export default function SettingsModal({
   saveCoordinateOverrides,
   saveAppSettings,
 }) {
+  const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
+
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(
     () => ({

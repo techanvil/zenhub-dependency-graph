@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { useEffect, useState, useRef } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 
 /**
@@ -17,6 +17,7 @@ import {
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 import {
+  APIKeyAtom,
   currentGraphDataAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
@@ -24,7 +25,6 @@ import {
 } from "../../store/atoms";
 
 export default function SVG({
-  APIKey,
   appSettings,
   pipelineColors,
   additionalColors,
@@ -44,6 +44,8 @@ export default function SVG({
   const setSelfContainedIssues = useSetAtom(selfContainedIssuesAtom);
   const setHiddenIssues = useSetAtom(hiddenIssuesAtom);
   const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
+
+  const APIKey = useAtomValue(APIKeyAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
