@@ -2,6 +2,7 @@
  * External dependencies
  */
 import { useCallback, useEffect, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
 import {
   Box,
   Button,
@@ -20,7 +21,6 @@ import {
   WrapItem,
 } from "@chakra-ui/react";
 import { AsyncSelect, Select } from "chakra-react-select";
-import { useAtom } from "jotai";
 
 /**
  * Internal dependencies
@@ -31,7 +31,7 @@ import {
   getWorkspaces,
 } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { activePaneAtom, PANES } from "../../store/atoms";
+import { activePaneAtom, nonEpicIssuesAtom, PANES } from "../../store/atoms";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -61,7 +61,6 @@ export default function Header({
   saveEpic,
   sprint,
   saveSprint,
-  nonEpicIssues,
   selfContainedIssues,
   hiddenIssues,
 }) {
@@ -252,6 +251,7 @@ export default function Header({
       }
     : {};
 
+  const nonEpicIssues = useAtomValue(nonEpicIssuesAtom);
   const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   function setPane(pane) {

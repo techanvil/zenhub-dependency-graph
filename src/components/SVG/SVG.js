@@ -2,6 +2,7 @@
  * External dependencies
  */
 import { useEffect, useState, useRef } from "react";
+import { useSetAtom } from "jotai";
 import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 
 /**
@@ -15,6 +16,7 @@ import {
 } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
+import { nonEpicIssuesAtom } from "../../store/atoms";
 
 export default function SVG({
   APIKey,
@@ -27,16 +29,16 @@ export default function SVG({
   workspace,
   sprint,
   epic,
-  setNonEpicIssues,
   setSelfContainedIssues,
   setHiddenIssues,
-  currentGraphData,
   setCurrentGraphData,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
   const [loading, setLoading] = useState(false);
+
+  const setNonEpicIssues = useSetAtom(nonEpicIssuesAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

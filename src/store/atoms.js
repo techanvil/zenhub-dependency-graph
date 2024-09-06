@@ -8,3 +8,5 @@ export const PANES = {
 };
 
 export const activePaneAtom = atom(PANES.NONE);
+
+export const nonEpicIssuesAtom = atom();
