@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 
 export const PANES = {
   NONE: "none",
@@ -13,3 +14,5 @@ export const nonEpicIssuesAtom = atom();
 export const selfContainedIssuesAtom = atom();
 export const hiddenIssuesAtom = atom();
 export const currentGraphDataAtom = atom();
+
+export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "");
