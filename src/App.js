@@ -193,7 +193,6 @@ function App({ authentication, panel }) {
     {},
     `coordinateOverrides`
   );
-  const [selfContainedIssues, setSelfContainedIssues] = useState();
   const [hiddenIssues, setHiddenIssues] = useState();
   const [currentGraphData, setCurrentGraphData] = useState();
 
@@ -217,8 +216,6 @@ function App({ authentication, panel }) {
     saveEpic,
     sprint,
     saveSprint,
-    selfContainedIssues,
-    setSelfContainedIssues,
     hiddenIssues,
     setHiddenIssues,
     currentGraphData,

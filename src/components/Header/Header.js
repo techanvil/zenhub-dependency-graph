@@ -31,7 +31,12 @@ import {
   getWorkspaces,
 } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
-import { activePaneAtom, nonEpicIssuesAtom, PANES } from "../../store/atoms";
+import {
+  activePaneAtom,
+  nonEpicIssuesAtom,
+  PANES,
+  selfContainedIssuesAtom,
+} from "../../store/atoms";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -61,7 +66,6 @@ export default function Header({
   saveEpic,
   sprint,
   saveSprint,
-  selfContainedIssues,
   hiddenIssues,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
@@ -72,6 +76,10 @@ export default function Header({
   const [chosenEpic, setChosenEpic] = useState(false);
   const [sprintOptions, setSprintOptions] = useState([]);
   const [chosenSprint, setChosenSprint] = useState(false);
+
+  const nonEpicIssues = useAtomValue(nonEpicIssuesAtom);
+  const selfContainedIssues = useAtomValue(selfContainedIssuesAtom);
+  const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {
@@ -250,9 +258,6 @@ export default function Header({
         placeholder: "Enter workspace name",
       }
     : {};
-
-  const nonEpicIssues = useAtomValue(nonEpicIssuesAtom);
-  const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   function setPane(pane) {
     const newPane = activePane === pane ? PANES.NONE : pane;
