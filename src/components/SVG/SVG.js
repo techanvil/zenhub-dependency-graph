@@ -27,7 +27,6 @@ export default function SVG({
   workspace,
   sprint,
   epic,
-  setEpicIssue,
   setNonEpicIssues,
   setSelfContainedIssues,
   setHiddenIssues,
@@ -59,7 +58,7 @@ export default function SVG({
       signal,
       appSettings
     )
-      .then(({ graphData, epicIssue }) => {
+      .then(({ graphData }) => {
         if (!appSettings.showNonEpicIssues) {
           const nonEpicIssues = removeNonEpicIssues(graphData);
           setNonEpicIssues(nonEpicIssues);
@@ -77,7 +76,6 @@ export default function SVG({
         setHiddenIssues(hiddenIssues);
 
         setGraphData(graphData);
-        setEpicIssue(epicIssue);
       })
       .catch((err) => {
         console.log("getGraphData error", err);
@@ -92,7 +90,6 @@ export default function SVG({
     workspace,
     epic,
     APIKey,
-    setEpicIssue,
     appSettings,
     setNonEpicIssues,
     setSelfContainedIssues,
