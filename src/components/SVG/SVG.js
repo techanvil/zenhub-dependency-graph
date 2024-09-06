@@ -17,6 +17,7 @@ import {
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 import {
+  currentGraphDataAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   selfContainedIssuesAtom,
@@ -33,7 +34,6 @@ export default function SVG({
   workspace,
   sprint,
   epic,
-  setCurrentGraphData,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -43,6 +43,7 @@ export default function SVG({
   const setNonEpicIssues = useSetAtom(nonEpicIssuesAtom);
   const setSelfContainedIssues = useSetAtom(selfContainedIssuesAtom);
   const setHiddenIssues = useSetAtom(hiddenIssuesAtom);
+  const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

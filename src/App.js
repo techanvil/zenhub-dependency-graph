@@ -193,7 +193,6 @@ function App({ authentication, panel }) {
     {},
     `coordinateOverrides`
   );
-  const [currentGraphData, setCurrentGraphData] = useState();
 
   // TODO: Migrate these to Jotai.
   const sharedStateProps = {
@@ -215,8 +214,6 @@ function App({ authentication, panel }) {
     saveEpic,
     sprint,
     saveSprint,
-    currentGraphData,
-    setCurrentGraphData,
   };
 
   return (
