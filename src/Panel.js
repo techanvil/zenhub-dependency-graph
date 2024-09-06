@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAtomValue } from "jotai";
 import { Box } from "@chakra-ui/react";
-import { activePaneAtom, PANES } from "./store/atoms";
+import { activePaneAtom, currentGraphDataAtom, PANES } from "./store/atoms";
 import { Legend } from "./components/Legend";
 
 export default function Panel({ panel, ...sharedStateProps }) {
@@ -21,13 +21,14 @@ export default function Panel({ panel, ...sharedStateProps }) {
       <Box p="1rem">
         {/* { activePane === PANES.SETTINGS && <Settings /> } */}
         {activePane === PANES.LEGEND && <Legend {...sharedStateProps} />}
-        {panel && <ExternalPanel {...sharedStateProps} panel={panel} />}
+        {panel && <ExternalPanel panel={panel} />}
       </Box>
     </Box>
   );
 }
 
-function ExternalPanel({ panel: { PanelComponent }, currentGraphData }) {
+function ExternalPanel({ panel: { PanelComponent } }) {
+  const currentGraphData = useAtomValue(currentGraphDataAtom);
   const activePane = useAtomValue(activePaneAtom);
 
   const [hasOpened, setHasOpened] = useState(false);
