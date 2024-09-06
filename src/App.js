@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import { useAtomValue } from "jotai";
 import {
   Box,
   ChakraProvider,
@@ -16,13 +17,12 @@ import {
 import Header from "./components/Header/Header";
 import SettingsModal from "./components/SettingsModal/SettingsModal";
 import SVG from "./components/SVG/SVG";
-import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
-import { useState } from "react";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
 import { toFixedDecimalPlaces } from "./d3/utils";
 import { appSettingDefaults } from "./constants";
+import { APIKeyAtom } from "./store/atoms";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -170,7 +170,7 @@ bootstrapParameters();
 function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [APIKey, saveAPIKey] = useLocalStorage("zenhubAPIKey", "");
+  const APIKey = useAtomValue(APIKeyAtom);
   const [appSettings, saveAppSettings] = useParameter("appSettings", {});
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
@@ -196,8 +196,6 @@ function App({ authentication, panel }) {
 
   // TODO: Migrate these to Jotai.
   const sharedStateProps = {
-    APIKey,
-    saveAPIKey,
     appSettings,
     saveAppSettings,
     pipelineColors,
@@ -220,7 +218,6 @@ function App({ authentication, panel }) {
     <ChakraProvider theme={theme}>
       <Box>
         <Header
-          APIKey={APIKey}
           appSettings={appSettings}
           pipelineColors={pipelineColors}
           savePipelineColors={savePipelineColors}
@@ -236,7 +233,7 @@ function App({ authentication, panel }) {
         <Flex direction="row">
           <Box flex="1" id="graph-container">
             {APIKey ? (
-              <SVG APIKey={APIKey} {...sharedStateProps} />
+              <SVG {...sharedStateProps} />
             ) : (
               <Box p={4}>
                 <p>

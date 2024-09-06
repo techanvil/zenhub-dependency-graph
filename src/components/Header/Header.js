@@ -33,6 +33,7 @@ import {
 import { isEmpty } from "../../utils/common";
 import {
   activePaneAtom,
+  APIKeyAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   PANES,
@@ -56,7 +57,6 @@ function getOpenIssueCount(issues) {
 }
 
 export default function Header({
-  APIKey,
   appSettings,
   onAPIKeyModalOpen = () => {},
   authentication,
@@ -81,6 +81,8 @@ export default function Header({
   const selfContainedIssues = useAtomValue(selfContainedIssuesAtom);
   const hiddenIssues = useAtomValue(hiddenIssuesAtom);
   const [activePane, setActivePane] = useAtom(activePaneAtom);
+
+  const APIKey = useAtomValue(APIKeyAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {
