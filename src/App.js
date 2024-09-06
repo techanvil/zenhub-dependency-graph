@@ -19,7 +19,6 @@ import SVG from "./components/SVG/SVG";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useParameter } from "./hooks/useParameter";
 import { useState } from "react";
-import { Legend } from "./components/Legend";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
 import { toFixedDecimalPlaces } from "./d3/utils";
@@ -194,11 +193,6 @@ function App({ authentication, panel }) {
     {},
     `coordinateOverrides`
   );
-  const [epicIssue, setEpicIssue] = useState(); // TODO: Remove epicIssue if no longer used.
-  const [nonEpicIssues, setNonEpicIssues] = useState();
-  const [selfContainedIssues, setSelfContainedIssues] = useState();
-  const [hiddenIssues, setHiddenIssues] = useState();
-  const [currentGraphData, setCurrentGraphData] = useState();
 
   // TODO: Migrate these to Jotai.
   const sharedStateProps = {
@@ -220,16 +214,6 @@ function App({ authentication, panel }) {
     saveEpic,
     sprint,
     saveSprint,
-    epicIssue,
-    setEpicIssue,
-    nonEpicIssues,
-    setNonEpicIssues,
-    selfContainedIssues,
-    setSelfContainedIssues,
-    hiddenIssues,
-    setHiddenIssues,
-    currentGraphData,
-    setCurrentGraphData,
   };
 
   return (

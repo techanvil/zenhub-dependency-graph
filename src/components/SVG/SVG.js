@@ -2,6 +2,7 @@
  * External dependencies
  */
 import { useEffect, useState, useRef } from "react";
+import { useSetAtom } from "jotai";
 import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 
 /**
@@ -15,6 +16,12 @@ import {
 } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
+import {
+  currentGraphDataAtom,
+  hiddenIssuesAtom,
+  nonEpicIssuesAtom,
+  selfContainedIssuesAtom,
+} from "../../store/atoms";
 
 export default function SVG({
   APIKey,
@@ -27,17 +34,16 @@ export default function SVG({
   workspace,
   sprint,
   epic,
-  setEpicIssue,
-  setNonEpicIssues,
-  setSelfContainedIssues,
-  setHiddenIssues,
-  currentGraphData,
-  setCurrentGraphData,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
   const [loading, setLoading] = useState(false);
+
+  const setNonEpicIssues = useSetAtom(nonEpicIssuesAtom);
+  const setSelfContainedIssues = useSetAtom(selfContainedIssuesAtom);
+  const setHiddenIssues = useSetAtom(hiddenIssuesAtom);
+  const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
@@ -59,7 +65,7 @@ export default function SVG({
       signal,
       appSettings
     )
-      .then(({ graphData, epicIssue }) => {
+      .then(({ graphData }) => {
         if (!appSettings.showNonEpicIssues) {
           const nonEpicIssues = removeNonEpicIssues(graphData);
           setNonEpicIssues(nonEpicIssues);
@@ -77,7 +83,6 @@ export default function SVG({
         setHiddenIssues(hiddenIssues);
 
         setGraphData(graphData);
-        setEpicIssue(epicIssue);
       })
       .catch((err) => {
         console.log("getGraphData error", err);
@@ -92,7 +97,6 @@ export default function SVG({
     workspace,
     epic,
     APIKey,
-    setEpicIssue,
     appSettings,
     setNonEpicIssues,
     setSelfContainedIssues,
