@@ -40,6 +40,7 @@ import {
   nonEpicIssuesAtom,
   PANES,
   selfContainedIssuesAtom,
+  sprintAtom,
   workspaceAtom,
 } from "../../store/atoms";
 
@@ -63,8 +64,6 @@ export default function Header({
   onAPIKeyModalOpen = () => {},
   authentication,
   panel,
-  sprint,
-  saveSprint,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -84,6 +83,7 @@ export default function Header({
   const appSettings = useAtomValue(appSettingsAtom);
   const [workspace, saveWorkspace] = useAtom(workspaceAtom);
   const [epic, saveEpic] = useAtom(epicAtom);
+  const [sprint, saveSprint] = useAtom(sprintAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {

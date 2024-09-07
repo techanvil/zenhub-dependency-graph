@@ -86,7 +86,6 @@ function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
 function bootstrapParameters() {
   const url = new URL(window.location);
   [
-    { key: "sprint" },
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
     { key: "pipelineHidden", isObject: true },
@@ -161,7 +160,6 @@ function App({ authentication, panel }) {
 
   const APIKey = useAtomValue(APIKeyAtom);
   const epic = useAtomValue(epicAtom);
-  const [sprint, saveSprint] = useParameter("sprint", "");
   const [pipelineColors, savePipelineColors] = useParameter(
     "pipelineColors",
     pipelineColorDefaults
@@ -191,8 +189,6 @@ function App({ authentication, panel }) {
     savePipelineHidden,
     coordinateOverrides,
     saveCoordinateOverrides,
-    sprint,
-    saveSprint,
   };
 
   return (

@@ -126,3 +126,4 @@ export const epicAtom = atomWithParameterPersistence("epic", "", {
     parse: (v) => parseInt(v, 10),
   },
 });
+export const sprintAtom = atomWithParameterPersistence("sprint", "");
