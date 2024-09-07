@@ -16,14 +16,9 @@ export const selfContainedIssuesAtom = atom();
 export const hiddenIssuesAtom = atom();
 export const currentGraphDataAtom = atom();
 
-export const APIKeyAtom = atomWithStorage(
-  "zenhubAPIKey",
-  ""
-  // TODO:
-  // {
-  //   getOnInit: true,
-  // }
-);
+export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
+  getOnInit: true,
+});
 
 function bootstrapParameter({
   key,
