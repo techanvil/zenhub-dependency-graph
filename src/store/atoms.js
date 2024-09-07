@@ -24,13 +24,10 @@ export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
   getOnInit: true,
 });
 
-function bootstrapParameter({
+function bootstrapParameter(
   key,
-  parse = (v) => v,
-  isObject,
-  toLocalStorage,
-  fromLocalStorage,
-}) {
+  { parse = (v) => v, isObject, toLocalStorage, fromLocalStorage }
+) {
   const url = new URL(window.location);
 
   if (url.searchParams.has(key)) {
