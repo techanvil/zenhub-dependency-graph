@@ -1,6 +1,5 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { toFixedDecimalPlaces } from "../d3/utils";
 
 export function atomWithParameterPersistence(
   key,
@@ -96,49 +95,4 @@ export function bootstrapParameter(
       window.history.pushState({}, undefined, url);
     }
   }
-}
-
-export function coordinateOverridesToLocalStorageValue(
-  coordinateOverrides,
-  epic
-) {
-  function firstValue(obj) {
-    return Object.values(obj)[0];
-  }
-
-  const isOldFormat =
-    typeof firstValue(coordinateOverrides) === "object" &&
-    typeof firstValue(firstValue(coordinateOverrides)) === "object";
-
-  if (isOldFormat) {
-    // Migrate legacy coordinateOverrides to new format.
-    Object.entries(coordinateOverrides).forEach(
-      ([epicNumber, epicOverrides]) => {
-        localStorage.setItem(
-          `coordinateOverrides-${epicNumber}`,
-          JSON.stringify(
-            Object.entries(epicOverrides).reduce(
-              (overrides, [issueNumber, coordinates]) => {
-                overrides[issueNumber] = {
-                  x: toFixedDecimalPlaces(parseFloat(coordinates.x), 1),
-                  y: toFixedDecimalPlaces(parseFloat(coordinates.y), 1),
-                };
-
-                return overrides;
-              },
-              {}
-            )
-          )
-        );
-      }
-    );
-
-    localStorage.removeItem("coordinateOverrides");
-
-    return JSON.parse(
-      localStorage.getItem(`coordinateOverrides-${epic}`) || "{}"
-    );
-  }
-
-  return coordinateOverrides;
 }
