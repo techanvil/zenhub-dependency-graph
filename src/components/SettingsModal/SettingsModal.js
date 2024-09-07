@@ -18,7 +18,6 @@ import {
   ModalCloseButton,
   FormLabel,
   Switch,
-  Text,
 } from "@chakra-ui/react";
 import { deepEquals } from "../../utils/common";
 import {
@@ -26,24 +25,25 @@ import {
   pipelineColorDefaults,
 } from "../../d3/constants";
 import { appSettingDefaults } from "../../constants";
-import { APIKeyAtom } from "../../store/atoms";
+import {
+  additionalColorsAtom,
+  APIKeyAtom,
+  appSettingsAtom,
+  coordinateOverridesAtom,
+  pipelineColorsAtom,
+  pipelineHiddenAtom,
+} from "../../store/atoms";
 
-export default function SettingsModal({
-  isOpen,
-  onClose,
-  appSettings,
-  pipelineColors,
-  savePipelineColors,
-  additionalColors,
-  saveAdditionalColors,
-  pipelineHidden,
-  savePipelineHidden,
-  epic,
-  coordinateOverrides,
-  saveCoordinateOverrides,
-  saveAppSettings,
-}) {
+export default function SettingsModal({ isOpen, onClose }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
+  const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
+  const [pipelineColors, savePipelineColors] = useAtom(pipelineColorsAtom);
+  const [additionalColors, saveAdditionalColors] =
+    useAtom(additionalColorsAtom);
+  const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom
+  );
 
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(

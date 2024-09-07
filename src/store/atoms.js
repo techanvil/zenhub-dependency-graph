@@ -1,5 +1,14 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import { appSettingDefaults } from "../constants";
+import {
+  additionalColorDefaults,
+  pipelineColorDefaults,
+} from "../d3/constants";
+import {
+  atomWithParameterPersistence,
+  coordinateOverridesToLocalStorageValue,
+} from "./utils";
 
 export const PANES = {
   NONE: "none",
@@ -15,4 +24,100 @@ export const selfContainedIssuesAtom = atom();
 export const hiddenIssuesAtom = atom();
 export const currentGraphDataAtom = atom();
 
-export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "");
+export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
+  getOnInit: true,
+});
+
+export const appSettingsAtom = atomWithParameterPersistence(
+  "appSettings",
+  {}, // Default value.
+  {
+    bootstrapOptions: {
+      isObject: true,
+      parse: (appSettings) => ({
+        ...appSettingDefaults,
+        ...appSettings,
+      }),
+    },
+  }
+);
+
+export const workspaceAtom = atomWithParameterPersistence("workspace", "");
+
+export const epicAtom = atomWithParameterPersistence("epic", "", {
+  bootstrapOptions: {
+    parse: (v) => parseInt(v, 10),
+  },
+});
+
+export const sprintAtom = atomWithParameterPersistence("sprint", "");
+
+export const pipelineColorsAtom = atomWithParameterPersistence(
+  "pipelineColors",
+  pipelineColorDefaults,
+  {
+    bootstrapOptions: {
+      isObject: true,
+    },
+  }
+);
+
+export const additionalColorsAtom = atomWithParameterPersistence(
+  "additionalColors",
+  additionalColorDefaults,
+  {
+    bootstrapOptions: {
+      isObject: true,
+    },
+  }
+);
+
+// TODO: Merge pipelineColors and pipelineHidden if more pipeline settings are added?
+export const pipelineHiddenAtom = atomWithParameterPersistence(
+  "pipelineHidden",
+  {},
+  {
+    bootstrapOptions: {
+      isObject: true,
+    },
+  }
+);
+
+export const coordinateOverridesAtom = atomWithParameterPersistence(
+  "coordinateOverrides",
+  {},
+  {
+    bootstrapOptions: {
+      isObject: true,
+      getLocalStorageKey: () => {
+        const url = new URL(window.location);
+
+        // By now the epic should be set. If not, bail out.
+        const epic = url.searchParams.get("epic");
+        if (!epic) return null;
+
+        return `coordinateOverrides-${epic}`;
+      },
+      toLocalStorageValue: (coordinateOverrides) => {
+        const url = new URL(window.location);
+
+        // By now the epic should be set. If not, bail out.
+        const epic = url.searchParams.get("epic");
+        if (!epic) return null;
+
+        return coordinateOverridesToLocalStorageValue(
+          coordinateOverrides,
+          epic
+        );
+      },
+    },
+    runtimeOptions: {
+      getLocalStorageKey: (get) => {
+        const epic = get(epicAtom);
+        if (!epic) return null;
+
+        return `coordinateOverrides-${epic}`;
+      },
+    },
+  }
+);

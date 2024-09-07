@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { useEffect, useState, useRef } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 
 /**
@@ -17,24 +17,22 @@ import {
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 import {
+  additionalColorsAtom,
   APIKeyAtom,
+  appSettingsAtom,
+  coordinateOverridesAtom,
   currentGraphDataAtom,
+  epicAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
+  pipelineColorsAtom,
+  pipelineHiddenAtom,
   selfContainedIssuesAtom,
+  sprintAtom,
+  workspaceAtom,
 } from "../../store/atoms";
 
-export default function SVG({
-  appSettings,
-  pipelineColors,
-  additionalColors,
-  pipelineHidden,
-  coordinateOverrides,
-  saveCoordinateOverrides,
-  workspace,
-  sprint,
-  epic,
-}) {
+export default function SVG() {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
@@ -46,6 +44,16 @@ export default function SVG({
   const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
 
   const APIKey = useAtomValue(APIKeyAtom);
+  const appSettings = useAtomValue(appSettingsAtom);
+  const workspace = useAtomValue(workspaceAtom);
+  const epic = useAtomValue(epicAtom);
+  const sprint = useAtomValue(sprintAtom);
+  const pipelineColors = useAtomValue(pipelineColorsAtom);
+  const additionalColors = useAtomValue(additionalColorsAtom);
+  const pipelineHidden = useAtomValue(pipelineHiddenAtom);
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom
+  );
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

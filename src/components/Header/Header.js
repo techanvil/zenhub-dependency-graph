@@ -34,10 +34,14 @@ import { isEmpty } from "../../utils/common";
 import {
   activePaneAtom,
   APIKeyAtom,
+  appSettingsAtom,
+  epicAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   PANES,
   selfContainedIssuesAtom,
+  sprintAtom,
+  workspaceAtom,
 } from "../../store/atoms";
 
 function pluralise(count, singular, plural) {
@@ -57,16 +61,9 @@ function getOpenIssueCount(issues) {
 }
 
 export default function Header({
-  appSettings,
   onAPIKeyModalOpen = () => {},
   authentication,
   panel,
-  workspace,
-  saveWorkspace,
-  epic,
-  saveEpic,
-  sprint,
-  saveSprint,
 }) {
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [chosenOrganization, setChosenOrganization] = useState(false);
@@ -83,6 +80,10 @@ export default function Header({
   const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   const APIKey = useAtomValue(APIKeyAtom);
+  const appSettings = useAtomValue(appSettingsAtom);
+  const [workspace, saveWorkspace] = useAtom(workspaceAtom);
+  const [epic, saveEpic] = useAtom(epicAtom);
+  const [sprint, saveSprint] = useAtom(sprintAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {
