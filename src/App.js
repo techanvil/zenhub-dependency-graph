@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import {
   Box,
   ChakraProvider,
@@ -18,7 +18,7 @@ import Header from "./components/Header/Header";
 import SettingsModal from "./components/SettingsModal/SettingsModal";
 import SVG from "./components/SVG/SVG";
 import Panel from "./Panel";
-import { APIKeyAtom, coordinateOverridesAtom } from "./store/atoms";
+import { APIKeyAtom } from "./store/atoms";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
