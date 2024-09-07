@@ -18,7 +18,6 @@ import {
   ModalCloseButton,
   FormLabel,
   Switch,
-  Text,
 } from "@chakra-ui/react";
 import { deepEquals } from "../../utils/common";
 import {

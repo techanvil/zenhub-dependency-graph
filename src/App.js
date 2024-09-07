@@ -42,10 +42,6 @@ function App({ authentication, panel }) {
 
   const APIKey = useAtomValue(APIKeyAtom);
 
-  // TODO: Migrate these to Jotai.
-  // TODO: Remove sharedStateProps.
-  const sharedStateProps = {};
-
   return (
     <ChakraProvider theme={theme}>
       <Box>
@@ -53,12 +49,11 @@ function App({ authentication, panel }) {
           onAPIKeyModalOpen={onOpen}
           authentication={authentication}
           panel={panel}
-          {...sharedStateProps}
         />
         <Flex direction="row">
           <Box flex="1" id="graph-container">
             {APIKey ? (
-              <SVG {...sharedStateProps} />
+              <SVG />
             ) : (
               <Box p={4}>
                 <p>
@@ -84,17 +79,9 @@ function App({ authentication, panel }) {
               </Box>
             )}
           </Box>
-          <Panel
-            {...sharedStateProps}
-            authentication={authentication}
-            panel={panel}
-          />
+          <Panel authentication={authentication} panel={panel} />
         </Flex>
-        <SettingsModal
-          isOpen={isOpen}
-          onClose={onClose}
-          {...sharedStateProps}
-        />
+        <SettingsModal isOpen={isOpen} onClose={onClose} />
       </Box>
     </ChakraProvider>
   );

@@ -4,7 +4,7 @@ import { Box } from "@chakra-ui/react";
 import { activePaneAtom, currentGraphDataAtom, PANES } from "./store/atoms";
 import { Legend } from "./components/Legend";
 
-export default function Panel({ panel, ...sharedStateProps }) {
+export default function Panel({ panel }) {
   const activePane = useAtomValue(activePaneAtom);
 
   // if (activePane === PANES.NONE) {
@@ -20,7 +20,7 @@ export default function Panel({ panel, ...sharedStateProps }) {
     >
       <Box p="1rem">
         {/* { activePane === PANES.SETTINGS && <Settings /> } */}
-        {activePane === PANES.LEGEND && <Legend {...sharedStateProps} />}
+        {activePane === PANES.LEGEND && <Legend />}
         {panel && <ExternalPanel panel={panel} />}
       </Box>
     </Box>
