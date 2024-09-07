@@ -17,11 +17,8 @@ import {
 import Header from "./components/Header/Header";
 import SettingsModal from "./components/SettingsModal/SettingsModal";
 import SVG from "./components/SVG/SVG";
-import { useParameter } from "./hooks/useParameter";
-import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
-import { toFixedDecimalPlaces } from "./d3/utils";
-import { APIKeyAtom, epic, epicAtom } from "./store/atoms";
+import { APIKeyAtom, coordinateOverridesAtom } from "./store/atoms";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -40,127 +37,12 @@ const theme = extendTheme({
   },
 });
 
-function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
-  function firstValue(obj) {
-    return Object.values(obj)[0];
-  }
-
-  const isOldFormat =
-    typeof firstValue(coordinateOverrides) === "object" &&
-    typeof firstValue(firstValue(coordinateOverrides)) === "object";
-
-  if (isOldFormat) {
-    // Migrate legacy coordinateOverrides to new format.
-    Object.entries(coordinateOverrides).forEach(
-      ([epicNumber, epicOverrides]) => {
-        localStorage.setItem(
-          `coordinateOverrides-${epicNumber}`,
-          JSON.stringify(
-            Object.entries(epicOverrides).reduce(
-              (overrides, [issueNumber, coordinates]) => {
-                overrides[issueNumber] = {
-                  x: toFixedDecimalPlaces(parseFloat(coordinates.x), 1),
-                  y: toFixedDecimalPlaces(parseFloat(coordinates.y), 1),
-                };
-
-                return overrides;
-              },
-              {}
-            )
-          )
-        );
-      }
-    );
-
-    localStorage.removeItem("coordinateOverrides");
-
-    return JSON.parse(
-      localStorage.getItem(`coordinateOverrides-${epic}`) || "{}"
-    );
-  }
-
-  return coordinateOverrides;
-}
-
-// TODO: Make this and the parameter hooks nicer.
-function bootstrapParameters() {
-  const url = new URL(window.location);
-  [
-    {
-      key: "coordinateOverrides",
-      isObject: true,
-      toLocalStorage: (coordinateOverrides) => {
-        // By now the epic should be set. If not, bail out.
-        const epic = url.searchParams.get("epic");
-        if (!epic) return null;
-
-        return {
-          localStorageKey: `coordinateOverrides-${epic}`,
-          localStorageValue: coordinateOverridesToLocalStorageValue(
-            coordinateOverrides,
-            epic
-          ),
-        };
-      },
-      fromLocalStorage: () => {
-        const epic = url.searchParams.get("epic");
-        if (!epic) return null;
-
-        return {
-          localStorageKey: `coordinateOverrides-${epic}`,
-        };
-      },
-    },
-  ].forEach(
-    ({ key, parse = (v) => v, isObject, toLocalStorage, fromLocalStorage }) => {
-      if (url.searchParams.has(key)) {
-        const value = isObject
-          ? parse(JSON.parse(url.searchParams.get(key)))
-          : parse(url.searchParams.get(key));
-
-        const { localStorageKey, localStorageValue } =
-          toLocalStorage?.(value) || {};
-
-        // Local storage is always JSON.stringified.
-        localStorage.setItem(
-          localStorageKey || key,
-          JSON.stringify(localStorageValue || value)
-        );
-      } else {
-        const { localStorageKey } = fromLocalStorage?.() || {};
-
-        const localValue = localStorage.getItem(localStorageKey || key);
-        if (!localValue) return;
-
-        let parsedValue;
-        try {
-          parsedValue = JSON.parse(localValue);
-        } catch (err) {
-          console.log("JSON parse error", err);
-        }
-        if (parsedValue) {
-          url.searchParams.set(
-            key,
-            isObject ? JSON.stringify(localValue) : localValue
-          );
-          window.history.pushState({}, undefined, url);
-        }
-      }
-    }
-  );
-}
-
-bootstrapParameters();
-
 function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
-  const epic = useAtomValue(epicAtom);
-  const [coordinateOverrides, saveCoordinateOverrides] = useParameter(
-    `coordinateOverrides-${epic}`,
-    {},
-    `coordinateOverrides`
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom
   );
 
   // TODO: Migrate these to Jotai.
