@@ -71,7 +71,17 @@ function atomWithParameterPersistence(
 ) {
   bootstrapParameter(key, bootstrapOptions);
 
-  const storageAtom = atomWithStorage(key, initialValue);
+  const storageAtom = atomWithStorage(
+    key,
+    initialValue
+    /* TODO: In order to override key:
+    {
+      getItem(key, initialValue) {},
+      setItem(key, value) {},
+      removeItem(key) {},
+    }
+    */
+  );
 
   return atom(
     (get) => get(storageAtom),
@@ -110,3 +120,4 @@ export const appSettingsAtom = atomWithParameterPersistence(
     },
   }
 );
+export const workspaceAtom = atomWithParameterPersistence("workspace", "");

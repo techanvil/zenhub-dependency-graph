@@ -39,6 +39,7 @@ import {
   nonEpicIssuesAtom,
   PANES,
   selfContainedIssuesAtom,
+  workspaceAtom,
 } from "../../store/atoms";
 
 function pluralise(count, singular, plural) {
@@ -61,8 +62,6 @@ export default function Header({
   onAPIKeyModalOpen = () => {},
   authentication,
   panel,
-  workspace,
-  saveWorkspace,
   epic,
   saveEpic,
   sprint,
@@ -84,6 +83,7 @@ export default function Header({
 
   const APIKey = useAtomValue(APIKeyAtom);
   const appSettings = useAtomValue(appSettingsAtom);
+  const [workspace, saveWorkspace] = useAtom(workspaceAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {

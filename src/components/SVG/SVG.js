@@ -23,6 +23,7 @@ import {
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   selfContainedIssuesAtom,
+  workspaceAtom,
 } from "../../store/atoms";
 
 export default function SVG({
@@ -31,7 +32,6 @@ export default function SVG({
   pipelineHidden,
   coordinateOverrides,
   saveCoordinateOverrides,
-  workspace,
   sprint,
   epic,
 }) {
@@ -47,6 +47,7 @@ export default function SVG({
 
   const APIKey = useAtomValue(APIKeyAtom);
   const appSettings = useAtomValue(appSettingsAtom);
+  const workspace = useAtomValue(workspaceAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
