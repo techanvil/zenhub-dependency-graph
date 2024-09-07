@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { appSettingDefaults } from "../constants";
+import { pipelineColorDefaults } from "../d3/constants";
 
 export const PANES = {
   NONE: "none",
@@ -127,3 +128,12 @@ export const epicAtom = atomWithParameterPersistence("epic", "", {
   },
 });
 export const sprintAtom = atomWithParameterPersistence("sprint", "");
+export const pipelineColorsAtom = atomWithParameterPersistence(
+  "pipelineColors",
+  pipelineColorDefaults,
+  {
+    bootstrapOptions: {
+      isObject: true,
+    },
+  }
+);

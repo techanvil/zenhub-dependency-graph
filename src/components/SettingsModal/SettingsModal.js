@@ -26,13 +26,15 @@ import {
   pipelineColorDefaults,
 } from "../../d3/constants";
 import { appSettingDefaults } from "../../constants";
-import { APIKeyAtom, appSettingsAtom } from "../../store/atoms";
+import {
+  APIKeyAtom,
+  appSettingsAtom,
+  pipelineColorsAtom,
+} from "../../store/atoms";
 
 export default function SettingsModal({
   isOpen,
   onClose,
-  pipelineColors,
-  savePipelineColors,
   additionalColors,
   saveAdditionalColors,
   pipelineHidden,
@@ -42,6 +44,7 @@ export default function SettingsModal({
 }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
   const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
+  const [pipelineColors, savePipelineColors] = useAtom(pipelineColorsAtom);
 
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(
