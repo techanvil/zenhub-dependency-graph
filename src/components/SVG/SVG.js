@@ -17,6 +17,7 @@ import {
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 import {
+  additionalColorsAtom,
   APIKeyAtom,
   appSettingsAtom,
   currentGraphDataAtom,
@@ -30,7 +31,6 @@ import {
 } from "../../store/atoms";
 
 export default function SVG({
-  additionalColors,
   pipelineHidden,
   coordinateOverrides,
   saveCoordinateOverrides,
@@ -51,6 +51,7 @@ export default function SVG({
   const epic = useAtomValue(epicAtom);
   const sprint = useAtomValue(sprintAtom);
   const pipelineColors = useAtomValue(pipelineColorsAtom);
+  const additionalColors = useAtomValue(additionalColorsAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

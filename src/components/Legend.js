@@ -17,7 +17,7 @@ import {
 import { useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
 import { additionalColorDefaults } from "../d3/constants";
-import { pipelineColorsAtom } from "../store/atoms";
+import { additionalColorsAtom, pipelineColorsAtom } from "../store/atoms";
 
 function LegendItem({
   label,
@@ -103,13 +103,10 @@ function LegendItem({
   );
 }
 
-export function Legend({
-  additionalColors,
-  saveAdditionalColors,
-  pipelineHidden,
-  savePipelineHidden,
-}) {
+export function Legend({ pipelineHidden, savePipelineHidden }) {
   const [pipelineColors, savePipelineColors] = useAtom(pipelineColorsAtom);
+  const [additionalColors, saveAdditionalColors] =
+    useAtom(additionalColorsAtom);
 
   const pipelineColorItems = Object.entries(pipelineColors);
 

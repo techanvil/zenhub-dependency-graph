@@ -1,7 +1,10 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { appSettingDefaults } from "../constants";
-import { pipelineColorDefaults } from "../d3/constants";
+import {
+  additionalColorDefaults,
+  pipelineColorDefaults,
+} from "../d3/constants";
 
 export const PANES = {
   NONE: "none",
@@ -131,6 +134,15 @@ export const sprintAtom = atomWithParameterPersistence("sprint", "");
 export const pipelineColorsAtom = atomWithParameterPersistence(
   "pipelineColors",
   pipelineColorDefaults,
+  {
+    bootstrapOptions: {
+      isObject: true,
+    },
+  }
+);
+export const additionalColorsAtom = atomWithParameterPersistence(
+  "additionalColors",
+  additionalColorDefaults,
   {
     bootstrapOptions: {
       isObject: true,

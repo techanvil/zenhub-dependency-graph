@@ -86,7 +86,6 @@ function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
 function bootstrapParameters() {
   const url = new URL(window.location);
   [
-    { key: "additionalColors", isObject: true },
     { key: "pipelineHidden", isObject: true },
     {
       key: "coordinateOverrides",
@@ -159,10 +158,6 @@ function App({ authentication, panel }) {
 
   const APIKey = useAtomValue(APIKeyAtom);
   const epic = useAtomValue(epicAtom);
-  const [additionalColors, saveAdditionalColors] = useParameter(
-    "additionalColors",
-    additionalColorDefaults
-  );
   // TODO: Merge pipelineColors and pipelineHidden if more pipeline settings are added.
   const [pipelineHidden, savePipelineHidden] = useParameter(
     "pipelineHidden",
@@ -176,8 +171,6 @@ function App({ authentication, panel }) {
 
   // TODO: Migrate these to Jotai.
   const sharedStateProps = {
-    additionalColors,
-    saveAdditionalColors,
     pipelineHidden,
     savePipelineHidden,
     coordinateOverrides,
@@ -188,8 +181,6 @@ function App({ authentication, panel }) {
     <ChakraProvider theme={theme}>
       <Box>
         <Header
-          additionalColors={additionalColors}
-          saveAdditionalColors={saveAdditionalColors}
           pipelineHidden={pipelineHidden}
           savePipelineHidden={savePipelineHidden}
           onAPIKeyModalOpen={onOpen}

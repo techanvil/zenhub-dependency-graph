@@ -27,6 +27,7 @@ import {
 } from "../../d3/constants";
 import { appSettingDefaults } from "../../constants";
 import {
+  additionalColorsAtom,
   APIKeyAtom,
   appSettingsAtom,
   pipelineColorsAtom,
@@ -35,8 +36,6 @@ import {
 export default function SettingsModal({
   isOpen,
   onClose,
-  additionalColors,
-  saveAdditionalColors,
   pipelineHidden,
   savePipelineHidden,
   coordinateOverrides,
@@ -45,6 +44,8 @@ export default function SettingsModal({
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
   const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
   const [pipelineColors, savePipelineColors] = useAtom(pipelineColorsAtom);
+  const [additionalColors, saveAdditionalColors] =
+    useAtom(additionalColorsAtom);
 
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(
