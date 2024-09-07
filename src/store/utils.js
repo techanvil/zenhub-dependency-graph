@@ -86,7 +86,7 @@ export function bootstrapParameter(
     if (parsedValue) {
       url.searchParams.set(
         key,
-        isObject ? JSON.stringify(localValue) : localValue
+        isObject ? JSON.stringify(parsedValue) : parsedValue
       );
       window.history.pushState({}, undefined, url);
     }
