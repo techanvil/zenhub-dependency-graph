@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
   Box,
   ChakraProvider,
@@ -22,7 +22,7 @@ import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
 import { toFixedDecimalPlaces } from "./d3/utils";
 import { appSettingDefaults } from "./constants";
-import { APIKeyAtom } from "./store/atoms";
+import { APIKeyAtom, appSettingAtom } from "./store/atoms";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -90,14 +90,6 @@ function bootstrapParameters() {
     { key: "workspace" },
     { key: "sprint" },
     { key: "epic", parse: (v) => parseInt(v, 10) },
-    {
-      key: "appSettings",
-      isObject: true,
-      parse: (appSettings) => ({
-        ...appSettingDefaults,
-        ...appSettings,
-      }),
-    },
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
     { key: "pipelineHidden", isObject: true },
@@ -171,7 +163,8 @@ function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
-  const [appSettings, saveAppSettings] = useParameter("appSettings", {});
+  // TODO: Remove appSettings from here.
+  const [appSettings, saveAppSettings] = useAtom(appSettingAtom);
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [sprint, saveSprint] = useParameter("sprint", "");
