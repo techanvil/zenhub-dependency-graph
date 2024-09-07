@@ -39,14 +39,10 @@ export function atomWithParameterPersistence(
 
       if (value) {
         url.searchParams.set(
-          // searchParamKey || key,
-          // TODO: Use fromLocalStorage to get the key.
           key,
           typeof value === "object" ? JSON.stringify(value) : value
         );
       } else {
-        // url.searchParams.delete(searchParamKey || key);
-        // TODO: Use fromLocalStorage to get the key.
         url.searchParams.delete(key);
       }
       window.history.pushState({}, undefined, url);
