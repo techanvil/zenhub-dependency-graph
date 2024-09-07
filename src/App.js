@@ -41,15 +41,10 @@ function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
-  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
-    coordinateOverridesAtom
-  );
 
   // TODO: Migrate these to Jotai.
-  const sharedStateProps = {
-    coordinateOverrides,
-    saveCoordinateOverrides,
-  };
+  // TODO: Remove sharedStateProps.
+  const sharedStateProps = {};
 
   return (
     <ChakraProvider theme={theme}>

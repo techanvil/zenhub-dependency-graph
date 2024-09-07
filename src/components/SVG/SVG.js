@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { useEffect, useState, useRef } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Box, FormControl, Input, Text } from "@chakra-ui/react";
 
 /**
@@ -20,6 +20,7 @@ import {
   additionalColorsAtom,
   APIKeyAtom,
   appSettingsAtom,
+  coordinateOverridesAtom,
   currentGraphDataAtom,
   epicAtom,
   hiddenIssuesAtom,
@@ -31,7 +32,7 @@ import {
   workspaceAtom,
 } from "../../store/atoms";
 
-export default function SVG({ coordinateOverrides, saveCoordinateOverrides }) {
+export default function SVG() {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
@@ -50,6 +51,9 @@ export default function SVG({ coordinateOverrides, saveCoordinateOverrides }) {
   const pipelineColors = useAtomValue(pipelineColorsAtom);
   const additionalColors = useAtomValue(additionalColorsAtom);
   const pipelineHidden = useAtomValue(pipelineHiddenAtom);
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom
+  );
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

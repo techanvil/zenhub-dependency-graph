@@ -30,22 +30,21 @@ import {
   additionalColorsAtom,
   APIKeyAtom,
   appSettingsAtom,
+  coordinateOverridesAtom,
   pipelineColorsAtom,
   pipelineHiddenAtom,
 } from "../../store/atoms";
 
-export default function SettingsModal({
-  isOpen,
-  onClose,
-  coordinateOverrides,
-  saveCoordinateOverrides,
-}) {
+export default function SettingsModal({ isOpen, onClose }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
   const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
   const [pipelineColors, savePipelineColors] = useAtom(pipelineColorsAtom);
   const [additionalColors, saveAdditionalColors] =
     useAtom(additionalColorsAtom);
   const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom
+  );
 
   // TODO: Clean this up.
   const appSettingsWithDefaults = useMemo(
