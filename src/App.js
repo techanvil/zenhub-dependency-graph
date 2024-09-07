@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import {
   Box,
   ChakraProvider,
@@ -21,8 +21,7 @@ import { useParameter } from "./hooks/useParameter";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
 import { toFixedDecimalPlaces } from "./d3/utils";
-import { appSettingDefaults } from "./constants";
-import { APIKeyAtom, appSettingAtom } from "./store/atoms";
+import { APIKeyAtom } from "./store/atoms";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -163,8 +162,6 @@ function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
-  // TODO: Remove appSettings from here.
-  const [appSettings, saveAppSettings] = useAtom(appSettingAtom);
   const [workspace, saveWorkspace] = useParameter("workspace", "");
   const [epic, saveEpic] = useParameter("epic", "");
   const [sprint, saveSprint] = useParameter("sprint", "");
@@ -189,8 +186,6 @@ function App({ authentication, panel }) {
 
   // TODO: Migrate these to Jotai.
   const sharedStateProps = {
-    appSettings,
-    saveAppSettings,
     pipelineColors,
     savePipelineColors,
     additionalColors,
@@ -211,7 +206,6 @@ function App({ authentication, panel }) {
     <ChakraProvider theme={theme}>
       <Box>
         <Header
-          appSettings={appSettings}
           pipelineColors={pipelineColors}
           savePipelineColors={savePipelineColors}
           additionalColors={additionalColors}

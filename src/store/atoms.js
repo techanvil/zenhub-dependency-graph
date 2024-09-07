@@ -102,7 +102,7 @@ function atomWithParameterPersistence(
   );
 }
 
-export const appSettingAtom = atomWithParameterPersistence(
+export const appSettingsAtom = atomWithParameterPersistence(
   "appSettings",
   {}, // Default value.
   {

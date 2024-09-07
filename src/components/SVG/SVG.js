@@ -18,6 +18,7 @@ import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
 import {
   APIKeyAtom,
+  appSettingsAtom,
   currentGraphDataAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
@@ -25,7 +26,6 @@ import {
 } from "../../store/atoms";
 
 export default function SVG({
-  appSettings,
   pipelineColors,
   additionalColors,
   pipelineHidden,
@@ -46,6 +46,7 @@ export default function SVG({
   const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
 
   const APIKey = useAtomValue(APIKeyAtom);
+  const appSettings = useAtomValue(appSettingsAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
