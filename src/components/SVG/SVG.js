@@ -25,16 +25,13 @@ import {
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   pipelineColorsAtom,
+  pipelineHiddenAtom,
   selfContainedIssuesAtom,
   sprintAtom,
   workspaceAtom,
 } from "../../store/atoms";
 
-export default function SVG({
-  pipelineHidden,
-  coordinateOverrides,
-  saveCoordinateOverrides,
-}) {
+export default function SVG({ coordinateOverrides, saveCoordinateOverrides }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
@@ -52,6 +49,7 @@ export default function SVG({
   const sprint = useAtomValue(sprintAtom);
   const pipelineColors = useAtomValue(pipelineColorsAtom);
   const additionalColors = useAtomValue(additionalColorsAtom);
+  const pipelineHidden = useAtomValue(pipelineHiddenAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

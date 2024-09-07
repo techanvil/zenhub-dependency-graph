@@ -149,3 +149,13 @@ export const additionalColorsAtom = atomWithParameterPersistence(
     },
   }
 );
+// TODO: Merge pipelineColors and pipelineHidden if more pipeline settings are added?
+export const pipelineHiddenAtom = atomWithParameterPersistence(
+  "pipelineHidden",
+  {},
+  {
+    bootstrapOptions: {
+      isObject: true,
+    },
+  }
+);
