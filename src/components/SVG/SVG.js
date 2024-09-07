@@ -20,6 +20,7 @@ import {
   APIKeyAtom,
   appSettingsAtom,
   currentGraphDataAtom,
+  epicAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   selfContainedIssuesAtom,
@@ -33,7 +34,6 @@ export default function SVG({
   coordinateOverrides,
   saveCoordinateOverrides,
   sprint,
-  epic,
 }) {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
@@ -48,6 +48,7 @@ export default function SVG({
   const APIKey = useAtomValue(APIKeyAtom);
   const appSettings = useAtomValue(appSettingsAtom);
   const workspace = useAtomValue(workspaceAtom);
+  const epic = useAtomValue(epicAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {

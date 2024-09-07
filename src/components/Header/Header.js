@@ -35,6 +35,7 @@ import {
   activePaneAtom,
   APIKeyAtom,
   appSettingsAtom,
+  epicAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   PANES,
@@ -62,8 +63,6 @@ export default function Header({
   onAPIKeyModalOpen = () => {},
   authentication,
   panel,
-  epic,
-  saveEpic,
   sprint,
   saveSprint,
 }) {
@@ -84,6 +83,7 @@ export default function Header({
   const APIKey = useAtomValue(APIKeyAtom);
   const appSettings = useAtomValue(appSettingsAtom);
   const [workspace, saveWorkspace] = useAtom(workspaceAtom);
+  const [epic, saveEpic] = useAtom(epicAtom);
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {

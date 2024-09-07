@@ -121,3 +121,8 @@ export const appSettingsAtom = atomWithParameterPersistence(
   }
 );
 export const workspaceAtom = atomWithParameterPersistence("workspace", "");
+export const epicAtom = atomWithParameterPersistence("epic", "", {
+  bootstrapOptions: {
+    parse: (v) => parseInt(v, 10),
+  },
+});

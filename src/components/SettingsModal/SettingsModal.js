@@ -37,7 +37,6 @@ export default function SettingsModal({
   saveAdditionalColors,
   pipelineHidden,
   savePipelineHidden,
-  epic,
   coordinateOverrides,
   saveCoordinateOverrides,
 }) {

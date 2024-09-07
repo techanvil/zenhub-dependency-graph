@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
   Box,
   ChakraProvider,
@@ -21,7 +21,7 @@ import { useParameter } from "./hooks/useParameter";
 import { additionalColorDefaults, pipelineColorDefaults } from "./d3/constants";
 import Panel from "./Panel";
 import { toFixedDecimalPlaces } from "./d3/utils";
-import { APIKeyAtom } from "./store/atoms";
+import { APIKeyAtom, epic, epicAtom } from "./store/atoms";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -87,7 +87,6 @@ function bootstrapParameters() {
   const url = new URL(window.location);
   [
     { key: "sprint" },
-    { key: "epic", parse: (v) => parseInt(v, 10) },
     { key: "pipelineColors", isObject: true },
     { key: "additionalColors", isObject: true },
     { key: "pipelineHidden", isObject: true },
@@ -161,7 +160,7 @@ function App({ authentication, panel }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
-  const [epic, saveEpic] = useParameter("epic", "");
+  const epic = useAtomValue(epicAtom);
   const [sprint, saveSprint] = useParameter("sprint", "");
   const [pipelineColors, savePipelineColors] = useParameter(
     "pipelineColors",
@@ -192,8 +191,6 @@ function App({ authentication, panel }) {
     savePipelineHidden,
     coordinateOverrides,
     saveCoordinateOverrides,
-    epic,
-    saveEpic,
     sprint,
     saveSprint,
   };
