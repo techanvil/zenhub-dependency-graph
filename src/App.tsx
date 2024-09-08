@@ -19,6 +19,8 @@ import SettingsModal from "./components/SettingsModal/SettingsModal";
 import SVG from "./components/SVG/SVG";
 import Panel from "./Panel";
 import { APIKeyAtom } from "./store/atoms";
+import { Session, SignInFunction, SignOutFunction } from "./auth-types";
+import React from "react";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
@@ -37,7 +39,27 @@ const theme = extendTheme({
   },
 });
 
-function App({ authentication, panel }) {
+interface AppProps {
+  // These optional props are provided for the chrysalis/Gemini integration,
+  // See https://github.com/techanvil/chrysalis
+  authentication?: {
+    // TODO: Provide abstractions around these types from @auth/core.
+    session: Session | null;
+    signIn: () => ReturnType<SignInFunction<"email">>;
+    signInLabel: string;
+    signOut: SignOutFunction;
+  };
+  panel?: {
+    buttonTitle: string;
+    PanelComponent: ({
+      graphData,
+    }: {
+      graphData: any; // GraphData type to be defined.
+    }) => React.ReactNode;
+  };
+}
+
+function App({ authentication, panel }: AppProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
@@ -79,7 +101,7 @@ function App({ authentication, panel }) {
               </Box>
             )}
           </Box>
-          <Panel authentication={authentication} panel={panel} />
+          <Panel panel={panel} />
         </Flex>
         <SettingsModal isOpen={isOpen} onClose={onClose} />
       </Box>
