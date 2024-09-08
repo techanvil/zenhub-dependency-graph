@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import React from "react";
 import { useAtomValue } from "jotai";
 import {
   Box,
@@ -20,7 +21,6 @@ import SVG from "./components/SVG/SVG";
 import Panel from "./Panel";
 import { APIKeyAtom } from "./store/atoms";
 import { Session, SignInFunction, SignOutFunction } from "./auth-types";
-import React from "react";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
 const theme = extendTheme({
