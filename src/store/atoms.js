@@ -28,7 +28,7 @@ export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
 
 export const appSettingsAtom = atomWithParameterPersistence(
   "appSettings",
-  {}, // Default value.
+  {}, // Initial value.
   {
     bootstrapOptions: {
       isObject: true,
