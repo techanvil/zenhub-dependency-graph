@@ -68,12 +68,6 @@ function App({ authentication, panel }: AppProps) {
 
   useEffect(() => {
     function handleKeyUp(event: KeyboardEvent) {
-      console.log({
-        event,
-        target: event.target,
-        targetTag: (event.target as HTMLElement)?.tagName,
-      });
-
       // Ignore events triggered by inputs etc.
       if (event.target !== document.body) {
         return;
