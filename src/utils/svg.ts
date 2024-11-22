@@ -13,11 +13,13 @@ declare global {
 function getGraphElement() {
   // const graphElement = document.getElementById("zdg-graph");
   const graphElement = document.querySelector("svg#zdg-graph");
-  if (!graphElement) return null;
+  if (!graphElement) return { svgElement: null };
 
   const clonedGraphElement = graphElement.cloneNode(true) as SVGElement;
 
-  const viewport = clonedGraphElement.querySelector(".svg-pan-zoom_viewport");
+  const viewport = clonedGraphElement.querySelector(
+    ".svg-pan-zoom_viewport",
+  ) as SVGGElement;
 
   /*
     This is what the viewport element looks like:
@@ -27,21 +29,39 @@ function getGraphElement() {
         style="transform: matrix(1.21723, 0, 0, 1.21723, 370.046, 112.141);">
   */
 
+  let scaleX = 1,
+    scaleY = 1;
+
+  function resetTransformPosition(transform: string) {
+    // Remove 'matrix(' and ')' and split the remaining string
+    const matrixValues = transform
+      .replace("matrix(", "")
+      .replace(")", "")
+      .split(",")
+      .map(Number);
+
+    scaleX = matrixValues[0];
+    scaleY = matrixValues[3];
+
+    // Keep scale and skew values (first 4), but reset translation (last 2) to 0:
+    return `matrix(${matrixValues[0]},${matrixValues[1]},${matrixValues[2]},${matrixValues[3]},0,0)`;
+  }
+
   // Reset the viewport x, y position to 0, 0 while retaining the scale and skew.
   if (viewport) {
     const transform = viewport.getAttribute("transform");
     if (transform) {
-      // Remove 'matrix(' and ')' and split the remaining string
-      const matrixValues = transform
-        .replace("matrix(", "")
-        .replace(")", "")
-        .split(",")
-        .map(Number);
-
-      // Keep scale and skew values (first 4), but reset translation (last 2) to 0:
-      const newTransform = `matrix(${matrixValues[0]},${matrixValues[1]},${matrixValues[2]},${matrixValues[3]},0,0)`;
+      const newTransform = resetTransformPosition(transform);
       viewport.setAttribute("transform", newTransform);
-      viewport.setAttribute("style", `transform: ${newTransform}`);
+    }
+
+    const style = viewport.getAttribute("style");
+    if (style) {
+      const transform = style.match(/transform: ([^;]+)/)?.[1];
+      if (transform) {
+        const newTransform = resetTransformPosition(transform);
+        viewport.setAttribute("style", style.replace(transform, newTransform));
+      }
     }
   }
 
@@ -55,23 +75,34 @@ function getGraphElement() {
   //   });
   // }
 
+  // TODO: Provide an option to include a white background.
+
   clonedGraphElement.querySelector("#svg-pan-zoom-controls")?.remove();
 
-  return clonedGraphElement;
+  const originalViewport = graphElement.querySelector(
+    ".svg-pan-zoom_viewport",
+  ) as SVGGElement;
+  const { width, height } = originalViewport.getBBox();
+
+  return {
+    svgElement: clonedGraphElement,
+    width: width * scaleX,
+    height: height * scaleY,
+  };
 }
 
 export async function downloadSVG(epicName: string) {
-  const svgElement = getGraphElement();
+  const { svgElement } = getGraphElement();
   if (!svgElement) return;
 
-  // Serialize the SVG
+  // Serialize the SVG.
   const serializer = new XMLSerializer();
   const svgString = serializer.serializeToString(svgElement);
 
-  // Create a Blob from the SVG string
+  // Create a Blob from the SVG string.
   const blob = new Blob([svgString], { type: "image/svg+xml" });
 
-  // Use the File System Access API to save the file
+  // Use the File System Access API to save the file.
   if (window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
@@ -94,4 +125,53 @@ export async function downloadSVG(epicName: string) {
   } else {
     alert("Your browser does not support the File System Access API.");
   }
+}
+
+export async function copyPNG() {
+  const { svgElement, width, height } = getGraphElement();
+  if (!svgElement) return;
+
+  // Convert the SVG to a PNG
+  const pngBlob = await svgToPNG(svgElement, width, height);
+
+  // Copy to the clipboard.
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ [pngBlob.type]: pngBlob }),
+    ]);
+  } catch (error) {
+    console.error("Clipboard write failed:", error);
+  }
+}
+
+async function svgToPNG(
+  svgElement: SVGElement,
+  width: number,
+  height: number,
+): Promise<Blob> {
+  // Create a canvas and get its context
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+
+  // Create an image element and set its source to the SVG.
+  const img = new Image();
+  const svgBlob = new Blob(
+    [new XMLSerializer().serializeToString(svgElement)],
+    { type: "image/svg+xml" },
+  );
+  const url = URL.createObjectURL(svgBlob);
+
+  return new Promise((resolve) => {
+    img.onload = () => {
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        resolve(blob!);
+      }, "image/png");
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
 }
