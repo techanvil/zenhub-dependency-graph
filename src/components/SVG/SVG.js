@@ -52,7 +52,7 @@ export default function SVG() {
   const additionalColors = useAtomValue(additionalColorsAtom);
   const pipelineHidden = useAtomValue(pipelineHiddenAtom);
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
-    coordinateOverridesAtom
+    coordinateOverridesAtom,
   );
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function SVG() {
       "https://api.zenhub.com/public/graphql/",
       APIKey,
       signal,
-      appSettings
+      appSettings,
     )
       .then(({ graphData }) => {
         if (!appSettings.showNonEpicIssues) {
@@ -102,7 +102,7 @@ export default function SVG() {
         setLoading(false);
       });
 
-    return () => controller.abort();
+    return () => controller.abort("getGraphData");
   }, [
     workspace,
     epic,
@@ -132,7 +132,7 @@ export default function SVG() {
           saveCoordinateOverrides,
           setCurrentGraphData,
         },
-        appSettings
+        appSettings,
       );
     } catch (err) {
       console.log("generateGraph error", err);

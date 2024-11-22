@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import { withUndo } from "jotai-history";
 import { appSettingDefaults } from "../constants";
 import {
   additionalColorDefaults,
@@ -37,7 +38,7 @@ export const appSettingsAtom = atomWithParameterPersistence(
         ...appSettings,
       }),
     },
-  }
+  },
 );
 
 export const workspaceAtom = atomWithParameterPersistence("workspace", "");
@@ -57,7 +58,7 @@ export const pipelineColorsAtom = atomWithParameterPersistence(
     bootstrapOptions: {
       isObject: true,
     },
-  }
+  },
 );
 
 export const additionalColorsAtom = atomWithParameterPersistence(
@@ -67,7 +68,7 @@ export const additionalColorsAtom = atomWithParameterPersistence(
     bootstrapOptions: {
       isObject: true,
     },
-  }
+  },
 );
 
 // TODO: Merge pipelineColors and pipelineHidden if more pipeline settings are added?
@@ -78,7 +79,7 @@ export const pipelineHiddenAtom = atomWithParameterPersistence(
     bootstrapOptions: {
       isObject: true,
     },
-  }
+  },
 );
 
 export const coordinateOverridesAtom = atomWithParameterPersistence(
@@ -105,7 +106,7 @@ export const coordinateOverridesAtom = atomWithParameterPersistence(
 
         return coordinateOverridesToLocalStorageValue(
           coordinateOverrides,
-          epic
+          epic,
         );
       },
     },
@@ -117,7 +118,12 @@ export const coordinateOverridesAtom = atomWithParameterPersistence(
         return `coordinateOverrides-${epic}`;
       },
     },
-  }
+  },
+);
+
+export const undoCoordinateOverridesAtom = withUndo(
+  coordinateOverridesAtom,
+  100,
 );
 
 function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
@@ -145,17 +151,17 @@ function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
 
                 return overrides;
               },
-              {}
-            )
-          )
+              {},
+            ),
+          ),
         );
-      }
+      },
     );
 
     localStorage.removeItem("coordinateOverrides");
 
     return JSON.parse(
-      localStorage.getItem(`coordinateOverrides-${epic}`) || "{}"
+      localStorage.getItem(`coordinateOverrides-${epic}`) || "{}",
     );
   }
 
