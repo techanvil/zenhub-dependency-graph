@@ -1,12 +1,9 @@
 import {
   createClient,
   fetchExchange,
-  OperationContext,
   OperationResult,
-  OperationResultSource,
   DocumentInput,
 } from "urql";
-import { TypedDocumentNode } from "@urql/core";
 import { AnyVariables } from "@urql/core";
 import { authExchange } from "@urql/exchange-auth";
 import { cacheExchange } from "@urql/exchange-graphcache";
@@ -24,6 +21,12 @@ import {
 } from "./queries";
 import { GetEpicLinkedIssuesQuery } from "../gql/graphql";
 
+declare global {
+  interface Window {
+    zdgDebugInfo: any;
+  }
+}
+
 interface AppSettings {
   showNonEpicBlockedIssues: boolean;
 }
@@ -35,8 +38,12 @@ if (!process.env.REACT_APP_ZENHUB_ENDPOINT_URL) {
 const storage = makeDefaultStorage({
   idbName: "graphcache-store", // Unique name for the database
   maxAge: 60 * 60 * 1000, // Data expiration (e.g., 1 hour in ms)
-  sessionStorage: true, // Use sessionStorage instead of localStorage
 });
+
+// Add this function to clear the cache
+export async function clearGraphCache() {
+  await storage.clear();
+}
 
 const cache = cacheExchange({
   storage,
@@ -462,93 +469,26 @@ export async function getGraphData(
 
   const { issueByInfo: epicIssue } = issueByNumberResult.data;
 
-  // console.log("epicIssue", epicIssue);
-  // console.log("workspace", workspaceId);
-  // console.log("repository", repositoryId, repositoryGhId);
-  // console.log("pipelines", pipelines);
-  // console.log("linkedIssues", linkedIssues);
-  // console.log("d3GraphData", d3GraphData);
+  console.log("epicIssue", epicIssue);
+  console.log("workspace", workspaceId);
+  console.log("repository", repositoryId, repositoryGhId);
+  console.log("pipelines", pipelines);
+  console.log("linkedIssues", linkedIssues);
+  console.log("epicGraphData", epicGraphData);
 
-  // window.zdgDebugInfo = {
-  //   ...(window.zdgDebugInfo || {}),
-  //   epicIssue,
-  //   workspaceId,
-  //   repositoryId,
-  //   repositoryGhId,
-  //   pipelines,
-  //   linkedIssues,
-  //   d3GraphData,
-  // };
+  window.zdgDebugInfo = {
+    ...(window.zdgDebugInfo || {}),
+    epicIssue,
+    workspaceId,
+    repositoryId,
+    repositoryGhId,
+    pipelines,
+    linkedIssues,
+    epicGraphData,
+  };
 
   return {
     graphData: epicGraphData,
     epicIssue,
   };
 }
-
-/*
-function createGqlQuery(endpointUrl, zenhubApiKey, signal) {
-  return async function gqlQuery(query, operationName, variables) {
-    const options = {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${zenhubApiKey}`,
-      },
-      body: JSON.stringify({
-        operationName,
-        query,
-        variables,
-      }),
-      signal,
-    };
-
-    // const res = await fetch(endpointUrl, options);
-    // return (await res.json()).data;
-    const res = await cachedFetch(endpointUrl, options);
-    return res.data;
-  };
-}
-
-// Cache responses for 1 hour.
-const cachedFetch = async (url, options) => {
-  // Generate a unique key for the request
-  const cacheKey = `cachedFetch:${url}:${JSON.stringify(options)}`;
-
-  // Check if the cached response is still valid
-  const cachedResponse = sessionStorage.getItem(cacheKey);
-  if (cachedResponse) {
-    const { data, expiry } = JSON.parse(cachedResponse);
-
-    // Check if the response has not expired
-    if (expiry > Date.now()) {
-      return data;
-    }
-
-    // If the response has expired, remove it from the cache
-    sessionStorage.removeItem(cacheKey);
-  }
-
-  // Fetch the data
-  const response = await fetch(url, options);
-
-  // Check if the request was successful
-  if (response.ok) {
-    // Parse the response body
-    const data = await response.json();
-
-    // Calculate the expiry time (e.g., 1 hour from the current time)
-    const expiry = Date.now() + 3600000;
-
-    // Cache the response with the expiry time in session storage
-    const cachedData = JSON.stringify({ data, expiry });
-    sessionStorage.setItem(cacheKey, cachedData);
-
-    // Return the data
-    return data;
-  }
-
-  // If the request was not successful, throw an error
-  throw new Error(`Request failed with status ${response.status}`);
-};
-*/
