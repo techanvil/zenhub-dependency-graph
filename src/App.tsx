@@ -64,9 +64,7 @@ function App({ authentication, panel }: AppProps) {
 
   const APIKey = useAtomValue(APIKeyAtom);
 
-  const { undo, redo, canUndo, canRedo } = useAtomValue(
-    undoCoordinateOverridesAtom,
-  );
+  const { undo, redo } = useAtomValue(undoCoordinateOverridesAtom);
 
   useEffect(() => {
     function handleKeyUp(event: KeyboardEvent) {
@@ -84,11 +82,9 @@ function App({ authentication, panel }: AppProps) {
       if (event.code === "KeyZ" && event.ctrlKey) {
         if (event.shiftKey) {
           // Redo coordinate overrides.
-          console.log("redo coordinate overrides");
           redo();
         } else {
           // Undo coordinate overrides
-          console.log("undo coordinate overrides");
           undo();
         }
       }
