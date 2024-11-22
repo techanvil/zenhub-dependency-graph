@@ -1,4 +1,13 @@
-import { createClient, fetchExchange } from "urql";
+import {
+  createClient,
+  fetchExchange,
+  OperationContext,
+  OperationResult,
+  OperationResultSource,
+  DocumentInput,
+} from "urql";
+import { TypedDocumentNode } from "@urql/core";
+import { AnyVariables } from "@urql/core";
 import { authExchange } from "@urql/exchange-auth";
 import { cacheExchange } from "@urql/exchange-graphcache";
 import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage";
@@ -6,14 +15,18 @@ import { pipe, subscribe } from "wonka";
 
 import { APIKeyAtom, store } from "../store/atoms";
 import {
-  GET_WORKSPACE_QUERY,
-  GET_REPO_AND_PIPELINES_QUERY,
-  GET_EPIC_LINKED_ISSUES_QUERY,
-  GET_ISSUE_BY_NUMBER_QUERY,
-  GET_ALL_EPICS,
-  GET_ALL_ORGANIZATIONS,
+  getWorkspaceQueryDocument,
+  getRepoAndPipelinesQueryDocument,
+  getEpicLinkedIssuesQueryDocument,
+  getIssueByNumberQueryDocument,
   getAllEpicsQueryDocument,
+  getAllOrganizationsQueryDocument,
 } from "./queries";
+import { GetEpicLinkedIssuesQuery } from "../gql/graphql";
+
+interface AppSettings {
+  showNonEpicBlockedIssues: boolean;
+}
 
 if (!process.env.REACT_APP_ZENHUB_ENDPOINT_URL) {
   throw new Error("REACT_APP_ZENHUB_ENDPOINT_URL is required");
@@ -66,9 +79,28 @@ export const client = createClient({
   // exchanges: [cacheExchange, fetchExchange],
 });
 
-// function executeQuery<Q, V>(query: Q, variables: V) {
-async function executeQuery(query, variables, signal) {
+function executeQuery<
+  Data = any,
+  Variables extends AnyVariables = AnyVariables,
+>(
+  query: DocumentInput<Data, Variables>,
+  variables: Variables,
+  signal: AbortSignal,
+): OperationResultSource<OperationResult<Data, Variables>> {
+  // async function executeQuery<
+  //   // Q extends TypedDocumentNode<any, V>,
+  //   Q = any,
+  //   V extends AnyVariables,
+  // >(
+  //   query: Q,
+  //   variables: V,
+  //   signal: AbortSignal,
+  // ): Promise<ReturnType<typeof client.query<Q, V>>> {
+  // ): Promise<OperationResultSource<OperationResult<any, V>>> {
+  // async function executeQuery(query, variables, signal) {
   // TODO: Refactor this to be a URQL exchange?
+
+  /*
   return new Promise((resolve) => {
     const { unsubscribe } = pipe(
       client.query(query, variables),
@@ -82,9 +114,27 @@ async function executeQuery(query, variables, signal) {
       unsubscribe();
     });
   });
+  */
+
+  const source = client.query(query, variables);
+
+  signal.addEventListener("abort", () => {
+    pipe(
+      source,
+      subscribe(() => {}),
+    ).unsubscribe();
+  });
+
+  return source;
 }
 
-function getNonEpicIssues(issues, relationshipProperty) {
+type Issue = NonNullable<GetEpicLinkedIssuesQuery["linkedIssues"]>["nodes"][0];
+type ExtendedIssue = Issue & { isNonEpicIssue?: boolean };
+
+function getNonEpicIssues(
+  issues: ExtendedIssue[],
+  relationshipProperty: "blockingIssues" | "blockedIssues",
+) {
   return issues.map((issue) =>
     issue[relationshipProperty].nodes.filter(
       (relatedIssue) =>
@@ -93,7 +143,12 @@ function getNonEpicIssues(issues, relationshipProperty) {
   );
 }
 
-async function getAllIssues(gqlQuery, issues, variables, appSettings) {
+async function getAllIssues(
+  issues: ExtendedIssue[],
+  variables: { workspaceId: string; repositoryGhId: number },
+  appSettings: AppSettings,
+  signal: AbortSignal,
+) {
   const { workspaceId, repositoryGhId } = variables;
 
   const nonEpicBlockingIssues = getNonEpicIssues(issues, "blockingIssues");
@@ -106,10 +161,19 @@ async function getAllIssues(gqlQuery, issues, variables, appSettings) {
   ].flatMap((a) => a);
 
   const dedupedNonEpicIssues = Object.values(
-    nonEpicIssues.reduce((issueMap, issue) => {
-      issueMap[issue.number] = issue;
-      return issueMap;
-    }, {}),
+    nonEpicIssues.reduce(
+      (
+        issueMap: {
+          [key: string]: ReturnType<typeof getNonEpicIssues>[0][0];
+          // NonNullable<GetEpicLinkedIssuesQuery["linkedIssues"]>["nodes"][0]["blockingIssues"]["nodes"][0]
+        },
+        issue,
+      ) => {
+        issueMap[issue.number] = issue;
+        return issueMap;
+      },
+      {},
+    ),
   );
 
   if (dedupedNonEpicIssues.length === 0) {
@@ -119,32 +183,58 @@ async function getAllIssues(gqlQuery, issues, variables, appSettings) {
   // FIXME: Find a way to avoid making a query per single issue!
   const nonEpicIssuesFull = await Promise.all(
     dedupedNonEpicIssues.map(async (issue) => {
-      const { issueByInfo } = await gqlQuery(
-        GET_ISSUE_BY_NUMBER_QUERY,
-        "GetIssueByNumber",
+      const result = await executeQuery(
+        getIssueByNumberQueryDocument,
         {
           workspaceId,
           repositoryGhId,
           issueNumber: issue.number,
         },
+        signal,
       );
+      // const result = await client.query(getIssueByNumberQueryDocument, {
+      //   workspaceId,
+      //   repositoryGhId,
+      //   issueNumber: issue.number,
+      // });
+
+      if (!result.data?.issueByInfo) {
+        console.warn("No issueByInfo", { issue });
+        return null;
+      }
+
+      const { issueByInfo } = result.data;
+
       return { ...issueByInfo, isNonEpicIssue: true };
     }),
   );
 
-  const allIssues = [...issues, ...nonEpicIssuesFull];
+  const allIssues = [...issues, ...nonEpicIssuesFull].filter(
+    (issue) => !!issue,
+  );
 
-  return getAllIssues(gqlQuery, allIssues, variables, appSettings);
+  return getAllIssues(allIssues, variables, appSettings, signal);
 }
 
 async function getLinkedIssues(
-  gqlQuery,
-  { workspaceId, repositoryId, repositoryGhId, epicIssueNumber, pipelineIds },
-  appSettings,
+  {
+    workspaceId,
+    repositoryId,
+    repositoryGhId,
+    epicIssueNumber,
+    pipelineIds,
+  }: {
+    workspaceId: string;
+    repositoryId: string;
+    repositoryGhId: number;
+    epicIssueNumber: number;
+    pipelineIds: string[];
+  },
+  appSettings: AppSettings,
+  signal: AbortSignal,
 ) {
-  const { linkedIssues } = await gqlQuery(
-    GET_EPIC_LINKED_ISSUES_QUERY,
-    "GetEpicLinkedIssues",
+  const result = await executeQuery(
+    getEpicLinkedIssuesQueryDocument,
     {
       workspaceId,
       repositoryId,
@@ -152,27 +242,44 @@ async function getLinkedIssues(
       epicIssueNumber,
       pipelineIds,
     },
+    signal,
   );
 
+  if (!result.data?.linkedIssues) {
+    console.warn("No linkedIssues", { result });
+    return [];
+  }
+
+  const { linkedIssues } = result.data;
+
   return getAllIssues(
-    gqlQuery,
     linkedIssues.nodes,
     {
       workspaceId,
       repositoryGhId,
     },
     appSettings,
+    signal,
   );
 }
 
-export async function getAllOrganizations(endpointUrl, zenhubApiKey, signal) {
-  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+export async function getAllOrganizations(signal: AbortSignal) {
+  const result = await executeQuery(
+    getAllOrganizationsQueryDocument,
+    {},
+    signal,
+  );
+
+  if (!result.data?.viewer?.zenhubOrganizations?.nodes) {
+    console.warn("No organizations", { result });
+    return [];
+  }
 
   const {
     viewer: {
       zenhubOrganizations: { nodes: organizations },
     },
-  } = await gqlQuery(GET_ALL_ORGANIZATIONS, "GetAllOrganizations", {});
+  } = result.data;
 
   return organizations.map((organization) => ({
     id: organization.id,
@@ -185,20 +292,25 @@ export async function getAllOrganizations(endpointUrl, zenhubApiKey, signal) {
 }
 
 export async function getWorkspaces(
-  workspaceName,
-  endpointUrl,
-  zenhubApiKey,
-  signal,
+  workspaceName: string,
+  signal: AbortSignal,
 ) {
-  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+  const result = await executeQuery(
+    getWorkspaceQueryDocument,
+    { workspaceName },
+    signal,
+  );
+
+  if (!result.data?.viewer?.searchWorkspaces?.nodes) {
+    console.warn("No workspaces", { result });
+    return [];
+  }
 
   const {
     viewer: {
       searchWorkspaces: { nodes: workspaces },
     },
-  } = await gqlQuery(GET_WORKSPACE_QUERY, "GetWorkSpace", {
-    workspaceName,
-  });
+  } = result.data;
 
   return workspaces.map(
     ({
@@ -217,28 +329,7 @@ export async function getWorkspaces(
   );
 }
 
-/*
-export async function getAllEpics(
-  workspaceId,
-  endpointUrl,
-  zenhubApiKey,
-  signal,
-) {
-  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
-
-  const {
-    workspace: {
-      epics: { nodes: epics },
-    },
-  } = await gqlQuery(GET_ALL_EPICS, "GetAllEpics", {
-    workspaceId,
-  });
-
-  return epics.map((epic) => epic.issue);
-}
-*/
-
-export async function getAllEpics(workspaceId, signal) {
+export async function getAllEpics(workspaceId: string, signal: AbortSignal) {
   // const result = await client.query(getAllEpicsQueryDocument, {
   //   workspaceId,
   // });
@@ -264,15 +355,26 @@ export async function getAllEpics(workspaceId, signal) {
 }
 
 export async function getGraphData(
-  workspaceName,
-  sprintName,
-  epicIssueNumber,
-  endpointUrl,
-  zenhubApiKey,
-  signal,
-  appSettings,
+  workspaceName: string,
+  sprintName: string,
+  epicIssueNumber: number,
+  appSettings: { showNonEpicBlockedIssues: boolean },
+  signal: AbortSignal,
 ) {
-  const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
+  console.log("getGraphData", workspaceName, epicIssueNumber);
+
+  const workspaceResult = await executeQuery(
+    getWorkspaceQueryDocument,
+    {
+      workspaceName,
+    },
+    signal,
+  );
+
+  if (!workspaceResult.data?.viewer?.searchWorkspaces?.nodes) {
+    console.warn("No workspaces", { workspaceResult });
+    return null;
+  }
 
   const {
     viewer: {
@@ -280,21 +382,51 @@ export async function getGraphData(
         nodes: [{ id: workspaceId }],
       },
     },
-  } = await gqlQuery(GET_WORKSPACE_QUERY, "GetWorkSpace", {
-    workspaceName,
-  });
+  } = workspaceResult.data;
+
+  const repoAndPipelinesResult = await executeQuery(
+    getRepoAndPipelinesQueryDocument,
+    {
+      workspaceId,
+    },
+    signal,
+  );
+
+  if (!repoAndPipelinesResult.data?.workspace?.defaultRepository) {
+    console.warn("No workspace", { repoAndPipelinesResult });
+    return null;
+  }
 
   const {
     workspace: {
       defaultRepository: { id: repositoryId, ghId: repositoryGhId },
       pipelinesConnection: { nodes: pipelines },
     },
-  } = await gqlQuery(GET_REPO_AND_PIPELINES_QUERY, "GetRepoAndPipelines", {
-    workspaceId,
-  });
+  } = repoAndPipelinesResult.data;
+
+  /*
+  const repoAndPipelinesResult = await executeQuery(
+    getRepoAndPipelinesQueryDocument,
+    {
+      workspaceId,
+    },
+    signal,
+  );
+
+  if (!repoAndPipelinesResult.data?.workspace?.defaultRepository) {
+    console.warn("No defaultRepository", { repoAndPipelinesResult });
+    return null;
+  }
+
+  const {
+    workspace: {
+      defaultRepository: { id: repositoryId, ghId: repositoryGhId },
+      pipelinesConnection: { nodes: pipelines },
+    },
+  } = repoAndPipelinesResult.data;
+  */
 
   const linkedIssues = await getLinkedIssues(
-    gqlQuery,
     {
       workspaceId,
       repositoryId,
@@ -303,69 +435,86 @@ export async function getGraphData(
       pipelineIds: pipelines.map((pipeline) => pipeline.id),
     },
     appSettings,
+    signal,
   );
 
-  const d3GraphData = linkedIssues.map(
-    ({
-      number: id,
-      title,
-      htmlUrl,
-      state,
-      isNonEpicIssue,
-      assignees: { nodes: assignees },
-      blockingIssues,
-      pipelineIssue: {
-        pipeline: { name: pipelineName },
-      },
-      estimate,
-      sprints,
-    }) => ({
-      id: `${id}`,
-      title,
-      htmlUrl,
-      isNonEpicIssue,
-      assignees: assignees.map(({ login }) => login),
-      parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
-      pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
-      estimate: estimate?.value,
-      sprints: sprints.nodes.map(({ name }) => name),
-      isChosenSprint: sprints.nodes.some(({ name }) => name === sprintName),
-    }),
-  );
+  const epicGraphData = linkedIssues
+    .map((issue) => {
+      if (!issue.pipelineIssue?.pipeline) {
+        console.warn("No pipeline", { issue });
+        return null;
+      }
 
-  /*
-  const { issueByInfo: epicIssue } = await gqlQuery(
-    GET_ISSUE_BY_NUMBER_QUERY,
-    "GetIssueByNumber",
+      const {
+        number: id,
+        title,
+        htmlUrl,
+        state,
+        isNonEpicIssue,
+        assignees: { nodes: assignees },
+        blockingIssues,
+        pipelineIssue: {
+          pipeline: { name: pipelineName },
+        },
+        estimate,
+        sprints,
+      } = issue;
+      return {
+        id: `${id}`,
+        title,
+        htmlUrl,
+        isNonEpicIssue,
+        assignees: assignees.map(({ login }) => login),
+        parentIds: blockingIssues.nodes.map(({ number }) => `${number}`),
+        pipelineName: state === "CLOSED" ? "Closed" : pipelineName,
+        estimate: estimate?.value,
+        sprints: sprints.nodes.map(({ name }) => name),
+        isChosenSprint: sprints.nodes.some(({ name }) => name === sprintName),
+      };
+    })
+    .filter((issue) => !!issue);
+
+  const issueByNumberResult = await client.query(
+    getIssueByNumberQueryDocument,
     {
       workspaceId,
       repositoryGhId,
       issueNumber: epicIssueNumber,
-    }
+    },
   );
-  */
 
-  console.log("workspace", workspaceId);
-  console.log("repository", repositoryId, repositoryGhId);
-  console.log("pipelines", pipelines);
-  console.log("linkedIssues", linkedIssues);
-  console.log("d3GraphData", d3GraphData);
+  if (!issueByNumberResult.data?.issueByInfo) {
+    console.warn("No issueByInfo", { issueByNumberResult });
+    return null;
+  }
 
-  window.zdgDebugInfo = {
-    ...(window.zdgDebugInfo || {}),
-    workspaceId,
-    repositoryId,
-    repositoryGhId,
-    pipelines,
-    linkedIssues,
-    d3GraphData,
-  };
+  const { issueByInfo: epicIssue } = issueByNumberResult.data;
+
+  // console.log("epicIssue", epicIssue);
+  // console.log("workspace", workspaceId);
+  // console.log("repository", repositoryId, repositoryGhId);
+  // console.log("pipelines", pipelines);
+  // console.log("linkedIssues", linkedIssues);
+  // console.log("d3GraphData", d3GraphData);
+
+  // window.zdgDebugInfo = {
+  //   ...(window.zdgDebugInfo || {}),
+  //   epicIssue,
+  //   workspaceId,
+  //   repositoryId,
+  //   repositoryGhId,
+  //   pipelines,
+  //   linkedIssues,
+  //   d3GraphData,
+  // };
 
   return {
-    graphData: d3GraphData,
+    graphData: epicGraphData,
+    epicIssue,
   };
 }
 
+/*
 function createGqlQuery(endpointUrl, zenhubApiKey, signal) {
   return async function gqlQuery(query, operationName, variables) {
     const options = {
@@ -430,3 +579,4 @@ const cachedFetch = async (url, options) => {
   // If the request was not successful, throw an error
   throw new Error(`Request failed with status ${response.status}`);
 };
+*/

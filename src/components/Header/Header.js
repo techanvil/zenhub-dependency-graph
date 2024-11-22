@@ -125,11 +125,7 @@ export default function Header({
     const controller = new AbortController();
     const { signal } = controller;
 
-    getAllOrganizations(
-      "https://api.zenhub.com/public/graphql/",
-      APIKey,
-      signal,
-    )
+    getAllOrganizations(signal)
       .then((organizations) =>
         setOrganizationOptions(
           organizations.map(entityToOption).sort(sortOptions),
@@ -149,12 +145,7 @@ export default function Header({
         return [];
       }
 
-      const workspaces = await getWorkspaces(
-        workspaceName,
-        "https://api.zenhub.com/public/graphql/",
-        APIKey,
-        signal,
-      );
+      const workspaces = await getWorkspaces(workspaceName, signal);
 
       let options = workspaces
         .map(({ name, id, zenhubOrganizationName, sprints, activeSprint }) => ({
@@ -176,7 +167,7 @@ export default function Header({
 
       return options;
     },
-    [APIKey, chosenOrganization],
+    [chosenOrganization],
   );
 
   useEffect(() => {
@@ -225,12 +216,7 @@ export default function Header({
     const controller = new AbortController();
     const { signal } = controller;
 
-    getAllEpics(
-      chosenWorkspace.value,
-      // "https://api.zenhub.com/public/graphql/",
-      // APIKey,
-      signal,
-    )
+    getAllEpics(chosenWorkspace.value, signal)
       .then((epics) => {
         const visibleEpics = appSettings.showClosedEpics
           ? epics
