@@ -82,8 +82,6 @@ function getGraphElement({
   //   });
   // }
 
-  // TODO: Provide an option to include a white background.
-
   clonedGraphElement.querySelector("#svg-pan-zoom-controls")?.remove();
 
   const originalViewport = graphElement.querySelector(
