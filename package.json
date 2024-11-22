@@ -67,6 +67,7 @@
     ]
   },
   "devDependencies": {
+    "@0no-co/graphqlsp": "^1.12.16",
     "@graphql-codegen/cli": "^5.0.3",
     "@parcel/watcher": "^2.5.0",
     "prettier": "^3.3.3"

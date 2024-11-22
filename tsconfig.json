@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -15,7 +15,13 @@
     "isolatedModules": true,
     "noEmit": true,
     "noErrorTruncation": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "@0no-co/graphqlsp",
+        "schema": "./zenhub-schema_patched.graphql"
+      }
+    ]
   },
   "include": ["src"]
 }
