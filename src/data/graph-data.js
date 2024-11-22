@@ -5,14 +5,14 @@ import {
   GET_ISSUE_BY_NUMBER_QUERY,
   GET_ALL_EPICS,
   GET_ALL_ORGANIZATIONS,
-} from "./queries.js";
+} from "./queries";
 
 function getNonEpicIssues(issues, relationshipProperty) {
   return issues.map((issue) =>
     issue[relationshipProperty].nodes.filter(
       (relatedIssue) =>
-        !issues.some((issue) => issue.number === relatedIssue.number)
-    )
+        !issues.some((issue) => issue.number === relatedIssue.number),
+    ),
   );
 }
 
@@ -32,7 +32,7 @@ async function getAllIssues(gqlQuery, issues, variables, appSettings) {
     nonEpicIssues.reduce((issueMap, issue) => {
       issueMap[issue.number] = issue;
       return issueMap;
-    }, {})
+    }, {}),
   );
 
   if (dedupedNonEpicIssues.length === 0) {
@@ -49,10 +49,10 @@ async function getAllIssues(gqlQuery, issues, variables, appSettings) {
           workspaceId,
           repositoryGhId,
           issueNumber: issue.number,
-        }
+        },
       );
       return { ...issueByInfo, isNonEpicIssue: true };
-    })
+    }),
   );
 
   const allIssues = [...issues, ...nonEpicIssuesFull];
@@ -63,7 +63,7 @@ async function getAllIssues(gqlQuery, issues, variables, appSettings) {
 async function getLinkedIssues(
   gqlQuery,
   { workspaceId, repositoryId, repositoryGhId, epicIssueNumber, pipelineIds },
-  appSettings
+  appSettings,
 ) {
   const { linkedIssues } = await gqlQuery(
     GET_EPIC_LINKED_ISSUES_QUERY,
@@ -74,7 +74,7 @@ async function getLinkedIssues(
       repositoryGhId,
       epicIssueNumber,
       pipelineIds,
-    }
+    },
   );
 
   return getAllIssues(
@@ -84,7 +84,7 @@ async function getLinkedIssues(
       workspaceId,
       repositoryGhId,
     },
-    appSettings
+    appSettings,
   );
 }
 
@@ -111,7 +111,7 @@ export async function getWorkspaces(
   workspaceName,
   endpointUrl,
   zenhubApiKey,
-  signal
+  signal,
 ) {
   const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
 
@@ -136,7 +136,7 @@ export async function getWorkspaces(
       zenhubOrganizationName,
       sprints: sprints.nodes,
       activeSprint,
-    })
+    }),
   );
 }
 
@@ -144,7 +144,7 @@ export async function getAllEpics(
   workspaceId,
   endpointUrl,
   zenhubApiKey,
-  signal
+  signal,
 ) {
   const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
 
@@ -166,7 +166,7 @@ export async function getGraphData(
   endpointUrl,
   zenhubApiKey,
   signal,
-  appSettings
+  appSettings,
 ) {
   const gqlQuery = createGqlQuery(endpointUrl, zenhubApiKey, signal);
 
@@ -198,7 +198,7 @@ export async function getGraphData(
       epicIssueNumber,
       pipelineIds: pipelines.map((pipeline) => pipeline.id),
     },
-    appSettings
+    appSettings,
   );
 
   const d3GraphData = linkedIssues.map(
@@ -226,7 +226,7 @@ export async function getGraphData(
       estimate: estimate?.value,
       sprints: sprints.nodes.map(({ name }) => name),
       isChosenSprint: sprints.nodes.some(({ name }) => name === sprintName),
-    })
+    }),
   );
 
   /*
