@@ -113,7 +113,7 @@ export default function Header({
         setChosenSprint(false);
       }
     },
-    [sprint]
+    [sprint],
   );
 
   useEffect(() => {
@@ -127,19 +127,19 @@ export default function Header({
     getAllOrganizations(
       "https://api.zenhub.com/public/graphql/",
       APIKey,
-      signal
+      signal,
     )
       .then((organizations) =>
         setOrganizationOptions(
-          organizations.map(entityToOption).sort(sortOptions)
-        )
+          organizations.map(entityToOption).sort(sortOptions),
+        ),
       )
       .catch((err) => {
         console.log("getGraphData error", err);
         setOrganizationOptions([]);
       });
 
-    return () => controller.abort();
+    return () => controller.abort("getAllOrganizations");
   }, [workspace, APIKey]);
 
   const loadOptions = useCallback(
@@ -152,7 +152,7 @@ export default function Header({
         workspaceName,
         "https://api.zenhub.com/public/graphql/",
         APIKey,
-        signal
+        signal,
       );
 
       let options = workspaces
@@ -169,13 +169,13 @@ export default function Header({
       if (chosenOrganization) {
         options = options.filter(
           ({ zenhubOrganizationName }) =>
-            zenhubOrganizationName === chosenOrganization.label
+            zenhubOrganizationName === chosenOrganization.label,
         );
       }
 
       return options;
     },
-    [APIKey, chosenOrganization]
+    [APIKey, chosenOrganization],
   );
 
   useEffect(() => {
@@ -194,7 +194,7 @@ export default function Header({
           setChosenWorkspaceAndSprint(options[0]);
 
           const organization = organizationOptions.find(
-            ({ label }) => label === options[0].zenhubOrganizationName
+            ({ label }) => label === options[0].zenhubOrganizationName,
           );
 
           if (organization) {
@@ -207,7 +207,7 @@ export default function Header({
         setWorkspaceOptions([]);
       });
 
-    return () => controller.abort();
+    return () => controller.abort("loadOptions");
   }, [
     APIKey,
     organizationOptions,
@@ -228,7 +228,7 @@ export default function Header({
       chosenWorkspace.value,
       "https://api.zenhub.com/public/graphql/",
       APIKey,
-      signal
+      signal,
     )
       .then((epics) => {
         const visibleEpics = appSettings.showClosedEpics
@@ -254,7 +254,7 @@ export default function Header({
         setEpicOptions([]);
       });
 
-    return () => controller.abort();
+    return () => controller.abort("getAllEpics");
   }, [APIKey, appSettings.showClosedEpics, chosenWorkspace, epic]);
 
   const extraWorkspaceProps = chosenOrganization
@@ -356,13 +356,14 @@ export default function Header({
                 overflow="visible" // when there are three lines of text.
               >
                 <VStack spacing="0">
-                  {!appSettings.showNonEpicIssues && nonEpicIssues?.length > 0 && (
-                    <Text color="tomato" fontSize="small">
-                      <b>{nonEpicIssues.length}</b> non-epic{" "}
-                      {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
-                      hidden (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
-                    </Text>
-                  )}
+                  {!appSettings.showNonEpicIssues &&
+                    nonEpicIssues?.length > 0 && (
+                      <Text color="tomato" fontSize="small">
+                        <b>{nonEpicIssues.length}</b> non-epic{" "}
+                        {pluralise(nonEpicIssues.length, "issue", "issues")}{" "}
+                        hidden (<b>{getOpenIssueCount(nonEpicIssues)}</b> open)
+                      </Text>
+                    )}
                   {!appSettings.showSelfContainedIssues &&
                     selfContainedIssues?.length > 0 && (
                       <Text color="tomato" fontSize="small">
@@ -370,7 +371,7 @@ export default function Header({
                         {pluralise(
                           selfContainedIssues.length,
                           "issue",
-                          "issues"
+                          "issues",
                         )}{" "}
                         hidden (<b>{getOpenIssueCount(selfContainedIssues)}</b>{" "}
                         open)
