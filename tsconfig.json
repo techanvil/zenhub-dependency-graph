@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "target": "es6",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,9 +14,14 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "noErrorTruncation": true,
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "@0no-co/graphqlsp",
+        "schema": "./zenhub-schema_patched.graphql"
+      }
+    ]
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

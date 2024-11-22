@@ -33,6 +33,7 @@ import {
   pipelineColorsAtom,
   pipelineHiddenAtom,
 } from "../../store/atoms";
+import { clearGraphCache } from "../../data/graph-data";
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
@@ -279,14 +280,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               colorScheme="blue"
               mr={1}
               onClick={() => {
-                const keys = [];
-                for (let i = 0; i < sessionStorage.length; i++) {
-                  const key = sessionStorage.key(i);
-                  if (key.startsWith("cachedFetch:")) {
-                    keys.push(key);
-                  }
-                }
-                keys.forEach((key) => sessionStorage.removeItem(key));
+                clearGraphCache();
               }}
             >
               Flush cache

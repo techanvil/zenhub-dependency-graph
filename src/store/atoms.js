@@ -1,4 +1,4 @@
-import { atom } from "jotai";
+import { atom, createStore } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { withUndo } from "jotai-history";
 import { appSettingDefaults } from "../constants";
@@ -15,6 +15,8 @@ export const PANES = {
   LEGEND: "legend",
   EXTERNAL: "external",
 };
+
+export const store = createStore();
 
 export const activePaneAtom = atom(PANES.NONE);
 

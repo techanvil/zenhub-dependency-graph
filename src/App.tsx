@@ -89,7 +89,7 @@ function App({ authentication, panel }: AppProps) {
     return () => {
       document.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [redo, undo]);
 
   return (
     <ChakraProvider theme={theme}>
