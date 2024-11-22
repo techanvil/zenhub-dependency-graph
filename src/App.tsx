@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import React from "react";
+import React, { useEffect } from "react";
 import { useAtomValue } from "jotai";
 import {
   Box,
@@ -19,7 +19,7 @@ import Header from "./components/Header/Header";
 import SettingsModal from "./components/SettingsModal/SettingsModal";
 import SVG from "./components/SVG/SVG";
 import Panel from "./Panel";
-import { APIKeyAtom } from "./store/atoms";
+import { APIKeyAtom, undoCoordinateOverridesAtom } from "./store/atoms";
 import { Session, SignInFunction, SignOutFunction } from "./auth-types";
 
 // Responsive popover styling. See https://github.com/chakra-ui/chakra-ui/issues/2609
@@ -63,6 +63,39 @@ function App({ authentication, panel }: AppProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const APIKey = useAtomValue(APIKeyAtom);
+
+  const { undo, redo } = useAtomValue(undoCoordinateOverridesAtom);
+
+  useEffect(() => {
+    function handleKeyUp(event: KeyboardEvent) {
+      console.log({
+        event,
+        target: event.target,
+        targetTag: (event.target as HTMLElement)?.tagName,
+      });
+
+      // Ignore events triggered by inputs etc.
+      if (event.target !== document.body) {
+        return;
+      }
+
+      if (event.code === "KeyZ" && event.ctrlKey) {
+        if (event.shiftKey) {
+          // Redo coordinate overrides.
+          redo();
+        } else {
+          // Undo coordinate overrides
+          undo();
+        }
+      }
+    }
+
+    document.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   return (
     <ChakraProvider theme={theme}>
