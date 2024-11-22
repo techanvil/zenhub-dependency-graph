@@ -1,3 +1,10 @@
+import { createClient, fetchExchange } from "urql";
+import { authExchange } from "@urql/exchange-auth";
+import { cacheExchange } from "@urql/exchange-graphcache";
+import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage";
+import { pipe, subscribe } from "wonka";
+
+import { APIKeyAtom, store } from "../store/atoms";
 import {
   GET_WORKSPACE_QUERY,
   GET_REPO_AND_PIPELINES_QUERY,
@@ -5,7 +12,77 @@ import {
   GET_ISSUE_BY_NUMBER_QUERY,
   GET_ALL_EPICS,
   GET_ALL_ORGANIZATIONS,
+  getAllEpicsQueryDocument,
 } from "./queries";
+
+if (!process.env.REACT_APP_ZENHUB_ENDPOINT_URL) {
+  throw new Error("REACT_APP_ZENHUB_ENDPOINT_URL is required");
+}
+
+const storage = makeDefaultStorage({
+  idbName: "graphcache-store", // Unique name for the database
+  maxAge: 60 * 60 * 1000, // Data expiration (e.g., 1 hour in ms)
+  sessionStorage: true, // Use sessionStorage instead of localStorage
+});
+
+const cache = cacheExchange({
+  storage,
+  resolvers: {
+    // Define resolvers if needed for custom field resolution
+  },
+  updates: {
+    // Update logic for mutations if needed
+  },
+});
+
+export const client = createClient({
+  url: process.env.REACT_APP_ZENHUB_ENDPOINT_URL,
+  exchanges: [
+    authExchange(async (utils) => {
+      return {
+        addAuthToOperation(operation) {
+          const zenhubAPIKey = store.get(APIKeyAtom);
+
+          if (!zenhubAPIKey) {
+            console.warn("No Zenhub API key");
+            return operation;
+          }
+
+          return utils.appendHeaders(operation, {
+            Authorization: `Bearer ${zenhubAPIKey}`,
+          });
+        },
+        didAuthError(error, operation) {
+          console.log("didAuthError", { error, operation });
+
+          return !!error;
+        },
+        async refreshAuth() {},
+      };
+    }),
+    cache,
+    fetchExchange,
+  ],
+  // exchanges: [cacheExchange, fetchExchange],
+});
+
+// function executeQuery<Q, V>(query: Q, variables: V) {
+async function executeQuery(query, variables, signal) {
+  // TODO: Refactor this to be a URQL exchange?
+  return new Promise((resolve) => {
+    const { unsubscribe } = pipe(
+      client.query(query, variables),
+      subscribe((result) => {
+        console.info("executeQuery", result);
+        resolve(result);
+      }),
+    );
+
+    signal.addEventListener("abort", () => {
+      unsubscribe();
+    });
+  });
+}
 
 function getNonEpicIssues(issues, relationshipProperty) {
   return issues.map((issue) =>
@@ -140,6 +217,7 @@ export async function getWorkspaces(
   );
 }
 
+/*
 export async function getAllEpics(
   workspaceId,
   endpointUrl,
@@ -155,6 +233,32 @@ export async function getAllEpics(
   } = await gqlQuery(GET_ALL_EPICS, "GetAllEpics", {
     workspaceId,
   });
+
+  return epics.map((epic) => epic.issue);
+}
+*/
+
+export async function getAllEpics(workspaceId, signal) {
+  // const result = await client.query(getAllEpicsQueryDocument, {
+  //   workspaceId,
+  // });
+
+  const result = await executeQuery(
+    getAllEpicsQueryDocument,
+    { workspaceId },
+    signal,
+  );
+
+  if (!result.data?.workspace?.epics?.nodes) {
+    console.warn("No epics", { result });
+    return [];
+  }
+
+  const {
+    workspace: {
+      epics: { nodes: epics },
+    },
+  } = result.data;
 
   return epics.map((epic) => epic.issue);
 }

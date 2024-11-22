@@ -227,8 +227,8 @@ export default function Header({
 
     getAllEpics(
       chosenWorkspace.value,
-      "https://api.zenhub.com/public/graphql/",
-      APIKey,
+      // "https://api.zenhub.com/public/graphql/",
+      // APIKey,
       signal,
     )
       .then((epics) => {

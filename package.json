@@ -15,6 +15,8 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@uiw/react-color-sketch": "^2.3.0",
+    "@urql/exchange-auth": "^2.2.0",
+    "@urql/exchange-graphcache": "^7.2.1",
     "chakra-react-select": "^4.9.2",
     "concurrently": "^9.1.0",
     "d3": "^7.9.0",
@@ -29,6 +31,7 @@
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
+    "urql": "^4.2.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
