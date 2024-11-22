@@ -3,7 +3,7 @@
  */
 import { useEffect, useState, useRef } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Box, FormControl, Input, Text } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 
 /**
  * Internal dependencies
@@ -66,15 +66,7 @@ export default function SVG() {
     const controller = new AbortController();
     const { signal } = controller;
 
-    getGraphData(
-      workspace,
-      sprint,
-      epic,
-      "https://api.zenhub.com/public/graphql/",
-      APIKey,
-      signal,
-      appSettings,
-    )
+    getGraphData(workspace, sprint, epic, appSettings, signal)
       .then(({ graphData }) => {
         if (!appSettings.showNonEpicIssues) {
           const nonEpicIssues = removeNonEpicIssues(graphData);

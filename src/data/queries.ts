@@ -1,15 +1,19 @@
-export const GET_WORKSPACE_QUERY = gql`
+import { graphql } from "../gql";
+
+export const getWorkspaceQueryDocument = graphql(`
   query GetWorkSpace($workspaceName: String!) {
     viewer {
+      id
       searchWorkspaces(query: $workspaceName) {
         nodes {
           id
           name
           zenhubOrganization {
+            id
             name
           }
           activeSprint {
-            # id
+            id
             name
           }
           sprints(filters: { state: { eq: OPEN } }) {
@@ -22,11 +26,12 @@ export const GET_WORKSPACE_QUERY = gql`
       }
     }
   }
-`;
+`);
 
-export const GET_REPO_AND_PIPELINES_QUERY = gql`
+export const getRepoAndPipelinesQueryDocument = graphql(`
   query GetRepoAndPipelines($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       defaultRepository {
         id
         ghId
@@ -38,9 +43,50 @@ export const GET_REPO_AND_PIPELINES_QUERY = gql`
       }
     }
   }
-`;
+`);
 
-export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
+/*
+export const EpicIssue_IssueFragment = graphql(`
+  fragment EpicIssue_IssueFragment on Issue {
+    number
+    title
+    htmlUrl
+    state
+    assignees {
+      nodes {
+        login
+        # name
+      }
+    }
+    blockingIssues {
+      nodes {
+        number
+      }
+    }
+    blockedIssues {
+      nodes {
+        number
+      }
+    }
+    pipelineIssue(workspaceId: $workspaceId) {
+      pipeline {
+        name
+      }
+    }
+    estimate {
+      value
+    }
+    sprints {
+      nodes {
+        # id
+        name
+      }
+    }
+  }
+`);
+*/
+
+export const getEpicLinkedIssuesQueryDocument = graphql(`
   query GetEpicLinkedIssues(
     $workspaceId: ID!
     $repositoryId: ID!
@@ -58,28 +104,35 @@ export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
       filters: { repositoryIds: [$repositoryId], pipelineIds: $pipelineIds }
     ) {
       nodes {
+        # ...EpicIssue_IssueFragment
+        id
         number
         title
         htmlUrl
         state
         assignees {
           nodes {
+            id
             login
             # name
           }
         }
         blockingIssues {
           nodes {
+            id
             number
           }
         }
         blockedIssues {
           nodes {
+            id
             number
           }
         }
         pipelineIssue(workspaceId: $workspaceId) {
+          id
           pipeline {
+            id
             name
           }
         }
@@ -88,50 +141,56 @@ export const GET_EPIC_LINKED_ISSUES_QUERY = gql`
         }
         sprints {
           nodes {
-            # id
+            id
             name
           }
         }
       }
     }
   }
-`;
+`);
 
-export const GET_ISSUE_BY_NUMBER_QUERY = gql`
+export const getIssueByNumberQueryDocument = graphql(`
   query GetIssueByNumber(
     $workspaceId: ID!
     $repositoryGhId: Int!
     $issueNumber: Int!
   ) {
     issueByInfo(issueNumber: $issueNumber, repositoryGhId: $repositoryGhId) {
+      id
       number
       title
       htmlUrl
       state
       assignees {
         nodes {
+          id
           login
           # name
         }
       }
       pipelineIssue(workspaceId: $workspaceId) {
+        id
         pipeline {
+          id
           name
         }
       }
       blockingIssues {
         nodes {
+          id
           number
         }
       }
       blockedIssues {
         nodes {
+          id
           number
         }
       }
       sprints {
         nodes {
-          # id
+          id
           name
         }
       }
@@ -140,11 +199,12 @@ export const GET_ISSUE_BY_NUMBER_QUERY = gql`
       }
     }
   }
-`;
+`);
 
-export const GET_ALL_ORGANIZATIONS = gql`
+export const getAllOrganizationsQueryDocument = graphql(`
   query GetAllOrganizations {
     viewer {
+      id
       zenhubOrganizations {
         nodes {
           id
@@ -159,14 +219,17 @@ export const GET_ALL_ORGANIZATIONS = gql`
       }
     }
   }
-`;
+`);
 
-export const GET_ALL_EPICS = gql`
+export const getAllEpicsQueryDocument = graphql(`
   query GetAllEpics($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       epics {
         nodes {
+          id
           issue {
+            id
             number
             title
             closedAt
@@ -175,9 +238,4 @@ export const GET_ALL_EPICS = gql`
       }
     }
   }
-`;
-
-// For the sake of syntax highlighting:
-function gql(strings) {
-  return strings[0];
-}
+`);

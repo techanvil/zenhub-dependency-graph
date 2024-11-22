@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 
-import { getCombinedSprints, getRectDimensions, getSprintsText } from "./utils";
+import { getCombinedSprints, getRectDimensions } from "./utils";
 import { pipelineAbbreviations } from "./constants";
 
 function getPipelineAbbreviation(node) {
