@@ -418,10 +418,24 @@ export default function Header({
                       <AuthenticationMenuItem authentication={authentication} />
                     )}
                     <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
-                    <MenuItem onClick={() => downloadSVG(chosenEpic.label)}>
+                    <MenuItem
+                      onClick={() =>
+                        downloadSVG(chosenEpic.label, {
+                          includeBackground:
+                            appSettings.includeBackgroundWhenExporting,
+                        })
+                      }
+                    >
                       Download (SVG)
                     </MenuItem>
-                    <MenuItem onClick={() => copyPNG()}>
+                    <MenuItem
+                      onClick={() =>
+                        copyPNG({
+                          includeBackground:
+                            appSettings.includeBackgroundWhenExporting,
+                        })
+                      }
+                    >
                       Copy to clipboard (PNG)
                     </MenuItem>
                   </MenuList>

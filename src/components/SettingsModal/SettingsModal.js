@@ -42,7 +42,7 @@ export default function SettingsModal({ isOpen, onClose }) {
     useAtom(additionalColorsAtom);
   const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
-    coordinateOverridesAtom
+    coordinateOverridesAtom,
   );
 
   // TODO: Clean this up.
@@ -51,7 +51,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       ...appSettingDefaults,
       ...appSettings,
     }),
-    [appSettings]
+    [appSettings],
   );
 
   const [settingsState, setSettingsState] = useState({
@@ -202,6 +202,19 @@ export default function SettingsModal({ isOpen, onClose }) {
               onChange={(e) => {
                 updateAppSettings({
                   highlightRelatedIssues: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Include background when exporting graph</FormLabel>
+            <Switch
+              isChecked={
+                settingsState.appSettings.includeBackgroundWhenExporting
+              }
+              onChange={(e) => {
+                updateAppSettings({
+                  includeBackgroundWhenExporting: e.target.checked,
                 });
               }}
             />

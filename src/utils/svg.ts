@@ -10,12 +10,19 @@ declare global {
   }
 }
 
-function getGraphElement() {
+function getGraphElement({
+  includeBackground,
+}: {
+  includeBackground: boolean;
+}) {
   // const graphElement = document.getElementById("zdg-graph");
   const graphElement = document.querySelector("svg#zdg-graph");
   if (!graphElement) return { svgElement: null };
 
   const clonedGraphElement = graphElement.cloneNode(true) as SVGElement;
+
+  clonedGraphElement.removeAttribute("id");
+  clonedGraphElement.removeAttribute("style");
 
   const viewport = clonedGraphElement.querySelector(
     ".svg-pan-zoom_viewport",
@@ -84,6 +91,16 @@ function getGraphElement() {
   ) as SVGGElement;
   const { width, height } = originalViewport.getBBox();
 
+  if (includeBackground) {
+    const backgroundRect = clonedGraphElement.querySelector(
+      ".zdg-background",
+    ) as SVGRectElement;
+    // The graph dimensions may have been changed by drag/drop or pan/zoom, so update the background rect dimensions.
+    backgroundRect.setAttribute("width", width.toString());
+    backgroundRect.setAttribute("height", height.toString());
+    backgroundRect.setAttribute("fill", "white");
+  }
+
   return {
     svgElement: clonedGraphElement,
     width: width * scaleX,
@@ -91,8 +108,11 @@ function getGraphElement() {
   };
 }
 
-export async function downloadSVG(epicName: string) {
-  const { svgElement } = getGraphElement();
+export async function downloadSVG(
+  epicName: string,
+  { includeBackground }: { includeBackground: boolean },
+) {
+  const { svgElement } = getGraphElement({ includeBackground });
   if (!svgElement) return;
 
   // Serialize the SVG.
@@ -127,8 +147,12 @@ export async function downloadSVG(epicName: string) {
   }
 }
 
-export async function copyPNG() {
-  const { svgElement, width, height } = getGraphElement();
+export async function copyPNG({
+  includeBackground,
+}: {
+  includeBackground: boolean;
+}) {
+  const { svgElement, width, height } = getGraphElement({ includeBackground });
   if (!svgElement) return;
 
   // Convert the SVG to a PNG
