@@ -3,15 +3,17 @@ import { graphql } from "../gql";
 export const getWorkspaceQueryDocument = graphql(`
   query GetWorkSpace($workspaceName: String!) {
     viewer {
+      id
       searchWorkspaces(query: $workspaceName) {
         nodes {
           id
           name
           zenhubOrganization {
+            id
             name
           }
           activeSprint {
-            # id
+            id
             name
           }
           sprints(filters: { state: { eq: OPEN } }) {
@@ -29,6 +31,7 @@ export const getWorkspaceQueryDocument = graphql(`
 export const getRepoAndPipelinesQueryDocument = graphql(`
   query GetRepoAndPipelines($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       defaultRepository {
         id
         ghId
@@ -102,28 +105,34 @@ export const getEpicLinkedIssuesQueryDocument = graphql(`
     ) {
       nodes {
         # ...EpicIssue_IssueFragment
+        id
         number
         title
         htmlUrl
         state
         assignees {
           nodes {
+            id
             login
             # name
           }
         }
         blockingIssues {
           nodes {
+            id
             number
           }
         }
         blockedIssues {
           nodes {
+            id
             number
           }
         }
         pipelineIssue(workspaceId: $workspaceId) {
+          id
           pipeline {
+            id
             name
           }
         }
@@ -132,7 +141,7 @@ export const getEpicLinkedIssuesQueryDocument = graphql(`
         }
         sprints {
           nodes {
-            # id
+            id
             name
           }
         }
@@ -148,34 +157,40 @@ export const getIssueByNumberQueryDocument = graphql(`
     $issueNumber: Int!
   ) {
     issueByInfo(issueNumber: $issueNumber, repositoryGhId: $repositoryGhId) {
+      id
       number
       title
       htmlUrl
       state
       assignees {
         nodes {
+          id
           login
           # name
         }
       }
       pipelineIssue(workspaceId: $workspaceId) {
+        id
         pipeline {
+          id
           name
         }
       }
       blockingIssues {
         nodes {
+          id
           number
         }
       }
       blockedIssues {
         nodes {
+          id
           number
         }
       }
       sprints {
         nodes {
-          # id
+          id
           name
         }
       }
@@ -189,6 +204,7 @@ export const getIssueByNumberQueryDocument = graphql(`
 export const getAllOrganizationsQueryDocument = graphql(`
   query GetAllOrganizations {
     viewer {
+      id
       zenhubOrganizations {
         nodes {
           id
@@ -208,9 +224,12 @@ export const getAllOrganizationsQueryDocument = graphql(`
 export const getAllEpicsQueryDocument = graphql(`
   query GetAllEpics($workspaceId: ID!) {
     workspace(id: $workspaceId) {
+      id
       epics {
         nodes {
+          id
           issue {
+            id
             number
             title
             closedAt

@@ -47,6 +47,10 @@ export async function clearGraphCache() {
 
 const cache = cacheExchange({
   storage,
+  keys: {
+    // Estimate doesn't have an id, this tells URQL to embed Estimate objects in their parent.
+    Estimate: () => null,
+  },
   resolvers: {
     // Define resolvers if needed for custom field resolution
   },
