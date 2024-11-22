@@ -79,28 +79,12 @@ export const client = createClient({
   // exchanges: [cacheExchange, fetchExchange],
 });
 
-function executeQuery<
-  Data = any,
-  Variables extends AnyVariables = AnyVariables,
->(
+function executeQuery<Data, Variables extends AnyVariables>(
   query: DocumentInput<Data, Variables>,
   variables: Variables,
   signal: AbortSignal,
-): OperationResultSource<OperationResult<Data, Variables>> {
-  // async function executeQuery<
-  //   // Q extends TypedDocumentNode<any, V>,
-  //   Q = any,
-  //   V extends AnyVariables,
-  // >(
-  //   query: Q,
-  //   variables: V,
-  //   signal: AbortSignal,
-  // ): Promise<ReturnType<typeof client.query<Q, V>>> {
-  // ): Promise<OperationResultSource<OperationResult<any, V>>> {
-  // async function executeQuery(query, variables, signal) {
-  // TODO: Refactor this to be a URQL exchange?
-
-  /*
+): Promise<OperationResult<Data, Variables>> {
+  // TODO: Rewrite this to be a URQL exchange?
   return new Promise((resolve) => {
     const { unsubscribe } = pipe(
       client.query(query, variables),
@@ -114,18 +98,6 @@ function executeQuery<
       unsubscribe();
     });
   });
-  */
-
-  const source = client.query(query, variables);
-
-  signal.addEventListener("abort", () => {
-    pipe(
-      source,
-      subscribe(() => {}),
-    ).unsubscribe();
-  });
-
-  return source;
 }
 
 type Issue = NonNullable<GetEpicLinkedIssuesQuery["linkedIssues"]>["nodes"][0];
