@@ -43,6 +43,7 @@ import {
   sprintAtom,
   workspaceAtom,
 } from "../../store/atoms";
+import { downloadSVG } from "../../utils/svg";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -407,22 +408,21 @@ export default function Header({
                     {panel.buttonTitle}
                   </Button>
                 )}
-                {authentication ? (
-                  <Menu>
-                    <MenuButton as={Button} colorScheme="blue">
-                      {/*rightIcon={<ChevronDownIcon />}> */}
-                      User
-                    </MenuButton>
-                    <MenuList>
+                <Menu>
+                  <MenuButton as={Button} colorScheme="blue">
+                    {/*rightIcon={<ChevronDownIcon />}> */}
+                    Menu
+                  </MenuButton>
+                  <MenuList>
+                    {authentication && (
                       <AuthenticationMenuItem authentication={authentication} />
-                      <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
-                    </MenuList>
-                  </Menu>
-                ) : (
-                  <Button colorScheme="blue" onClick={onAPIKeyModalOpen}>
-                    Settings
-                  </Button>
-                )}
+                    )}
+                    <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
+                    <MenuItem onClick={() => downloadSVG(chosenEpic.label)}>
+                      Download (SVG)
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
               </WrapItem>
             </Wrap>
           </Container>
