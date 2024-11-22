@@ -55,7 +55,7 @@ function removeAncestors(graphData) {
     });
 
     node.parentIds = node.parentIds.filter(
-      (parentId) => !ancestorParentIds.includes(parentId)
+      (parentId) => !ancestorParentIds.includes(parentId),
     );
   });
 }
@@ -72,7 +72,7 @@ export function removeNonEpicIssues(graphData) {
 
     node.parentIds = node.parentIds.filter(
       (parentId) =>
-        !nonEpicIssues.some((nonEpicIssue) => nonEpicIssue.id === parentId)
+        !nonEpicIssues.some((nonEpicIssue) => nonEpicIssue.id === parentId),
     );
   });
 
@@ -96,14 +96,14 @@ export function removeSelfContainedIssues(graphData) {
     }
 
     return !graphData?.some((otherNode) =>
-      otherNode.parentIds?.includes(node.id)
+      otherNode.parentIds?.includes(node.id),
     );
   });
 
   // remove selfContainedIssues from graphData, mutating it:
   selfContainedIssues?.forEach((selfContainedIssue) => {
     const index = graphData.findIndex(
-      (node) => node.id === selfContainedIssue.id
+      (node) => node.id === selfContainedIssue.id,
     );
 
     if (index > -1) {
@@ -126,7 +126,7 @@ function findNonPipelineParents(node, graphData, pipelineName) {
 
     if (parent.pipelineName === pipelineName) {
       nonPipelineParents.push(
-        ...findNonPipelineParents(parent, graphData, pipelineName)
+        ...findNonPipelineParents(parent, graphData, pipelineName),
       );
     } else {
       nonPipelineParents.push(parent);
@@ -138,7 +138,7 @@ function findNonPipelineParents(node, graphData, pipelineName) {
 
 export function removePipelineIssues(graphData, pipelineName) {
   const pipelineIssues = graphData?.filter(
-    (node) => node.pipelineName === pipelineName
+    (node) => node.pipelineName === pipelineName,
   );
 
   const fullGraphData = [...graphData];
@@ -156,13 +156,13 @@ export function removePipelineIssues(graphData, pipelineName) {
     graphData?.forEach((node) => {
       if (node.parentIds?.includes(pipelineIssue.id)) {
         node.parentIds = node.parentIds.filter(
-          (parentId) => parentId !== pipelineIssue.id
+          (parentId) => parentId !== pipelineIssue.id,
         );
 
         const nonPipelineParents = findNonPipelineParents(
           pipelineIssue,
           fullGraphData,
-          pipelineName
+          pipelineName,
         );
 
         nonPipelineParents.forEach((openParent) => {
@@ -196,7 +196,7 @@ export const generateGraph = (
     saveCoordinateOverrides,
     setCurrentGraphData,
   },
-  appSettings
+  appSettings,
 ) => {
   const {
     highlightRelatedIssues,
@@ -268,7 +268,7 @@ export const generateGraph = (
   }
 
   layout = layout.nodeSize((node) =>
-    node === undefined ? [0, 0] : [nodeWidth, nodeHeight]
+    node === undefined ? [0, 0] : [nodeWidth, nodeHeight],
   ); // set node size instead of constraining to fit
   const { width: dagWidth, height: dagHeight } = layout(dag);
 
@@ -306,7 +306,7 @@ export const generateGraph = (
 
       applyOverrides(
         root.dataChildren.map(({ child }) => child),
-        overrides
+        overrides,
       );
     });
   }
@@ -338,7 +338,7 @@ export const generateGraph = (
     }
 
     const coordinateKeysToNodeData = getCoordinateKeysToNodeData(
-      dag.proots || [dag]
+      dag.proots || [dag],
     );
 
     return Object.entries(coordinateKeysToNodeData).reduce(
@@ -353,7 +353,7 @@ export const generateGraph = (
 
         return opacities;
       },
-      {}
+      {},
     );
   }
 
@@ -368,6 +368,7 @@ export const generateGraph = (
   // TODO: See if there's a better way to handle this.
   svgSelection
     .append("rect")
+    .attr("class", "zdg-background")
     .attr("width", dagWidth)
     .attr("height", dagHeight)
     .attr("fill", "rgba(0,0,0,0)");
@@ -406,7 +407,7 @@ export const generateGraph = (
         target.x,
         target.y,
         (rectWidth + arrowSize / 3) / 2,
-        (rectHeight + arrowSize / 3) / 2
+        (rectHeight + arrowSize / 3) / 2,
       );
       return line([...linePoints, { x: dx, y: dy }]);
     })
@@ -419,13 +420,13 @@ export const generateGraph = (
         target.x,
         target.y,
         (rectWidth + arrowSize / 3) / 2,
-        (rectHeight + arrowSize / 3) / 2
+        (rectHeight + arrowSize / 3) / 2,
       );
 
       // encodeURIComponents for spaces, hope id doesn't have a `--` in it.
       // Prefix with an alpha character to avoid invalid CSS selectors.
       const gradId = encodeURIComponent(
-        `s-${source.data.id}--${target.data.id}`
+        `s-${source.data.id}--${target.data.id}`,
       );
       const grad = defs
         .append("linearGradient")
@@ -444,7 +445,7 @@ export const generateGraph = (
         .attr("offset", "100%")
         .attr(
           "stop-color",
-          getArrowEndColor(source, target, pipelineColors, colorMap)
+          getArrowEndColor(source, target, pipelineColors, colorMap),
         );
       return `url(#${gradId})`;
     });
@@ -540,14 +541,14 @@ export const generateGraph = (
         end.x,
         end.y,
         (rectWidth + arrowSize / 3) / 2,
-        (rectHeight + arrowSize / 3) / 2
+        (rectHeight + arrowSize / 3) / 2,
       );
       // This is the angle of the last line segment
       const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
       return `translate(${dx}, ${dy}) rotate(${angle})`;
     })
     .attr("fill", ({ source, target }) =>
-      getArrowEndColor(source, target, pipelineColors, colorMap)
+      getArrowEndColor(source, target, pipelineColors, colorMap),
     );
 
   // Highlight blocked and blocking issues on hover.
@@ -565,21 +566,21 @@ export const generateGraph = (
             (d) =>
               id !== d.data.id &&
               !parentIds.includes(d.data.id) &&
-              !d.data.parentIds.includes(id)
+              !d.data.parentIds.includes(id),
           )
           .attr("opacity", "0.3");
 
         lines
           .filter(
             ({ source, target }) =>
-              source.data.id !== id && target.data.id !== id
+              source.data.id !== id && target.data.id !== id,
           )
           .attr("opacity", "0.3");
 
         arrows
           .filter(
             ({ source, target }) =>
-              source.data.id !== id && target.data.id !== id
+              source.data.id !== id && target.data.id !== id,
           )
           .attr("opacity", "0.3");
       })
@@ -620,7 +621,7 @@ export const generateGraph = (
       coordinateOverrides,
       saveCoordinateOverrides,
     },
-    appSettings
+    appSettings,
   );
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
@@ -709,7 +710,7 @@ export const generateGraph = (
           prevWidth = newWidth;
           prevHeight = newHeight;
         };
-      })()
+      })(),
     );
     panZoom.resizeHandler.observe(document.getElementById("graph-container"));
 
