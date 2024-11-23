@@ -31,8 +31,12 @@ interface AppSettings {
   showNonEpicBlockedIssues: boolean;
 }
 
-if (!process.env.REACT_APP_ZENHUB_ENDPOINT_URL) {
-  throw new Error("REACT_APP_ZENHUB_ENDPOINT_URL is required");
+const zenhubEndpointUrl =
+  process.env.REACT_APP_ZENHUB_ENDPOINT_URL ||
+  process.env.NEXT_PUBLIC_ZENHUB_ENDPOINT_URL;
+
+if (!zenhubEndpointUrl) {
+  throw new Error("Zenhub endpoint URL is required");
 }
 
 const storage = makeDefaultStorage({
@@ -60,7 +64,7 @@ const cache = cacheExchange({
 });
 
 export const client = createClient({
-  url: process.env.REACT_APP_ZENHUB_ENDPOINT_URL,
+  url: zenhubEndpointUrl,
   exchanges: [
     authExchange(async (utils) => {
       return {
@@ -100,7 +104,7 @@ function executeQuery<Data, Variables extends AnyVariables>(
     const { unsubscribe } = pipe(
       client.query(query, variables),
       subscribe((result) => {
-        console.info("executeQuery", result);
+        // console.info("executeQuery", result);
         resolve(result);
       }),
     );
