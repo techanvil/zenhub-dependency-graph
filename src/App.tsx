@@ -64,32 +64,45 @@ function App({ authentication, panel }: AppProps) {
 
   const APIKey = useAtomValue(APIKeyAtom);
 
-  const { undo, redo } = useAtomValue(undoCoordinateOverridesAtom);
+  const { undo, redo, canUndo, canRedo } = useAtomValue(
+    undoCoordinateOverridesAtom,
+  );
 
   useEffect(() => {
-    function handleKeyUp(event: KeyboardEvent) {
+    function handleKeyDown(event: KeyboardEvent) {
       // Ignore events triggered by inputs etc.
       if (event.target !== document.body) {
         return;
       }
 
+      console.log({
+        event,
+        eventCode: event.code,
+        eventCtrlKey: event.ctrlKey,
+        eventMetaKey: event.metaKey,
+      });
+
       if (event.code === "KeyZ" && event.ctrlKey) {
-        if (event.shiftKey) {
+        if ((event.shiftKey || event.metaKey) && canRedo) {
           // Redo coordinate overrides.
           redo();
-        } else {
+          // Prevent repeats from being handled until the handler is rebound on the next render
+          // so they don't arrive more quickly than can be handled.
+          document.removeEventListener("keydown", handleKeyDown);
+        } else if (canUndo) {
           // Undo coordinate overrides
           undo();
+          document.removeEventListener("keydown", handleKeyDown);
         }
       }
     }
 
-    document.addEventListener("keyup", handleKeyUp);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [redo, undo]);
+  }, [canRedo, canUndo, redo, undo]);
 
   return (
     <ChakraProvider theme={theme}>

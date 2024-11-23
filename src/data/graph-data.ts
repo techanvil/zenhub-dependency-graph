@@ -104,7 +104,7 @@ function executeQuery<Data, Variables extends AnyVariables>(
     const { unsubscribe } = pipe(
       client.query(query, variables),
       subscribe((result) => {
-        console.info("executeQuery", result);
+        // console.info("executeQuery", result);
         resolve(result);
       }),
     );
