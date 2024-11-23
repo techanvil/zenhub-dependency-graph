@@ -75,24 +75,13 @@ function App({ authentication, panel }: AppProps) {
         return;
       }
 
-      console.log({
-        event,
-        eventCode: event.code,
-        eventCtrlKey: event.ctrlKey,
-        eventMetaKey: event.metaKey,
-      });
-
-      if (event.code === "KeyZ" && event.ctrlKey) {
-        if ((event.shiftKey || event.metaKey) && canRedo) {
+      if (event.code === "KeyZ" && (event.ctrlKey || event.metaKey)) {
+        if (event.shiftKey && canRedo) {
           // Redo coordinate overrides.
           redo();
-          // Prevent repeats from being handled until the handler is rebound on the next render
-          // so they don't arrive more quickly than can be handled.
-          document.removeEventListener("keydown", handleKeyDown);
         } else if (canUndo) {
           // Undo coordinate overrides
           undo();
-          document.removeEventListener("keydown", handleKeyDown);
         }
       }
     }
