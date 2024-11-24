@@ -290,6 +290,17 @@ export default function SettingsModal({ isOpen, onClose }) {
             <summary>Advanced</summary>
 
             <FormControl pt="5">
+              <FormLabel>Show grid</FormLabel>
+              <Switch
+                isChecked={settingsState.appSettings.showGrid}
+                onChange={(e) => {
+                  updateAppSettings({
+                    showGrid: e.target.checked,
+                  });
+                }}
+              />
+            </FormControl>
+            <FormControl pt="5">
               <FormLabel>
                 Show non-epic blocked issues (it's recommended to leave this
                 off)

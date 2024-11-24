@@ -1,5 +1,6 @@
 export const appSettingDefaults = {
   snapToGrid: true,
+  showGrid: false,
   showIssueDetails: false,
   showNonEpicIssues: false,
   showSelfContainedIssues: false,
