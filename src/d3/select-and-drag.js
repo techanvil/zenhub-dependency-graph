@@ -73,6 +73,8 @@ export function setupSelectAndDrag(
     dagHeight,
     dagWidth,
     defs,
+    gridWidth,
+    gridHeight,
     line,
     nodeHeight,
     nodes,
@@ -85,7 +87,7 @@ export function setupSelectAndDrag(
     coordinateOverrides,
     saveCoordinateOverrides,
   },
-  appSettings
+  appSettings,
 ) {
   selectAndDragState.isLassooing = false;
 
@@ -131,17 +133,24 @@ export function setupSelectAndDrag(
         if (snapToGrid && !isDraggingSelection) {
           // Draw the dashed outline of the target node position.
 
-          const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+          const [gridX, gridY] = roundToGrid(
+            gridWidth,
+            gridHeight,
+            nodeWidth,
+            nodeHeight,
+            newX,
+            newY,
+          );
 
           const issuesAtTarget = findIssuesAtTarget(
             dag.proots || [dag],
             d.data.id,
             gridX,
-            gridY
+            gridY,
           );
 
           const targetIssueHasOutline = issuesAtTarget.some(
-            ({ data }) => data.isChosenSprint
+            ({ data }) => data.isChosenSprint,
           );
 
           const padding = targetIssueHasOutline ? 10 : 5;
@@ -168,7 +177,7 @@ export function setupSelectAndDrag(
               "transform",
               `translate(${gridX - borderRectWidth / 2}, ${
                 gridY - borderRectHeight / 2
-              })`
+              })`,
             )
             .attr("stroke", outlineColor)
             .attr("stroke-dasharray", "6,3")
@@ -188,7 +197,14 @@ export function setupSelectAndDrag(
         let deltaY;
 
         if (snapToGrid) {
-          const [gridX, gridY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+          const [gridX, gridY] = roundToGrid(
+            gridWidth,
+            gridHeight,
+            nodeWidth,
+            nodeHeight,
+            newX,
+            newY,
+          );
 
           deltaX = gridX - draggedDatum.x;
           deltaY = gridY - draggedDatum.y;
@@ -203,7 +219,7 @@ export function setupSelectAndDrag(
           "transform",
           `translate(${startX + deltaX - nodeWidth / 2}, ${
             startY + deltaY - nodeHeight / 2
-          })`
+          })`,
         );
       }
 
@@ -238,15 +254,15 @@ export function setupSelectAndDrag(
             target.x,
             target.y,
             (rectWidth + arrowSize / 3) / 2,
-            (rectHeight + arrowSize / 3) / 2
+            (rectHeight + arrowSize / 3) / 2,
           );
 
           // Stroke is already defined so we can just update the gradient here.
           const grad = defs
             .select(
               `linearGradient#${encodeURIComponent(
-                `s-${source.data.id}--${target.data.id}`
-              )}`
+                `s-${source.data.id}--${target.data.id}`,
+              )}`,
             )
             .attr("x1", source.x)
             .attr("x2", dx)
@@ -261,7 +277,7 @@ export function setupSelectAndDrag(
             .attr("offset", "100%")
             .attr(
               "stop-color",
-              getArrowEndColor(source, target, pipelineColors, colorMap)
+              getArrowEndColor(source, target, pipelineColors, colorMap),
             );
 
           return line([
@@ -290,7 +306,7 @@ export function setupSelectAndDrag(
             end.x,
             end.y,
             (rectWidth + arrowSize / 3) / 2,
-            (rectHeight + arrowSize / 3) / 2
+            (rectHeight + arrowSize / 3) / 2,
           );
           // This is the angle of the last line segment
           const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
@@ -316,7 +332,14 @@ export function setupSelectAndDrag(
         let newY = toFixedDecimalPlaces(d.y + totalDy, 1);
 
         if (snapToGrid) {
-          [newX, newY] = roundToGrid(nodeWidth, nodeHeight, newX, newY);
+          [newX, newY] = roundToGrid(
+            gridWidth,
+            gridHeight,
+            nodeWidth,
+            nodeHeight,
+            newX,
+            newY,
+          );
         }
 
         node.classed("dragging", false);
@@ -409,7 +432,7 @@ export function setupSelectAndDrag(
           .getBoundingClientRect();
 
         const panZoomViewport = document.querySelector(
-          ".svg-pan-zoom_viewport"
+          ".svg-pan-zoom_viewport",
         );
         const panZoomViewportRect = panZoomViewport.getBoundingClientRect();
 
@@ -417,7 +440,7 @@ export function setupSelectAndDrag(
           containerRect,
           panZoomViewportRect,
           dagWidth,
-          dagHeight
+          dagHeight,
         );
 
         const newX = (startEvent.x - pan.x) / svgRatio / zoom;
@@ -470,9 +493,9 @@ export function setupSelectAndDrag(
                 "transform",
                 `translate(${startX - nodeWidth / 2}, ${
                   startY - nodeHeight / 2
-                })`
+                })`,
               );
           });
-      })
+      }),
   );
 }

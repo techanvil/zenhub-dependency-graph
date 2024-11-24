@@ -272,9 +272,12 @@ export const generateGraph = (
   ); // set node size instead of constraining to fit
   const { width: dagWidth, height: dagHeight } = layout(dag);
 
+  const gridWidth = nodeWidth / 2;
+  const gridHeight = nodeHeight / 2;
+
   function getCoordinates({ x, y }) {
     if (snapToGrid) {
-      return roundToGrid(nodeWidth, nodeHeight, x, y);
+      return roundToGrid(gridWidth, gridHeight, nodeWidth, nodeHeight, x, y);
     }
 
     return [x, y];
@@ -609,6 +612,8 @@ export const generateGraph = (
       dagHeight,
       dagWidth,
       defs,
+      gridWidth,
+      gridHeight,
       line,
       nodeHeight,
       nodes,

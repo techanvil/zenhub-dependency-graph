@@ -24,16 +24,23 @@ export function getIntersection(dx, dy, cx, cy, w, h) {
 
 export function toFixedDecimalPlaces(value, decimalPlaces) {
   return Number(
-    Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces
+    Math.round(parseFloat(value + "e" + decimalPlaces)) + "e-" + decimalPlaces,
   );
 }
 
-export function roundToGrid(nodeWidth, nodeHeight, x, y) {
+export function roundToGrid(
+  gridWidth,
+  gridHeight,
+  nodeWidth,
+  nodeHeight,
+  x,
+  y,
+) {
   let newX = x - nodeWidth / 2;
   let newY = y - nodeHeight / 2;
 
-  newX = Math.round(newX / nodeWidth) * nodeWidth + nodeWidth / 2;
-  newY = Math.round(newY / nodeHeight) * nodeHeight + nodeHeight / 2;
+  newX = Math.round(newX / gridWidth) * gridWidth + nodeWidth / 2;
+  newY = Math.round(newY / gridHeight) * gridHeight + nodeHeight / 2;
 
   return [newX, newY];
 }
