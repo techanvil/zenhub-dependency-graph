@@ -76,11 +76,11 @@ function App({ authentication, panel }: AppProps) {
       }
 
       if (event.code === "KeyZ" && (event.ctrlKey || event.metaKey)) {
-        if (event.shiftKey && canRedo) {
-          // Redo coordinate overrides.
-          redo();
+        if (event.shiftKey) {
+          if (canRedo) {
+            redo();
+          }
         } else if (canUndo) {
-          // Undo coordinate overrides
           undo();
         }
       }
