@@ -201,6 +201,7 @@ export const generateGraph = (
   const {
     highlightRelatedIssues,
     snapToGrid,
+    showGrid,
     showIssueDetails,
     showAncestorDependencies,
   } = appSettings;
@@ -272,9 +273,12 @@ export const generateGraph = (
   ); // set node size instead of constraining to fit
   const { width: dagWidth, height: dagHeight } = layout(dag);
 
+  const gridWidth = nodeWidth / 2;
+  const gridHeight = nodeHeight / 2;
+
   function getCoordinates({ x, y }) {
     if (snapToGrid) {
-      return roundToGrid(nodeWidth, nodeHeight, x, y);
+      return roundToGrid(gridWidth, gridHeight, nodeWidth, nodeHeight, x, y);
     }
 
     return [x, y];
@@ -366,12 +370,33 @@ export const generateGraph = (
   // Add a full width/height rectangle to ensure svgPanZoom doesn't crop the viewport,
   // making it easier to determine the dimensions to use for lassoing.
   // TODO: See if there's a better way to handle this.
-  svgSelection
+  const backgroundRect = svgSelection
     .append("rect")
     .attr("class", "zdg-background")
     .attr("width", dagWidth)
-    .attr("height", dagHeight)
-    .attr("fill", "rgba(0,0,0,0)");
+    .attr("height", dagHeight);
+
+  if (showGrid) {
+    // Append to defs using d3:
+    //   <pattern id="smallGrid" width="8" height="8" patternUnits="userSpaceOnUse">
+    //   <path d="M 8 0 L 0 0 0 8" fill="none" stroke="gray" stroke-width="0.5"/>
+    // </pattern>
+    defs
+      .append("pattern")
+      .attr("id", "smallGrid")
+      .attr("width", gridWidth)
+      .attr("height", gridHeight)
+      .attr("patternUnits", "userSpaceOnUse")
+      .append("path")
+      .attr("d", `M ${gridWidth} 0 L 0 0 0 ${gridHeight}`) //"M 8 0 L 0 0 0 8")
+      .attr("fill", "none")
+      .attr("stroke", "gray")
+      .attr("stroke-width", 0.5);
+
+    backgroundRect.attr("fill", "url(#smallGrid)");
+  } else {
+    backgroundRect.attr("fill", "rgba(0,0,0,0)");
+  }
 
   const steps = dag.size();
   const interp = d3.interpolateRainbow;
@@ -609,6 +634,8 @@ export const generateGraph = (
       dagHeight,
       dagWidth,
       defs,
+      gridWidth,
+      gridHeight,
       line,
       nodeHeight,
       nodes,
