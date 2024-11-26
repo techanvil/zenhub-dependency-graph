@@ -7,7 +7,6 @@ import {
 import { AnyVariables } from "@urql/core";
 import { authExchange } from "@urql/exchange-auth";
 import { cacheExchange } from "@urql/exchange-graphcache";
-import { makeDefaultStorage } from "@urql/exchange-graphcache/default-storage";
 import { pipe, subscribe } from "wonka";
 
 import { APIKeyAtom, store } from "../store/atoms";
@@ -20,6 +19,7 @@ import {
   getAllOrganizationsQueryDocument,
 } from "./queries";
 import { GetEpicLinkedIssuesQuery } from "../gql/graphql";
+import { makeDefaultStorage } from "./cache-exchange-storage";
 
 declare global {
   interface Window {
@@ -41,7 +41,7 @@ if (!zenhubEndpointUrl) {
 
 const storage = makeDefaultStorage({
   idbName: "graphcache-store", // Unique name for the database
-  maxAge: 60 * 60 * 1000, // Data expiration (e.g., 1 hour in ms)
+  maxAge: 60, // Data expiration in minutes.
 });
 
 // Add this function to clear the cache
