@@ -624,25 +624,11 @@ export const generateGraph = (
 
         if (showIssuePreviews) {
           const delay = highlightRelatedIssues ? 1000 : 0;
-          previewTimeout = setTimeout(async () => {
+          previewTimeout = setTimeout(() => {
             console.log("showIssuePreview", _e, d);
 
-            // const { x, y } = d;
-            // const { body: markdownBody, htmlUrl } = d.data;
-            const { body: markdownBody } = d.data;
-
-            const file = await unified()
-              .use(remarkParse)
-              .use(remarkGfm)
-              .use(remarkRehype)
-              .use(rehypeStringify)
-              .process(markdownBody);
-
-            const body = String(file);
-
-            console.log(body);
-
-            // TODO: Show a popup preview of the related GH issue.
+            // Show popup preview of the related GH issue
+            createPreviewPopup(d, svgElement);
           }, delay);
         }
       })
@@ -660,7 +646,8 @@ export const generateGraph = (
         if (showIssuePreviews) {
           clearTimeout(previewTimeout);
 
-          // TODO: Hide the popup preview of the related GH issue if it's still visible.
+          // Hide the popup preview of the related GH issue
+          removePopup();
         }
       });
   }
