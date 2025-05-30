@@ -40,15 +40,39 @@ export function calculatePopupPosition(
     top = y;
   }
 
-  // Adjust if popup would go off-screen
+  // Adjust if popup would go off-screen horizontally
   if (left + popupWidth > window.innerWidth) {
-    left = left - popupWidth - offset * 2; // Move to left side of node
+    // Try positioning on the left side of the node (subtract offset to get node position, then subtract popup width)
+    const nodePosition = left - offset;
+    const leftSidePosition = nodePosition - popupWidth - offset;
+    if (leftSidePosition >= 10) {
+      const newLeft = leftSidePosition;
+      left = newLeft;
+    } else {
+      // If left side doesn't work either, clamp to screen bounds
+      left = window.innerWidth - popupWidth - 10;
+    }
   }
-  if (top < 0) {
+
+  // Final safety check to ensure popup stays within screen bounds
+  if (left < 10) {
+    left = 10;
+  }
+  if (left + popupWidth > window.innerWidth - 10) {
+    left = window.innerWidth - popupWidth - 10;
+  }
+  if (left < 0) {
+    left = 0;
+  }
+
+  if (top < 10) {
     top = 10;
   }
   if (top + popupHeight > window.innerHeight) {
     top = window.innerHeight - popupHeight - 10;
+  }
+  if (top < 0) {
+    top = 0;
   }
 
   return { x: left, y: top };

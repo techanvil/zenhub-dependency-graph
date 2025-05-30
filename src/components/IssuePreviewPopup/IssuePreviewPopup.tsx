@@ -85,18 +85,30 @@ function IssuePreviewPopup() {
   const measuredRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (node && isMeasuring && handlePopupMeasured) {
-        // Force a reflow to ensure accurate measurements
-        requestAnimationFrame(() => {
-          const rect = node.getBoundingClientRect();
-          console.log("rect", rect);
-          handlePopupMeasured({
-            width: rect.width,
-            height: rect.height,
-          });
-        });
+        // Wait for markdown to be processed before measuring
+        const measureWhenReady = () => {
+          // Check if markdown content is ready (either no body or htmlContent is set)
+          const isMarkdownReady = !issueData?.body || htmlContent;
+
+          if (isMarkdownReady) {
+            // Force a reflow to ensure accurate measurements
+            requestAnimationFrame(() => {
+              const rect = node.getBoundingClientRect();
+              handlePopupMeasured({
+                width: rect.width,
+                height: rect.height,
+              });
+            });
+          } else {
+            // Markdown not ready yet, try again in next frame
+            requestAnimationFrame(measureWhenReady);
+          }
+        };
+
+        measureWhenReady();
       }
     },
-    [isMeasuring, handlePopupMeasured],
+    [isMeasuring, handlePopupMeasured, htmlContent, issueData?.body],
   );
 
   useEffect(() => {
@@ -172,8 +184,8 @@ function IssuePreviewPopup() {
       borderColor="gray.300"
       borderRadius="md"
       p={3}
-      maxW="800px" // TODO: Create constants for the popup width and height.
-      maxH="600px"
+      maxW="min(800px, 100vw)" // TODO: Create constants for the popup width and height.
+      maxH="min(600px, 100vh)"
       overflow="auto"
       boxShadow="lg"
       zIndex={1000}

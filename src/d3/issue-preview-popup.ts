@@ -144,8 +144,6 @@ export async function createPreviewPopup(
 
   const body = String(file);
 
-  console.log(body);
-
   return createPopup(
     x,
     y,
