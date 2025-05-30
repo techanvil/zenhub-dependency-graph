@@ -105,6 +105,12 @@ export function setupSelectAndDrag(
       isOpen: false,
       issueData: null,
       position: { x: 0, y: 0 },
+      isMeasuring: false,
+      originalX: undefined,
+      originalY: undefined,
+      panZoomInstance: null,
+      dagWidth: 0,
+      dagHeight: 0,
     });
 
     event.on("drag", dragged).on("end", ended);
@@ -471,6 +477,12 @@ export function setupSelectAndDrag(
               isOpen: false,
               issueData: null,
               position: { x: 0, y: 0 },
+              isMeasuring: false,
+              originalX: undefined,
+              originalY: undefined,
+              panZoomInstance: null,
+              dagWidth: 0,
+              dagHeight: 0,
             });
 
             width += dragEvent.dx / svgRatio / zoom;

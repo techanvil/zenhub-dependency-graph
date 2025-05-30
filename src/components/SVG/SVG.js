@@ -24,7 +24,6 @@ import {
   currentGraphDataAtom,
   epicAtom,
   hiddenIssuesAtom,
-  issuePreviewPopupAtom,
   nonEpicIssuesAtom,
   pipelineColorsAtom,
   pipelineHiddenAtom,
@@ -56,9 +55,6 @@ export default function SVG() {
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
     coordinateOverridesAtom,
   );
-
-  // Get popup state from Jotai
-  const popupState = useAtomValue(issuePreviewPopupAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
@@ -160,13 +156,7 @@ export default function SVG() {
   return (
     <Box h="var(--main-height)" position="relative">
       <svg id="zdg-graph" style={{ width: "100%", height: "100%" }} ref={ref} />
-      {popupState.issueData && (
-        <IssuePreviewPopup
-          issueData={popupState.issueData}
-          isOpen={popupState.isOpen}
-          position={popupState.position}
-        />
-      )}
+      <IssuePreviewPopup />
     </Box>
   );
 }

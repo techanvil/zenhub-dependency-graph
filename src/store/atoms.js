@@ -8,6 +8,7 @@ import {
 } from "../d3/constants";
 import { atomWithParameterPersistence } from "./utils";
 import { toFixedDecimalPlaces } from "../d3/utils";
+export * from "./atoms-typed";
 
 export const PANES = {
   NONE: "none",
@@ -127,13 +128,6 @@ export const undoCoordinateOverridesAtom = withUndo(
   coordinateOverridesAtom,
   100,
 );
-
-// Issue preview popup atoms
-export const issuePreviewPopupAtom = atom({
-  isOpen: false,
-  issueData: null,
-  position: { x: 0, y: 0 },
-});
 
 function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
   function firstValue(obj) {

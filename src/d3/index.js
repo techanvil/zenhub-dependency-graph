@@ -19,7 +19,6 @@ import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
 import { store } from "../store/atoms";
 import { issuePreviewPopupAtom } from "../store/atoms";
-import { calculatePopupPosition } from "../utils/popup-position";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
   const node = graphData.find(({ id }) => id === nodeId);
@@ -632,17 +631,17 @@ export const generateGraph = (
               pipelineName: data.pipelineName,
             };
 
-            const { x, y } = calculatePopupPosition(d.x, d.y, {
-              svgElement,
+            // Start with measuring mode - render invisibly to get dimensions
+            store.set(issuePreviewPopupAtom, {
+              isOpen: false,
+              isMeasuring: true,
+              issueData,
+              position: { x: -9999, y: -9999 }, // Off-screen position during measurement
+              originalX: d.x,
+              originalY: d.y,
               panZoomInstance: panZoom.instance,
               dagWidth,
               dagHeight,
-            });
-
-            store.set(issuePreviewPopupAtom, {
-              isOpen: true,
-              issueData,
-              position: { x, y },
             });
           }, 1000); // Show after 1 second
         }
@@ -669,6 +668,12 @@ export const generateGraph = (
             isOpen: false,
             issueData: null,
             position: { x: 0, y: 0 },
+            isMeasuring: false,
+            originalX: undefined,
+            originalY: undefined,
+            panZoomInstance: null,
+            dagWidth: 0,
+            dagHeight: 0,
           });
         }
       });

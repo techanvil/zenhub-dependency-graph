@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Box, Text, Link, VStack, HStack, Badge } from "@chakra-ui/react";
+import { useAtomValue } from "jotai";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -8,34 +9,100 @@ import rehypeStringify from "rehype-stringify";
 import { issuePreviewPopupAtom } from "../../store/atoms";
 import { store } from "../../store/atoms";
 import { getIssueNodeAtMousePosition } from "../../utils/mouse-position";
+import { calculatePopupPosition } from "../../utils/popup-position";
 
-interface IssueData {
-  id: string;
-  title: string;
-  body: string;
-  htmlUrl: string;
-  assignees: string[];
-  estimate?: string;
-  pipelineName: string;
-}
-
-interface IssuePreviewPopupProps {
-  issueData: IssueData;
-  isOpen: boolean;
-  position: { x: number; y: number };
-}
-
-function IssuePreviewPopup({
-  issueData,
-  isOpen,
-  position,
-}: IssuePreviewPopupProps) {
+function IssuePreviewPopup() {
   const [htmlContent, setHtmlContent] = React.useState<string>("");
+
+  // Get all popup state from the atom
+  const popupState = useAtomValue(issuePreviewPopupAtom);
+  const {
+    issueData,
+    isOpen,
+    position,
+    isMeasuring,
+    originalX,
+    originalY,
+    panZoomInstance,
+    dagWidth,
+    dagHeight,
+  } = popupState;
+
+  // Handler for when popup dimensions are measured
+  const handlePopupMeasured = useCallback(
+    (dimensions: { width: number; height: number }) => {
+      if (
+        !issueData ||
+        !isMeasuring ||
+        originalX === undefined ||
+        originalY === undefined
+      ) {
+        return;
+      }
+
+      // Get the SVG element
+      const svgElement = document.querySelector("#zdg-graph") as SVGSVGElement;
+      if (!svgElement) {
+        console.warn("SVG element not found for popup positioning");
+        return;
+      }
+
+      // Calculate the correct position with actual dimensions
+      const { x, y } = calculatePopupPosition(originalX, originalY, {
+        svgElement,
+        panZoomInstance,
+        dagWidth,
+        dagHeight,
+        popupWidth: dimensions.width,
+        popupHeight: dimensions.height,
+      });
+
+      // Update the atom with the correct position and show the popup
+      store.set(issuePreviewPopupAtom, {
+        isOpen: true,
+        isMeasuring: false,
+        issueData,
+        position: { x, y },
+        originalX,
+        originalY,
+        panZoomInstance,
+        dagWidth: dagWidth || 0,
+        dagHeight: dagHeight || 0,
+      });
+    },
+    [
+      issueData,
+      isMeasuring,
+      originalX,
+      originalY,
+      panZoomInstance,
+      dagWidth,
+      dagHeight,
+    ],
+  );
+
+  // Callback to measure popup dimensions when in measuring mode
+  const measuredRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node && isMeasuring && handlePopupMeasured) {
+        // Force a reflow to ensure accurate measurements
+        requestAnimationFrame(() => {
+          const rect = node.getBoundingClientRect();
+          console.log("rect", rect);
+          handlePopupMeasured({
+            width: rect.width,
+            height: rect.height,
+          });
+        });
+      }
+    },
+    [isMeasuring, handlePopupMeasured],
+  );
 
   useEffect(() => {
     // TODO: Consider using `react-markdown` instead of `unified`.
     const processMarkdown = async () => {
-      if (!issueData.body) {
+      if (!issueData?.body) {
         setHtmlContent("");
         return;
       }
@@ -59,12 +126,17 @@ function IssuePreviewPopup({
   }, [issueData]);
 
   function onClose(e: React.MouseEvent<HTMLDivElement>) {
+    // Don't allow closing when measuring
+    if (isMeasuring) {
+      return;
+    }
+
     const issueNode = getIssueNodeAtMousePosition({
       x: e.clientX,
       y: e.clientY,
     });
 
-    if (issueNode?.data?.id === issueData.id) {
+    if (issueNode?.data?.id === issueData?.id) {
       return;
     }
 
@@ -75,15 +147,23 @@ function IssuePreviewPopup({
       isOpen: false,
       issueData: null,
       position: { x: 0, y: 0 },
+      isMeasuring: false,
+      originalX: undefined,
+      originalY: undefined,
+      panZoomInstance: null,
+      dagWidth: 0,
+      dagHeight: 0,
     });
   }
 
-  if (!isOpen) {
+  // Don't render if no issue data and not measuring
+  if (!issueData || (!isOpen && !isMeasuring)) {
     return null;
   }
 
   return (
     <Box
+      ref={measuredRef}
       position="fixed"
       left={`${position.x}px`}
       top={`${position.y}px`}
@@ -101,6 +181,9 @@ function IssuePreviewPopup({
       lineHeight="1.4"
       className="zdg-issue-preview-popup"
       onMouseLeave={onClose}
+      opacity={isMeasuring ? 0 : 1}
+      visibility={isMeasuring ? "hidden" : "visible"}
+      pointerEvents={isMeasuring ? "none" : "auto"}
     >
       <VStack align="stretch" spacing={2}>
         <HStack justify="space-between" align="flex-start">
