@@ -207,6 +207,7 @@ export const generateGraph = (
     showGrid,
     showIssueDetails,
     showAncestorDependencies,
+    showIssuePreviews,
   } = appSettings;
 
   try {
@@ -579,7 +580,6 @@ export const generateGraph = (
       getArrowEndColor(source, target, pipelineColors, colorMap),
     );
 
-  const showIssuePreviews = true;
   // Highlight blocked and blocking issues and/or show a preview of the related GH issue on hover.
   if (highlightRelatedIssues || showIssuePreviews) {
     let previewTimeout;
