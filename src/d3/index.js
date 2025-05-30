@@ -3,6 +3,12 @@
  */
 import * as d3 from "d3";
 import { dagStratify, sugiyama, decrossOpt } from "d3-dag";
+import rehypeStringify from "rehype-stringify";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+// import {read} from 'to-vfile'
+import { unified } from "unified";
 
 /**
  * Internal dependencies
@@ -576,47 +582,86 @@ export const generateGraph = (
       getArrowEndColor(source, target, pipelineColors, colorMap),
     );
 
-  // Highlight blocked and blocking issues on hover.
-  if (highlightRelatedIssues) {
+  const showIssuePreviews = true;
+  // Highlight blocked and blocking issues and/or show a preview of the related GH issue on hover.
+  if (highlightRelatedIssues || showIssuePreviews) {
+    let previewTimeout;
+
     nodes
-      .on("mouseenter", (_e, { data }) => {
+      .on("mouseenter", (_e, d) => {
+        const { data } = d;
+
         if (selectAndDragState.isLassooing) {
           return;
         }
 
         const { id, parentIds } = data;
 
-        issues
-          .filter(
-            (d) =>
-              id !== d.data.id &&
-              !parentIds.includes(d.data.id) &&
-              !d.data.parentIds.includes(id),
-          )
-          .attr("opacity", "0.3");
+        if (highlightRelatedIssues) {
+          issues
+            .filter(
+              (d) =>
+                id !== d.data.id &&
+                !parentIds.includes(d.data.id) &&
+                !d.data.parentIds.includes(id),
+            )
+            .attr("opacity", "0.3");
 
-        lines
-          .filter(
-            ({ source, target }) =>
-              source.data.id !== id && target.data.id !== id,
-          )
-          .attr("opacity", "0.3");
+          lines
+            .filter(
+              ({ source, target }) =>
+                source.data.id !== id && target.data.id !== id,
+            )
+            .attr("opacity", "0.3");
 
-        arrows
-          .filter(
-            ({ source, target }) =>
-              source.data.id !== id && target.data.id !== id,
-          )
-          .attr("opacity", "0.3");
+          arrows
+            .filter(
+              ({ source, target }) =>
+                source.data.id !== id && target.data.id !== id,
+            )
+            .attr("opacity", "0.3");
+        }
+
+        if (showIssuePreviews) {
+          const delay = highlightRelatedIssues ? 1000 : 0;
+          previewTimeout = setTimeout(async () => {
+            console.log("showIssuePreview", _e, d);
+
+            // const { x, y } = d;
+            // const { body: markdownBody, htmlUrl } = d.data;
+            const { body: markdownBody } = d.data;
+
+            const file = await unified()
+              .use(remarkParse)
+              .use(remarkGfm)
+              .use(remarkRehype)
+              .use(rehypeStringify)
+              .process(markdownBody);
+
+            const body = String(file);
+
+            console.log(body);
+
+            // TODO: Show a popup preview of the related GH issue.
+          }, delay);
+        }
       })
       .on("mouseleave", () => {
         if (selectAndDragState.isLassooing) {
           return;
         }
 
-        issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
-        lines.attr("opacity", "1");
-        arrows.attr("opacity", "1");
+        if (highlightRelatedIssues) {
+          issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
+          lines.attr("opacity", "1");
+          arrows.attr("opacity", "1");
+        }
+
+        if (showIssuePreviews) {
+          clearTimeout(previewTimeout);
+
+          // TODO: Hide the popup preview of the related GH issue if it's still visible.
+        }
       });
   }
 
