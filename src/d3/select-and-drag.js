@@ -1,6 +1,12 @@
+/**
+ * External dependencies
+ */
 import * as d3 from "d3";
 import { drag as d3Drag } from "d3-drag";
 
+/**
+ * Internal dependencies
+ */
 import {
   getArrowEndColor,
   getIntersection,
@@ -8,6 +14,7 @@ import {
   roundToGrid,
   toFixedDecimalPlaces,
 } from "./utils";
+import { getSvgRatio, getContainerAndViewportRects } from "./coordinate-utils";
 
 export const selectAndDragState = {
   isLassooing: false,
@@ -51,18 +58,6 @@ function getMinMaxNodeCoordinates(nodes) {
   });
 
   return { startX, startY, endX, endY };
-}
-
-function getSvgRatio(containerRect, panZoomViewportRect, dagWidth, dagHeight) {
-  if (panZoomViewportRect.width === containerRect.width) {
-    return containerRect.width / dagWidth;
-  }
-
-  if (panZoomViewportRect.height === containerRect.height) {
-    return containerRect.height / dagHeight;
-  }
-
-  return containerRect.width / dagWidth;
 }
 
 export function setupSelectAndDrag(
@@ -424,17 +419,12 @@ export function setupSelectAndDrag(
           lassooedNodes = null;
         }
 
-        const pan = panZoom.instance.getPan();
-        const zoom = panZoom.instance.getZoom();
+        const { containerRect, panZoomViewportRect } =
+          getContainerAndViewportRects();
 
-        const containerRect = document
-          .getElementById("graph-container")
-          .getBoundingClientRect();
-
-        const panZoomViewport = document.querySelector(
-          ".svg-pan-zoom_viewport",
-        );
-        const panZoomViewportRect = panZoomViewport.getBoundingClientRect();
+        if (!containerRect || !panZoomViewportRect) {
+          return;
+        }
 
         const svgRatio = getSvgRatio(
           containerRect,
@@ -443,6 +433,12 @@ export function setupSelectAndDrag(
           dagHeight,
         );
 
+        // Get pan and zoom for the calculations
+        const pan = panZoom.instance.getPan();
+        const zoom = panZoom.instance.getZoom();
+
+        // Convert container-relative coordinates to SVG coordinates
+        // startEvent.x and startEvent.y are already relative to the container
         const newX = (startEvent.x - pan.x) / svgRatio / zoom;
         const newY = (startEvent.y - pan.y) / svgRatio / zoom;
 

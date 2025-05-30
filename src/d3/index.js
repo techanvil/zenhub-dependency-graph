@@ -628,7 +628,13 @@ export const generateGraph = (
             console.log("showIssuePreview", _e, d);
 
             // Show popup preview of the related GH issue
-            createPreviewPopup(d, svgElement);
+            createPreviewPopup(
+              d,
+              svgElement,
+              panZoom.instance,
+              dagWidth,
+              dagHeight,
+            );
           }, delay);
         }
       })
