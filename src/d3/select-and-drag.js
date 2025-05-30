@@ -15,9 +15,11 @@ import {
   toFixedDecimalPlaces,
 } from "./utils";
 import { getSvgRatio, getContainerAndViewportRects } from "./coordinate-utils";
+import { issuePreviewPopupAtom, store } from "../store/atoms";
 
 export const selectAndDragState = {
   isLassooing: false,
+  isDragging: false,
 };
 
 const outlineColor = "#2378ae";
@@ -98,6 +100,12 @@ export function setupSelectAndDrag(
     const draggingNodes = isDraggingSelection ? lassooedNodes : d3.select(this);
 
     draggingNodes.classed("dragging", true);
+    selectAndDragState.isDragging = true;
+    store.set(issuePreviewPopupAtom, {
+      isOpen: false,
+      issueData: null,
+      position: { x: 0, y: 0 },
+    });
 
     event.on("drag", dragged).on("end", ended);
 
@@ -338,6 +346,7 @@ export function setupSelectAndDrag(
         }
 
         node.classed("dragging", false);
+        selectAndDragState.isDragging = false;
 
         newCoords[d.data.id] = { x: newX, y: newY };
         // [d3.select(this).datum().data.id]: { x: newX, y: newY },
@@ -458,6 +467,11 @@ export function setupSelectAndDrag(
         startEvent
           .on("drag", (dragEvent) => {
             selectAndDragState.isLassooing = true;
+            store.set(issuePreviewPopupAtom, {
+              isOpen: false,
+              issueData: null,
+              position: { x: 0, y: 0 },
+            });
 
             width += dragEvent.dx / svgRatio / zoom;
             height += dragEvent.dy / svgRatio / zoom;

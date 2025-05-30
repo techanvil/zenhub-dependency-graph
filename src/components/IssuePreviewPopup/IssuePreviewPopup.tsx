@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Text, Link, VStack, HStack, Badge } from "@chakra-ui/react";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
+import { issuePreviewPopupAtom } from "../../store/atoms";
+import { store } from "../../store/atoms";
+import { getIssueNodeAtMousePosition } from "../../utils/mouse-position";
 
 interface IssueData {
   id: string;
@@ -14,24 +17,23 @@ interface IssueData {
   assignees: string[];
   estimate?: string;
   pipelineName: string;
-  number: number;
 }
 
 interface IssuePreviewPopupProps {
   issueData: IssueData;
   isOpen: boolean;
-  onClose: () => void;
   position: { x: number; y: number };
 }
 
-const IssuePreviewPopup: React.FC<IssuePreviewPopupProps> = ({
+function IssuePreviewPopup({
   issueData,
   isOpen,
   position,
-}) => {
+}: IssuePreviewPopupProps) {
   const [htmlContent, setHtmlContent] = React.useState<string>("");
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // TODO: Consider using `react-markdown` instead of `unified`.
     const processMarkdown = async () => {
       if (!issueData.body) {
         setHtmlContent("");
@@ -54,7 +56,27 @@ const IssuePreviewPopup: React.FC<IssuePreviewPopupProps> = ({
     };
 
     processMarkdown();
-  }, [issueData.body]);
+  }, [issueData]);
+
+  function onClose(e: React.MouseEvent<HTMLDivElement>) {
+    const issueNode = getIssueNodeAtMousePosition({
+      x: e.clientX,
+      y: e.clientY,
+    });
+
+    if (issueNode?.data?.id === issueData.id) {
+      return;
+    }
+
+    // TODO:
+    // - Consider using `useSetAtom` instead of `store.set`.
+    // - Create a `hideIssuePreviewPopupAtom` atom or function as we're now hiding in multiple places.
+    store.set(issuePreviewPopupAtom, {
+      isOpen: false,
+      issueData: null,
+      position: { x: 0, y: 0 },
+    });
+  }
 
   if (!isOpen) {
     return null;
@@ -70,14 +92,15 @@ const IssuePreviewPopup: React.FC<IssuePreviewPopupProps> = ({
       borderColor="gray.300"
       borderRadius="md"
       p={3}
-      maxW="400px"
-      maxH="300px"
+      maxW="800px" // TODO: Create constants for the popup width and height.
+      maxH="600px"
       overflow="auto"
       boxShadow="lg"
       zIndex={1000}
       fontSize="sm"
       lineHeight="1.4"
       className="zdg-issue-preview-popup"
+      onMouseLeave={onClose}
     >
       <VStack align="stretch" spacing={2}>
         <HStack justify="space-between" align="flex-start">
@@ -85,7 +108,7 @@ const IssuePreviewPopup: React.FC<IssuePreviewPopupProps> = ({
             {issueData.title}
           </Text>
           <Badge colorScheme="blue" variant="subtle">
-            #{issueData.number}
+            #{issueData.id}
           </Badge>
         </HStack>
 
@@ -145,6 +168,6 @@ const IssuePreviewPopup: React.FC<IssuePreviewPopupProps> = ({
       </VStack>
     </Box>
   );
-};
+}
 
 export default IssuePreviewPopup;

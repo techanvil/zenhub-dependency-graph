@@ -11,8 +11,8 @@ export function calculatePopupPosition(
     panZoomInstance = null,
     dagWidth = 0,
     dagHeight = 0,
-    popupWidth = 400,
-    popupHeight = 300,
+    popupWidth = 800, // TODO: Create constants for the popup width and height.
+    popupHeight = 600,
     offset = 20,
   } = {},
 ) {

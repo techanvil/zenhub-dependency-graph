@@ -503,7 +503,7 @@ export const generateGraph = (
     // Append the issue group element that will contain the issue details.
     .append("g")
     .attr("opacity", (d) => issueOpacities[d.data.id] || 1)
-    .attr("class", "zdg-issue");
+    .attr("class", (d) => `zdg-issue zdg-issue-${d.data.id}`);
 
   const nodes = issues.select(function () {
     return this.parentNode;
@@ -588,7 +588,7 @@ export const generateGraph = (
       .on("mouseenter", (_e, d) => {
         const { data } = d;
 
-        if (selectAndDragState.isLassooing) {
+        if (selectAndDragState.isLassooing || selectAndDragState.isDragging) {
           return;
         }
 
@@ -620,7 +620,6 @@ export const generateGraph = (
         }
 
         if (showIssuePreviews) {
-          const delay = highlightRelatedIssues ? 1000 : 0;
           previewTimeout = setTimeout(() => {
             // Show React popup preview of the related GH issue
             const issueData = {
@@ -631,7 +630,6 @@ export const generateGraph = (
               assignees: data.assignees || [],
               estimate: data.estimate,
               pipelineName: data.pipelineName,
-              number: data.number,
             };
 
             const { x, y } = calculatePopupPosition(d.x, d.y, {
@@ -646,11 +644,11 @@ export const generateGraph = (
               issueData,
               position: { x, y },
             });
-          }, delay);
+          }, 1000); // Show after 1 second
         }
       })
-      .on("mouseleave", () => {
-        if (selectAndDragState.isLassooing) {
+      .on("mouseleave", (e) => {
+        if (selectAndDragState.isLassooing || selectAndDragState.isDragging) {
           return;
         }
 
@@ -660,7 +658,10 @@ export const generateGraph = (
           arrows.attr("opacity", "1");
         }
 
-        if (showIssuePreviews) {
+        if (
+          showIssuePreviews &&
+          !e.relatedTarget?.classList.contains("zdg-issue-preview-popup")
+        ) {
           clearTimeout(previewTimeout);
 
           // Hide the React popup preview of the related GH issue

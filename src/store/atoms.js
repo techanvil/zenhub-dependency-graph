@@ -8,7 +8,6 @@ import {
 } from "../d3/constants";
 import { atomWithParameterPersistence } from "./utils";
 import { toFixedDecimalPlaces } from "../d3/utils";
-import { calculatePopupPosition } from "../utils/popup-position";
 
 export const PANES = {
   NONE: "none",
