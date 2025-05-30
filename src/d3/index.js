@@ -17,6 +17,8 @@ import {
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
+import { store } from "../store/atoms";
+import { issuePreviewPopupAtom } from "../store/atoms";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
   const node = graphData.find(({ id }) => id === nodeId);
@@ -204,6 +206,7 @@ export const generateGraph = (
     showGrid,
     showIssueDetails,
     showAncestorDependencies,
+    showIssuePreviews,
   } = appSettings;
 
   try {
@@ -500,7 +503,7 @@ export const generateGraph = (
     // Append the issue group element that will contain the issue details.
     .append("g")
     .attr("opacity", (d) => issueOpacities[d.data.id] || 1)
-    .attr("class", "zdg-issue");
+    .attr("class", (d) => `zdg-issue zdg-issue-${d.data.id}`);
 
   const nodes = issues.select(function () {
     return this.parentNode;
@@ -576,47 +579,105 @@ export const generateGraph = (
       getArrowEndColor(source, target, pipelineColors, colorMap),
     );
 
-  // Highlight blocked and blocking issues on hover.
-  if (highlightRelatedIssues) {
+  // Highlight blocked and blocking issues and/or show a preview of the related GH issue on hover.
+  if (highlightRelatedIssues || showIssuePreviews) {
+    let previewTimeout;
+
     nodes
-      .on("mouseenter", (_e, { data }) => {
-        if (selectAndDragState.isLassooing) {
+      .on("mouseenter", (e, d) => {
+        const { data } = d;
+
+        if (selectAndDragState.isLassooing || selectAndDragState.isDragging) {
           return;
         }
 
         const { id, parentIds } = data;
 
-        issues
-          .filter(
-            (d) =>
-              id !== d.data.id &&
-              !parentIds.includes(d.data.id) &&
-              !d.data.parentIds.includes(id),
-          )
-          .attr("opacity", "0.3");
+        if (highlightRelatedIssues) {
+          issues
+            .filter(
+              (d) =>
+                id !== d.data.id &&
+                !parentIds.includes(d.data.id) &&
+                !d.data.parentIds.includes(id),
+            )
+            .attr("opacity", "0.3");
 
-        lines
-          .filter(
-            ({ source, target }) =>
-              source.data.id !== id && target.data.id !== id,
-          )
-          .attr("opacity", "0.3");
+          lines
+            .filter(
+              ({ source, target }) =>
+                source.data.id !== id && target.data.id !== id,
+            )
+            .attr("opacity", "0.3");
 
-        arrows
-          .filter(
-            ({ source, target }) =>
-              source.data.id !== id && target.data.id !== id,
-          )
-          .attr("opacity", "0.3");
+          arrows
+            .filter(
+              ({ source, target }) =>
+                source.data.id !== id && target.data.id !== id,
+            )
+            .attr("opacity", "0.3");
+        }
+
+        // Don't show the preview if the user is holding down the ctrl key, this allows
+        // them to view the related issues without the preview getting in the way.
+        if (showIssuePreviews && !e.ctrlKey) {
+          previewTimeout = setTimeout(() => {
+            // Show React popup preview of the related GH issue
+            const issueData = {
+              id: data.id,
+              title: data.title,
+              body: data.body || "",
+              htmlUrl: data.htmlUrl,
+              assignees: data.assignees || [],
+              estimate: data.estimate,
+              pipelineName: data.pipelineName,
+            };
+
+            // Start with measuring mode - render invisibly to get dimensions
+            store.set(issuePreviewPopupAtom, {
+              isOpen: false,
+              isMeasuring: true,
+              issueData,
+              position: { x: -9999, y: -9999 }, // Off-screen position during measurement
+              originalX: d.x,
+              originalY: d.y,
+              panZoomInstance: panZoom.instance,
+              dagWidth,
+              dagHeight,
+            });
+          }, 1000); // Show after 1 second
+        }
       })
-      .on("mouseleave", () => {
-        if (selectAndDragState.isLassooing) {
+      .on("mouseleave", (e) => {
+        if (selectAndDragState.isLassooing || selectAndDragState.isDragging) {
           return;
         }
 
-        issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
-        lines.attr("opacity", "1");
-        arrows.attr("opacity", "1");
+        if (highlightRelatedIssues) {
+          issues.attr("opacity", (d) => issueOpacities[d.data.id] || 1);
+          lines.attr("opacity", "1");
+          arrows.attr("opacity", "1");
+        }
+
+        if (
+          showIssuePreviews &&
+          !e.relatedTarget?.classList.contains("zdg-issue-preview-popup")
+        ) {
+          clearTimeout(previewTimeout);
+
+          // Hide the React popup preview of the related GH issue
+          store.set(issuePreviewPopupAtom, {
+            isOpen: false,
+            issueData: null,
+            position: { x: 0, y: 0 },
+            isMeasuring: false,
+            originalX: undefined,
+            originalY: undefined,
+            panZoomInstance: null,
+            dagWidth: 0,
+            dagHeight: 0,
+          });
+        }
       });
   }
 

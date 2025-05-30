@@ -197,6 +197,17 @@ export default function SettingsModal({ isOpen, onClose }) {
             />
           </FormControl>
           <FormControl pt="5">
+            <FormLabel>Show issue previews</FormLabel>
+            <Switch
+              isChecked={settingsState.appSettings.showIssuePreviews}
+              onChange={(e) => {
+                updateAppSettings({
+                  showIssuePreviews: e.target.checked,
+                });
+              }}
+            />
+          </FormControl>
+          <FormControl pt="5">
             <FormLabel>Highlight blocked & blocking issues</FormLabel>
             <Switch
               isChecked={settingsState.appSettings.highlightRelatedIssues}

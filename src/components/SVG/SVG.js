@@ -31,6 +31,7 @@ import {
   sprintAtom,
   workspaceAtom,
 } from "../../store/atoms";
+import IssuePreviewPopup from "../IssuePreviewPopup/IssuePreviewPopup";
 
 export default function SVG() {
   const ref = useRef();
@@ -153,8 +154,9 @@ export default function SVG() {
   }
 
   return (
-    <Box h="var(--main-height)">
+    <Box h="var(--main-height)" position="relative">
       <svg id="zdg-graph" style={{ width: "100%", height: "100%" }} ref={ref} />
+      <IssuePreviewPopup />
     </Box>
   );
 }

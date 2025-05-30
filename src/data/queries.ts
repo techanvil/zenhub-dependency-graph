@@ -108,6 +108,7 @@ export const getEpicLinkedIssuesQueryDocument = graphql(`
         id
         number
         title
+        body
         htmlUrl
         state
         assignees {
@@ -160,6 +161,7 @@ export const getIssueByNumberQueryDocument = graphql(`
       id
       number
       title
+      body
       htmlUrl
       state
       assignees {

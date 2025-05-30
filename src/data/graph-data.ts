@@ -435,6 +435,7 @@ export async function getGraphData(
       const {
         number: id,
         title,
+        body,
         htmlUrl,
         state,
         isNonEpicIssue,
@@ -449,6 +450,7 @@ export async function getGraphData(
       return {
         id: `${id}`,
         title,
+        body,
         htmlUrl,
         isNonEpicIssue,
         assignees: assignees.map(({ login }) => login),

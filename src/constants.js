@@ -8,6 +8,7 @@ export const appSettingDefaults = {
   showIssueSprints: true,
   showAncestorDependencies: false,
   showNonEpicBlockedIssues: false,
+  showIssuePreviews: true,
   highlightRelatedIssues: true,
   includeBackgroundWhenExporting: false,
 };
