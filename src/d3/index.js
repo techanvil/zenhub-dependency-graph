@@ -3,12 +3,6 @@
  */
 import * as d3 from "d3";
 import { dagStratify, sugiyama, decrossOpt } from "d3-dag";
-import rehypeStringify from "rehype-stringify";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-// import {read} from 'to-vfile'
-import { unified } from "unified";
 
 /**
  * Internal dependencies
@@ -23,6 +17,12 @@ import {
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
+import { store } from "../store/atoms";
+import {
+  showIssuePreviewPopupAtom,
+  hideIssuePreviewPopupAtom,
+} from "../store/atoms";
+import { calculatePopupPosition } from "../utils/popup-position";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
   const node = graphData.find(({ id }) => id === nodeId);
@@ -625,16 +625,30 @@ export const generateGraph = (
         if (showIssuePreviews) {
           const delay = highlightRelatedIssues ? 1000 : 0;
           previewTimeout = setTimeout(() => {
-            console.log("showIssuePreview", _e, d);
+            // Show React popup preview of the related GH issue
+            const issueData = {
+              id: data.id,
+              title: data.title,
+              body: data.body || "",
+              htmlUrl: data.htmlUrl,
+              assignees: data.assignees || [],
+              estimate: data.estimate,
+              pipelineName: data.pipelineName,
+              number: data.number,
+            };
 
-            // Show popup preview of the related GH issue
-            createPreviewPopup(
-              d,
+            const { x, y } = calculatePopupPosition(d.x, d.y, {
               svgElement,
-              panZoom.instance,
+              panZoomInstance: panZoom.instance,
               dagWidth,
               dagHeight,
-            );
+            });
+
+            store.set(showIssuePreviewPopupAtom, {
+              issueData,
+              x,
+              y,
+            });
           }, delay);
         }
       })
@@ -652,8 +666,8 @@ export const generateGraph = (
         if (showIssuePreviews) {
           clearTimeout(previewTimeout);
 
-          // Hide the popup preview of the related GH issue
-          removePopup();
+          // Hide the React popup preview of the related GH issue
+          store.set(hideIssuePreviewPopupAtom);
         }
       });
   }

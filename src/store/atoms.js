@@ -8,6 +8,7 @@ import {
 } from "../d3/constants";
 import { atomWithParameterPersistence } from "./utils";
 import { toFixedDecimalPlaces } from "../d3/utils";
+import { calculatePopupPosition } from "../utils/popup-position";
 
 export const PANES = {
   NONE: "none",
@@ -127,6 +128,33 @@ export const undoCoordinateOverridesAtom = withUndo(
   coordinateOverridesAtom,
   100,
 );
+
+// Issue preview popup atoms
+export const issuePreviewPopupAtom = atom({
+  isOpen: false,
+  issueData: null,
+  position: { x: 0, y: 0 },
+});
+
+// Derived atoms for popup actions
+export const showIssuePreviewPopupAtom = atom(
+  null,
+  (_get, set, { issueData, x, y, delay = 0 }) => {
+    set(issuePreviewPopupAtom, {
+      isOpen: true,
+      issueData,
+      position: { x, y },
+    });
+  },
+);
+
+export const hideIssuePreviewPopupAtom = atom(null, (get, set) => {
+  set(issuePreviewPopupAtom, {
+    isOpen: false,
+    issueData: null,
+    position: { x: 0, y: 0 },
+  });
+});
 
 function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
   function firstValue(obj) {
