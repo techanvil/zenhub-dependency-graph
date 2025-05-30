@@ -18,10 +18,7 @@ import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
 import { store } from "../store/atoms";
-import {
-  showIssuePreviewPopupAtom,
-  hideIssuePreviewPopupAtom,
-} from "../store/atoms";
+import { issuePreviewPopupAtom } from "../store/atoms";
 import { calculatePopupPosition } from "../utils/popup-position";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
@@ -644,10 +641,10 @@ export const generateGraph = (
               dagHeight,
             });
 
-            store.set(showIssuePreviewPopupAtom, {
+            store.set(issuePreviewPopupAtom, {
+              isOpen: true,
               issueData,
-              x,
-              y,
+              position: { x, y },
             });
           }, delay);
         }
@@ -667,7 +664,11 @@ export const generateGraph = (
           clearTimeout(previewTimeout);
 
           // Hide the React popup preview of the related GH issue
-          store.set(hideIssuePreviewPopupAtom);
+          store.set(issuePreviewPopupAtom, {
+            isOpen: false,
+            issueData: null,
+            position: { x: 0, y: 0 },
+          });
         }
       });
   }

@@ -136,26 +136,6 @@ export const issuePreviewPopupAtom = atom({
   position: { x: 0, y: 0 },
 });
 
-// Derived atoms for popup actions
-export const showIssuePreviewPopupAtom = atom(
-  null,
-  (_get, set, { issueData, x, y, delay = 0 }) => {
-    set(issuePreviewPopupAtom, {
-      isOpen: true,
-      issueData,
-      position: { x, y },
-    });
-  },
-);
-
-export const hideIssuePreviewPopupAtom = atom(null, (get, set) => {
-  set(issuePreviewPopupAtom, {
-    isOpen: false,
-    issueData: null,
-    position: { x: 0, y: 0 },
-  });
-});
-
 function coordinateOverridesToLocalStorageValue(coordinateOverrides, epic) {
   function firstValue(obj) {
     return Object.values(obj)[0];
