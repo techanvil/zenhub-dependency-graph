@@ -1,6 +1,12 @@
+/**
+ * External dependencies
+ */
 import * as d3 from "d3";
 import { drag as d3Drag } from "d3-drag";
 
+/**
+ * Internal dependencies
+ */
 import {
   getArrowEndColor,
   getIntersection,
@@ -8,9 +14,12 @@ import {
   roundToGrid,
   toFixedDecimalPlaces,
 } from "./utils";
+import { getSvgRatio, getContainerAndViewportRects } from "./coordinate-utils";
+import { issuePreviewPopupAtom, store } from "../store/atoms";
 
 export const selectAndDragState = {
   isLassooing: false,
+  isDragging: false,
 };
 
 const outlineColor = "#2378ae";
@@ -53,18 +62,6 @@ function getMinMaxNodeCoordinates(nodes) {
   return { startX, startY, endX, endY };
 }
 
-function getSvgRatio(containerRect, panZoomViewportRect, dagWidth, dagHeight) {
-  if (panZoomViewportRect.width === containerRect.width) {
-    return containerRect.width / dagWidth;
-  }
-
-  if (panZoomViewportRect.height === containerRect.height) {
-    return containerRect.height / dagHeight;
-  }
-
-  return containerRect.width / dagWidth;
-}
-
 export function setupSelectAndDrag(
   {
     arrowSize,
@@ -103,6 +100,18 @@ export function setupSelectAndDrag(
     const draggingNodes = isDraggingSelection ? lassooedNodes : d3.select(this);
 
     draggingNodes.classed("dragging", true);
+    selectAndDragState.isDragging = true;
+    store.set(issuePreviewPopupAtom, {
+      isOpen: false,
+      issueData: null,
+      position: { x: 0, y: 0 },
+      isMeasuring: false,
+      originalX: undefined,
+      originalY: undefined,
+      panZoomInstance: null,
+      dagWidth: 0,
+      dagHeight: 0,
+    });
 
     event.on("drag", dragged).on("end", ended);
 
@@ -343,6 +352,7 @@ export function setupSelectAndDrag(
         }
 
         node.classed("dragging", false);
+        selectAndDragState.isDragging = false;
 
         newCoords[d.data.id] = { x: newX, y: newY };
         // [d3.select(this).datum().data.id]: { x: newX, y: newY },
@@ -424,17 +434,16 @@ export function setupSelectAndDrag(
           lassooedNodes = null;
         }
 
+        // Get pan and zoom for the calculations
         const pan = panZoom.instance.getPan();
         const zoom = panZoom.instance.getZoom();
 
-        const containerRect = document
-          .getElementById("graph-container")
-          .getBoundingClientRect();
+        const { containerRect, panZoomViewportRect } =
+          getContainerAndViewportRects();
 
-        const panZoomViewport = document.querySelector(
-          ".svg-pan-zoom_viewport",
-        );
-        const panZoomViewportRect = panZoomViewport.getBoundingClientRect();
+        if (!containerRect || !panZoomViewportRect) {
+          return;
+        }
 
         const svgRatio = getSvgRatio(
           containerRect,
@@ -443,6 +452,8 @@ export function setupSelectAndDrag(
           dagHeight,
         );
 
+        // Convert container-relative coordinates to SVG coordinates
+        // startEvent.x and startEvent.y are already relative to the container
         const newX = (startEvent.x - pan.x) / svgRatio / zoom;
         const newY = (startEvent.y - pan.y) / svgRatio / zoom;
 
@@ -462,6 +473,17 @@ export function setupSelectAndDrag(
         startEvent
           .on("drag", (dragEvent) => {
             selectAndDragState.isLassooing = true;
+            store.set(issuePreviewPopupAtom, {
+              isOpen: false,
+              issueData: null,
+              position: { x: 0, y: 0 },
+              isMeasuring: false,
+              originalX: undefined,
+              originalY: undefined,
+              panZoomInstance: null,
+              dagWidth: 0,
+              dagHeight: 0,
+            });
 
             width += dragEvent.dx / svgRatio / zoom;
             height += dragEvent.dy / svgRatio / zoom;
