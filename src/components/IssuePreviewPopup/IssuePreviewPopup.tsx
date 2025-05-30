@@ -148,6 +148,7 @@ function IssuePreviewPopup() {
       y: e.clientY,
     });
 
+    // Don't close if the issue node is the same as the one that opened the popup
     if (issueNode?.data?.id === issueData?.id) {
       return;
     }

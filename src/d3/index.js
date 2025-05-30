@@ -584,7 +584,7 @@ export const generateGraph = (
     let previewTimeout;
 
     nodes
-      .on("mouseenter", (_e, d) => {
+      .on("mouseenter", (e, d) => {
         const { data } = d;
 
         if (selectAndDragState.isLassooing || selectAndDragState.isDragging) {
@@ -618,7 +618,9 @@ export const generateGraph = (
             .attr("opacity", "0.3");
         }
 
-        if (showIssuePreviews) {
+        // Don't show the preview if the user is holding down the ctrl key, this allows
+        // them to view the related issues without the preview getting in the way.
+        if (showIssuePreviews && !e.ctrlKey) {
           previewTimeout = setTimeout(() => {
             // Show React popup preview of the related GH issue
             const issueData = {
