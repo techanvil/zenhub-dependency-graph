@@ -419,6 +419,10 @@ export function setupSelectAndDrag(
           lassooedNodes = null;
         }
 
+        // Get pan and zoom for the calculations
+        const pan = panZoom.instance.getPan();
+        const zoom = panZoom.instance.getZoom();
+
         const { containerRect, panZoomViewportRect } =
           getContainerAndViewportRects();
 
@@ -432,10 +436,6 @@ export function setupSelectAndDrag(
           dagWidth,
           dagHeight,
         );
-
-        // Get pan and zoom for the calculations
-        const pan = panZoom.instance.getPan();
-        const zoom = panZoom.instance.getZoom();
 
         // Convert container-relative coordinates to SVG coordinates
         // startEvent.x and startEvent.y are already relative to the container
