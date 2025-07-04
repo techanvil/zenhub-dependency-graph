@@ -86,64 +86,124 @@ export const EpicIssue_IssueFragment = graphql(`
 `);
 */
 
-export const getEpicLinkedIssuesQueryDocument = graphql(`
-  query GetEpicLinkedIssues(
+// TODO: Check whether the pipeline filter is relevant for the new `GetEpicChildIssues` query, otherwise remove this document.
+// export const getEpicLinkedIssuesQueryDocument = graphql(`
+//   query GetEpicLinkedIssues(
+//     $workspaceId: ID!
+//     $repositoryId: ID!
+//     $repositoryGhId: Int!
+//     $epicIssueNumber: Int!
+//     $pipelineIds: [ID!]!
+//   ) {
+//     linkedIssues: searchIssues(
+//       workspaceId: $workspaceId
+//       epicIssueByInfo: {
+//         repositoryGhId: $repositoryGhId
+//         issueNumber: $epicIssueNumber
+//       }
+//       includeClosed: true
+//       filters: { repositoryIds: [$repositoryId], pipelineIds: $pipelineIds }
+//     ) {
+//       nodes {
+//         # ...EpicIssue_IssueFragment
+//         id
+//         number
+//         title
+//         body
+//         htmlUrl
+//         state
+//         assignees {
+//           nodes {
+//             id
+//             login
+//             # name
+//           }
+//         }
+//         blockingIssues {
+//           nodes {
+//             id
+//             number
+//           }
+//         }
+//         blockedIssues {
+//           nodes {
+//             id
+//             number
+//           }
+//         }
+//         pipelineIssue(workspaceId: $workspaceId) {
+//           id
+//           pipeline {
+//             id
+//             name
+//           }
+//         }
+//         estimate {
+//           value
+//         }
+//         sprints {
+//           nodes {
+//             id
+//             name
+//           }
+//         }
+//       }
+//     }
+//   }
+// `);
+
+export const getEpicChildIssuesQueryDocument = graphql(`
+  query GetEpicChildIssues(
     $workspaceId: ID!
-    $repositoryId: ID!
     $repositoryGhId: Int!
     $epicIssueNumber: Int!
-    $pipelineIds: [ID!]!
   ) {
-    linkedIssues: searchIssues(
-      workspaceId: $workspaceId
-      epicIssueByInfo: {
-        repositoryGhId: $repositoryGhId
-        issueNumber: $epicIssueNumber
-      }
-      includeClosed: true
-      filters: { repositoryIds: [$repositoryId], pipelineIds: $pipelineIds }
+    issueByInfo(
+      issueNumber: $epicIssueNumber
+      repositoryGhId: $repositoryGhId
     ) {
-      nodes {
-        # ...EpicIssue_IssueFragment
-        id
-        number
-        title
-        body
-        htmlUrl
-        state
-        assignees {
-          nodes {
-            id
-            login
-            # name
-          }
-        }
-        blockingIssues {
-          nodes {
-            id
-            number
-          }
-        }
-        blockedIssues {
-          nodes {
-            id
-            number
-          }
-        }
-        pipelineIssue(workspaceId: $workspaceId) {
+      githubChildIssues {
+        nodes {
           id
-          pipeline {
-            id
-            name
+          number
+          title
+          body
+          htmlUrl
+          state
+          assignees {
+            nodes {
+              id
+              login
+              # name
+            }
           }
-        }
-        estimate {
-          value
-        }
-        sprints {
-          nodes {
+          blockingIssues {
+            nodes {
+              id
+              number
+            }
+          }
+          blockedIssues {
+            nodes {
+              id
+              number
+            }
+          }
+          pipelineIssue(workspaceId: $workspaceId) {
             id
-            name
+            pipeline {
+              id
+              name
+            }
+          }
+          estimate {
+            value
+          }
+          sprints {
+            nodes {
+              id
+              name
+            }
           }
         }
       }
