@@ -17,6 +17,7 @@ import {
   getIssueByNumberQueryDocument,
   getAllEpicsQueryDocument,
   getAllOrganizationsQueryDocument,
+  getEpicChildIssuesQueryDocument,
 } from "./queries";
 import { GetEpicLinkedIssuesQuery } from "../gql/graphql";
 import { makeDefaultStorage } from "./cache-exchange-storage";
@@ -221,10 +222,10 @@ async function getLinkedIssues(
   signal: AbortSignal,
 ) {
   const result = await executeQuery(
-    getEpicLinkedIssuesQueryDocument,
+    getEpicChildIssuesQueryDocument,
     {
       workspaceId,
-      repositoryId,
+      // repositoryId,
       repositoryGhId,
       epicIssueNumber,
       pipelineIds,
@@ -232,15 +233,15 @@ async function getLinkedIssues(
     signal,
   );
 
-  if (!result.data?.linkedIssues) {
+  if (!result.data?.issueByInfo?.githubChildIssues) {
     console.warn("No linkedIssues", { result });
     return [];
   }
 
-  const { linkedIssues } = result.data;
+  const { issueByInfo } = result.data;
 
   return getAllIssues(
-    linkedIssues.nodes,
+    issueByInfo.githubChildIssues.nodes,
     {
       workspaceId,
       repositoryGhId,
