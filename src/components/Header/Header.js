@@ -517,7 +517,7 @@ function SelectEpicControl({ epicOptions, chosenEpic, setChosenEpic }) {
         <Box w="200px">
           {isManualEpic ? (
             <Input
-              placeholder="Issue #, then press Enter"
+              placeholder="Epic issue #, then Enter"
               type="number"
               disabled={isSaving}
               value={epicNumber}
