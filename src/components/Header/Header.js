@@ -514,21 +514,22 @@ function SelectEpicControl({ epicOptions, chosenEpic, setChosenEpic }) {
   return (
     <Box display="flex" alignItems="center" gap={2}>
       <FormControl>
-        <Box w="200px">
-          {isManualEpic ? (
-            <Input
-              placeholder="Epic issue #, then Enter"
-              type="number"
-              disabled={isSaving}
-              value={epicNumber}
-              onChange={(e) => setEpicNumber(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  saveManuallySelectedEpic(epicNumber);
-                }
-              }}
-            />
-          ) : (
+        {isManualEpic ? (
+          <Input
+            placeholder="Epic issue #, then Enter"
+            type="number"
+            w="180px"
+            disabled={isSaving}
+            value={epicNumber}
+            onChange={(e) => setEpicNumber(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                saveManuallySelectedEpic(epicNumber);
+              }
+            }}
+          />
+        ) : (
+          <Box w="200px">
             <Select
               options={epicOptions}
               value={chosenEpic}
@@ -544,8 +545,8 @@ function SelectEpicControl({ epicOptions, chosenEpic, setChosenEpic }) {
                 saveEpic(chosenEpic.value);
               }}
             />
-          )}
-        </Box>
+          </Box>
+        )}
       </FormControl>
       <Switch
         title="Enter issue number manually"
