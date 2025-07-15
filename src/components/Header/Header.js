@@ -48,7 +48,6 @@ import {
   workspaceAtom,
 } from "../../store/atoms";
 import { copyPNG, downloadSVG } from "../../utils/svg";
-import { getSimpleIssueByNumberQueryDocument } from "../../data/queries";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -77,6 +76,7 @@ export default function Header({
   const [workspaceOptions, setWorkspaceOptions] = useState(false);
   const [epicOptions, setEpicOptions] = useState([]);
   const [chosenEpic, setChosenEpic] = useState(false);
+  const isManualEpic = useAtomValue(isManualEpicAtom);
   const [sprintOptions, setSprintOptions] = useState([]);
   const [chosenSprint, setChosenSprint] = useState(false);
 
@@ -223,23 +223,9 @@ export default function Header({
 
     getAllEpics(chosenWorkspace.value, signal)
       .then((epics) => {
-        window.zdgDebugInfo = {
-          ...(window.zdgDebugInfo || {}),
-          epics,
-        };
-        let visibleEpics = appSettings.showClosedEpics
+        const visibleEpics = appSettings.showClosedEpics
           ? epics
           : epics.filter(({ closedAt }) => closedAt === null);
-
-        // visibleEpics.push({
-        //   title: "Enhanced Conversions & EuID Enablement (ECEE)",
-        //   number: 10931,
-        // });
-
-        console.log({
-          epics,
-          visibleEpics,
-        });
 
         const options = visibleEpics
           .map(({ title: label, number: value }) => ({
@@ -339,20 +325,14 @@ export default function Header({
                 <SelectEpicControl
                   epicOptions={epicOptions}
                   chosenEpic={chosenEpic}
-                  saveEpic={saveEpic}
                   setChosenEpic={setChosenEpic}
                 />
               </HStack>
               <WrapItem>
-                {chosenEpic && (
-                  <Box>
-                    <Text fontSize="smaller" alignSelf="center">
-                      {chosenEpic.label}
-                    </Text>
-                    <Text fontSize="smaller" alignSelf="center">
-                      {chosenEpic.value}
-                    </Text>
-                  </Box>
+                {isManualEpic && chosenEpic && (
+                  <Text fontSize="smaller" alignSelf="center">
+                    {chosenEpic.label}
+                  </Text>
                 )}
               </WrapItem>
               <WrapItem
@@ -483,59 +463,53 @@ function AuthenticationMenuItem({ authentication }) {
   );
 }
 
-function SelectEpicControl({
-  epicOptions,
-  chosenEpic,
-  saveEpic,
-  setChosenEpic,
-}) {
+function SelectEpicControl({ epicOptions, chosenEpic, setChosenEpic }) {
   const workspace = useAtomValue(workspaceAtom);
-  const [epicNumber, setEpicNumber] = useState(chosenEpic?.value || 0);
-  const [isSaving, setIsSaving] = useState(false);
   const [isManualEpic, setIsManualEpic] = useAtom(isManualEpicAtom);
+  const [epic, saveEpic] = useAtom(epicAtom);
+  const [epicNumber, setEpicNumber] = useState(chosenEpic?.value || epic);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const updateChosenEpic = useCallback(
+    async (epicNum) => {
+      if (!epicNum || epicNum === chosenEpic?.value) {
+        return;
+      }
+
+      setIsSaving(true);
+
+      // TODO: Can we use the URQL React hook to do this?
+      const issueByNumberResult = await getEpicInfo(
+        workspace,
+        // TODO: Improve the string/number handling.
+        Number(epicNum),
+      );
+      const newChosenEpic = {
+        label: issueByNumberResult.title,
+        value: epicNum,
+      };
+      setChosenEpic(newChosenEpic);
+
+      setIsSaving(false);
+    },
+    [chosenEpic?.value, workspace, setChosenEpic],
+  );
 
   async function saveManuallySelectedEpic(epicNumber) {
     setIsSaving(true);
-    // // TODO: Can we use the URQL React hook to do this?
-    // const issueByNumberResult = await getEpicInfo(
-    //   workspace,
-    //   Number(epicNumber), // TODO: Improve the string/number handling.
-    // );
-    // const newChosenEpic = {
-    //   label: issueByNumberResult.title,
-    //   value: issueByNumberResult.number,
-    // };
-    // setChosenEpic(newChosenEpic);
-    saveEpic(epicNumber);
+
+    // TODO: Improve the string/number handling.
+    saveEpic(Number(epicNumber));
     setIsSaving(false);
+
+    updateChosenEpic(epicNumber);
   }
 
   useEffect(() => {
-    if (isManualEpic && workspace && epicNumber && !chosenEpic) {
-      (async () => {
-        setIsSaving(true);
-        // TODO: Can we use the URQL React hook to do this?
-        const issueByNumberResult = await getEpicInfo(
-          workspace,
-          Number(epicNumber), // TODO: Improve the string/number handling.
-        );
-        const newChosenEpic = {
-          label: issueByNumberResult.title,
-          value: Number(issueByNumberResult.number),
-        };
-        setChosenEpic(newChosenEpic);
-        saveEpic(epicNumber);
-        setIsSaving(false);
-      })();
+    if (isManualEpic && workspace && epic && !chosenEpic) {
+      updateChosenEpic(epic);
     }
-  }, [
-    chosenEpic,
-    epicNumber,
-    isManualEpic,
-    saveEpic,
-    setChosenEpic,
-    workspace,
-  ]);
+  }, [chosenEpic, epic, isManualEpic, updateChosenEpic, workspace]);
 
   return (
     <Box display="flex" alignItems="center" gap={2}>
@@ -546,7 +520,6 @@ function SelectEpicControl({
               placeholder="Issue #, then press Enter"
               type="number"
               disabled={isSaving}
-              // initialValue={epicNumber}
               value={epicNumber}
               onChange={(e) => setEpicNumber(e.target.value)}
               onKeyDown={(e) => {
@@ -576,7 +549,12 @@ function SelectEpicControl({
       </FormControl>
       <Switch
         title="Enter issue number manually"
-        isChecked={isManualEpic === "true"} // FIXME: Update `atomWithParameterPersistence` to support booleans.
+        isChecked={
+          // FIXME: Fix this string/boolean handling.
+          typeof isManualEpic === "boolean"
+            ? isManualEpic
+            : isManualEpic === "true"
+        }
         onChange={(e) => {
           setIsManualEpic(e.target.checked);
         }}

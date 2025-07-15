@@ -226,7 +226,7 @@ async function getLinkedIssues(
       workspaceId,
       // repositoryId,
       repositoryGhId,
-      epicIssueNumber: Number(epicIssueNumber),
+      epicIssueNumber,
       pipelineIds,
     },
     signal,
@@ -342,14 +342,13 @@ export async function getAllEpics(workspaceId: string, signal: AbortSignal) {
 }
 
 // TODO: Check caching/efficiency of this function and how it's used.
+// Maybe DRY with `getGraphData()`.
 export async function getEpicInfo(
   workspaceName: string,
   epicIssueNumber: number,
   // FIXME: Use a shared signal, remove this default value.
   signal: AbortSignal = new AbortController().signal,
 ) {
-  console.log("getEpicInfo", workspaceName, epicIssueNumber);
-
   const workspaceResult = await executeQuery(
     getWorkspaceQueryDocument,
     {
@@ -421,8 +420,6 @@ export async function getGraphData(
   appSettings: { showNonEpicBlockedIssues: boolean },
   signal: AbortSignal,
 ) {
-  console.log("getGraphData", workspaceName, epicIssueNumber);
-
   const workspaceResult = await executeQuery(
     getWorkspaceQueryDocument,
     {
