@@ -52,6 +52,11 @@ export const epicAtom = atomWithParameterPersistence("epic", "", {
   },
 });
 
+export const isManualEpicAtom = atomWithParameterPersistence(
+  "isManualEpic",
+  false,
+);
+
 export const sprintAtom = atomWithParameterPersistence("sprint", "");
 
 export const pipelineColorsAtom = atomWithParameterPersistence(

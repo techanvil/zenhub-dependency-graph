@@ -13,13 +13,12 @@ import { APIKeyAtom, store } from "../store/atoms";
 import {
   getWorkspaceQueryDocument,
   getRepoAndPipelinesQueryDocument,
-  getEpicLinkedIssuesQueryDocument,
   getIssueByNumberQueryDocument,
   getAllEpicsQueryDocument,
   getAllOrganizationsQueryDocument,
   getEpicChildIssuesQueryDocument,
+  getSimpleIssueByNumberQueryDocument,
 } from "./queries";
-import { GetEpicLinkedIssuesQuery } from "../gql/graphql";
 import { makeDefaultStorage } from "./cache-exchange-storage";
 
 declare global {
@@ -227,7 +226,7 @@ async function getLinkedIssues(
       workspaceId,
       // repositoryId,
       repositoryGhId,
-      epicIssueNumber,
+      epicIssueNumber: Number(epicIssueNumber),
       pipelineIds,
     },
     signal,
@@ -340,6 +339,79 @@ export async function getAllEpics(workspaceId: string, signal: AbortSignal) {
   } = result.data;
 
   return epics.map((epic) => epic.issue);
+}
+
+// TODO: Check caching/efficiency of this function and how it's used.
+export async function getEpicInfo(
+  workspaceName: string,
+  epicIssueNumber: number,
+  // FIXME: Use a shared signal, remove this default value.
+  signal: AbortSignal = new AbortController().signal,
+) {
+  console.log("getEpicInfo", workspaceName, epicIssueNumber);
+
+  const workspaceResult = await executeQuery(
+    getWorkspaceQueryDocument,
+    {
+      workspaceName,
+    },
+    signal,
+  );
+
+  if (!workspaceResult.data?.viewer?.searchWorkspaces?.nodes) {
+    console.warn("No workspaces", { workspaceResult });
+    return null;
+  }
+
+  const {
+    viewer: {
+      searchWorkspaces: {
+        nodes: [{ id: workspaceId }],
+      },
+    },
+  } = workspaceResult.data;
+
+  const repoAndPipelinesResult = await executeQuery(
+    getRepoAndPipelinesQueryDocument,
+    {
+      workspaceId,
+    },
+    signal,
+  );
+
+  if (!repoAndPipelinesResult.data?.workspace?.defaultRepository) {
+    console.warn("No workspace", { repoAndPipelinesResult });
+    return null;
+  }
+
+  const {
+    workspace: {
+      defaultRepository: { ghId: repositoryGhId },
+    },
+  } = repoAndPipelinesResult.data;
+
+  const result = await executeQuery(
+    getSimpleIssueByNumberQueryDocument,
+    {
+      repositoryGhId,
+      issueNumber: epicIssueNumber,
+    },
+    signal,
+  );
+
+  if (!result.data?.issueByInfo) {
+    console.warn("No issueByInfo", { result });
+    return null;
+  }
+
+  const {
+    issueByInfo: { number, title },
+  } = result.data;
+
+  return {
+    number,
+    title,
+  };
 }
 
 export async function getGraphData(
