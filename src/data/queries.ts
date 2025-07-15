@@ -263,6 +263,16 @@ export const getIssueByNumberQueryDocument = graphql(`
   }
 `);
 
+export const getSimpleIssueByNumberQueryDocument = graphql(`
+  query GetSimpleIssueByNumber($repositoryGhId: Int!, $issueNumber: Int!) {
+    issueByInfo(issueNumber: $issueNumber, repositoryGhId: $repositoryGhId) {
+      id
+      number
+      title
+    }
+  }
+`);
+
 export const getAllOrganizationsQueryDocument = graphql(`
   query GetAllOrganizations {
     viewer {
