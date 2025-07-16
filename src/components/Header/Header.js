@@ -549,7 +549,7 @@ function SelectEpicControl({ epicOptions, chosenEpic, setChosenEpic }) {
         )}
       </FormControl>
       <Switch
-        title="Enter issue number manually"
+        title="Enable manual epic input"
         isChecked={
           // FIXME: Fix this string/boolean handling.
           typeof isManualEpic === "boolean"
