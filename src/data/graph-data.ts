@@ -20,6 +20,7 @@ import {
   getSimpleIssueByNumberQueryDocument,
 } from "./queries";
 import { makeDefaultStorage } from "./cache-exchange-storage";
+import { GetEpicChildIssuesQuery } from "../gql/graphql";
 
 declare global {
   interface Window {
@@ -115,7 +116,9 @@ function executeQuery<Data, Variables extends AnyVariables>(
   });
 }
 
-type Issue = NonNullable<GetEpicLinkedIssuesQuery["linkedIssues"]>["nodes"][0];
+type Issue = NonNullable<
+  GetEpicChildIssuesQuery["issueByInfo"]["githubChildIssues"]
+>["nodes"][0];
 type ExtendedIssue = Issue & { isNonEpicIssue?: boolean };
 
 function getNonEpicIssues(
