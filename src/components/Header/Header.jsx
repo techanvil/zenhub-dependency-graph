@@ -48,6 +48,7 @@ import {
   workspaceAtom,
 } from "../../store/atoms";
 import { copyPNG, downloadSVG } from "../../utils/svg";
+import PageTitle from "../PageTitle";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -121,6 +122,10 @@ export default function Header({
     },
     [sprint],
   );
+
+  console.log({
+    chosenEpic,
+  });
 
   useEffect(() => {
     if (isEmpty(APIKey)) {
@@ -262,6 +267,7 @@ export default function Header({
 
   return (
     <>
+      <PageTitle epic={chosenEpic.label} />
       <Box as="section" h="var(--header-height)">
         <Box
           as="nav"
