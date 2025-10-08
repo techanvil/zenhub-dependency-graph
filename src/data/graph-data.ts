@@ -32,7 +32,7 @@ interface AppSettings {
 }
 
 const zenhubEndpointUrl =
-  process.env.REACT_APP_ZENHUB_ENDPOINT_URL ||
+  import.meta.env.VITE_ZENHUB_ENDPOINT_URL ||
   process.env.NEXT_PUBLIC_ZENHUB_ENDPOINT_URL;
 
 if (!zenhubEndpointUrl) {
