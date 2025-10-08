@@ -7,13 +7,6 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.108",
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
     "@uiw/react-color-sketch": "^2.3.0",
     "@urql/exchange-auth": "^2.2.0",
     "@urql/exchange-graphcache": "^7.2.1",
@@ -29,7 +22,6 @@
     "react": "^18.3.1",
     "react-d3-library": "^1.1.8",
     "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1",
     "rehype-stringify": "^10.0.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
@@ -43,39 +35,24 @@
     "typescript": "^5.7.2"
   },
   "scripts": {
-    "start": "concurrently \"react-scripts start\" \"npm run generate -- --watch\"",
-    "start:turbo": "npm run start -- --turbo",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "dev": "concurrently \"vite\" \"npm run generate -- --watch\"",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint:js-fix": "prettier --write --ignore-path .prettierignore \"**/*.{js,jsx,ts,tsx}\"",
     "generate": "graphql-codegen --config codegen.ts",
-    "prestart": "npm run generate",
+    "predev": "npm run generate",
     "prebuild": "npm run generate"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.12.16",
     "@graphql-codegen/cli": "^5.0.3",
     "@parcel/watcher": "^2.5.0",
     "@types/d3": "^7.4.3",
-    "prettier": "^3.3.3"
+    "@types/node": "^22.12.0",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^5.0.2",
+    "prettier": "^3.3.3",
+    "vite": "^7.1.3"
   }
 }
