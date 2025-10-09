@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Flex,
-  IconButton,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -42,28 +41,18 @@ function LegendItem({
     <Flex align="center" my={2}>
       <Popover placement="bottom-end" isOpen={isOpen} onClose={onClose} isLazy>
         <PopoverTrigger>
-          <IconButton
+          <Box
             w="20px"
             h="20px"
-            size={20}
             bg={color}
             borderRadius="md"
+            cursor="pointer"
             mr={2}
+            _hover={{
+              opacity: 0.7,
+            }}
             onClick={onToggle}
-          >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-            </svg>
-          </IconButton>
+          ></Box>
         </PopoverTrigger>
         <PopoverContent>
           <PopoverArrow />
