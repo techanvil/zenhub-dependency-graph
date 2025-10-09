@@ -1,4 +1,5 @@
 import { useAtom } from "jotai";
+
 import {
   Box,
   Button,
@@ -45,9 +46,13 @@ function LegendItem({
             h="20px"
             bg={color}
             borderRadius="md"
+            cursor="pointer"
             mr={2}
+            _hover={{
+              opacity: 0.7,
+            }}
             onClick={onToggle}
-          />
+          ></Box>
         </PopoverTrigger>
         <PopoverContent>
           <PopoverArrow />
