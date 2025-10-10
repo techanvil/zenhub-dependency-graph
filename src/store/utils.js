@@ -4,7 +4,7 @@ import { atomWithStorage } from "jotai/utils";
 export function atomWithParameterPersistence(
   key,
   initialValue,
-  { bootstrapOptions = {}, runtimeOptions = {} } = {}
+  { bootstrapOptions = {}, runtimeOptions = {} } = {},
 ) {
   bootstrapParameter(key, bootstrapOptions);
 
@@ -40,13 +40,13 @@ export function atomWithParameterPersistence(
       if (value) {
         url.searchParams.set(
           key,
-          typeof value === "object" ? JSON.stringify(value) : value
+          typeof value === "object" ? JSON.stringify(value) : value,
         );
       } else {
         url.searchParams.delete(key);
       }
       window.history.pushState({}, undefined, url);
-    }
+    },
   );
 }
 
@@ -57,7 +57,7 @@ export function bootstrapParameter(
     isObject,
     getLocalStorageKey, // `key` will be used if not provided.
     toLocalStorageValue,
-  }
+  },
 ) {
   const url = new URL(window.location);
 
@@ -86,9 +86,41 @@ export function bootstrapParameter(
     if (parsedValue) {
       url.searchParams.set(
         key,
-        isObject ? JSON.stringify(parsedValue) : parsedValue
+        isObject ? JSON.stringify(parsedValue) : parsedValue,
       );
       window.history.pushState({}, undefined, url);
     }
   }
+}
+
+export function atomWithQueryParameter(
+  key,
+  initialValue,
+  { parse = (value) => value } = {},
+) {
+  const url = new URL(window.location);
+
+  if (url.searchParams.has(key)) {
+    initialValue = parse(url.searchParams.get(key));
+  }
+
+  const queryAtom = atom(initialValue);
+
+  return atom(
+    (get) => {
+      return get(queryAtom);
+    },
+    (get, set, value) => {
+      const url = new URL(window.location);
+
+      set(queryAtom, value);
+
+      if (value) {
+        url.searchParams.set(key, value);
+      } else {
+        url.searchParams.delete(key);
+      }
+      window.history.pushState({}, undefined, url);
+    },
+  );
 }
