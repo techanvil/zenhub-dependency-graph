@@ -66,6 +66,14 @@ function getOpenIssueCount(issues) {
   return issues.filter(({ pipelineName }) => pipelineName !== "Closed").length;
 }
 
+function usePageTitle(title) {
+  useEffect(() => {
+    if (title) {
+      document.title = title;
+    }
+  }, [title]);
+}
+
 export default function Header({
   onAPIKeyModalOpen = () => {},
   authentication,
@@ -122,10 +130,6 @@ export default function Header({
     },
     [sprint],
   );
-
-  console.log({
-    chosenEpic,
-  });
 
   useEffect(() => {
     if (isEmpty(APIKey)) {
@@ -265,9 +269,10 @@ export default function Header({
     setActivePane(newPane);
   }
 
+  usePageTitle(chosenEpic ? `Epic: ${chosenEpic.label} - ZDG` : "ZDG");
+
   return (
     <>
-      <PageTitle epic={chosenEpic.label} />
       <Box as="section" h="var(--header-height)">
         <Box
           as="nav"
