@@ -6,7 +6,7 @@ import {
   additionalColorDefaults,
   pipelineColorDefaults,
 } from "../d3/constants";
-import { atomWithParameterPersistence } from "./utils";
+import { atomWithParameterPersistence, atomWithQueryParameter } from "./utils";
 import { toFixedDecimalPlaces } from "../d3/utils";
 export * from "./atoms-typed";
 
@@ -44,20 +44,16 @@ export const appSettingsAtom = atomWithParameterPersistence(
   },
 );
 
+// Workspace should not really be persisted to local storage, but we'll keep it persistent for convenience.
 export const workspaceAtom = atomWithParameterPersistence("workspace", "");
 
-export const epicAtom = atomWithParameterPersistence("epic", "", {
-  bootstrapOptions: {
-    parse: (v) => parseInt(v, 10),
-  },
+export const epicAtom = atomWithQueryParameter("epic", "", {
+  parse: (v) => parseInt(v, 10),
 });
 
-export const isManualEpicAtom = atomWithParameterPersistence(
-  "isManualEpic",
-  false,
-);
+export const isManualEpicAtom = atomWithQueryParameter("isManualEpic", false);
 
-export const sprintAtom = atomWithParameterPersistence("sprint", "");
+export const sprintAtom = atomWithQueryParameter("sprint", "");
 
 export const pipelineColorsAtom = atomWithParameterPersistence(
   "pipelineColors",
