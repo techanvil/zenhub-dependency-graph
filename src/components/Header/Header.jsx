@@ -48,6 +48,7 @@ import {
   workspaceAtom,
 } from "../../store/atoms";
 import { copyPNG, downloadSVG } from "../../utils/svg";
+import PageTitle from "../PageTitle";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -63,6 +64,14 @@ function entityToOption({ name, id }) {
 
 function getOpenIssueCount(issues) {
   return issues.filter(({ pipelineName }) => pipelineName !== "Closed").length;
+}
+
+function usePageTitle(title) {
+  useEffect(() => {
+    if (title) {
+      document.title = title;
+    }
+  }, [title]);
 }
 
 export default function Header({
@@ -259,6 +268,8 @@ export default function Header({
     const newPane = activePane === pane ? PANES.NONE : pane;
     setActivePane(newPane);
   }
+
+  usePageTitle(chosenEpic ? `Epic: ${chosenEpic.label} - ZDG` : "ZDG");
 
   return (
     <>
