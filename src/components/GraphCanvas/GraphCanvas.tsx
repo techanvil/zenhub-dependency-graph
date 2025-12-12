@@ -192,6 +192,11 @@ function Scene({
     layout.nodeHeight,
   ]);
 
+  const layoutRef = useRef(layout);
+  useEffect(() => {
+    layoutRef.current = layout;
+  }, [layout]);
+
   // Keep node positions in sync with latest computed layout/overrides (e.g. undo/redo),
   // but do NOT re-fit the camera when only coordinates move.
   useEffect(() => {
@@ -214,10 +219,12 @@ function Scene({
       fitCameraToLayout(
         camera as THREE.PerspectiveCamera,
         controlsRef.current,
-        layout,
+        layoutRef.current,
       );
     }
-  }, [layoutKey, camera, layout, onLassoBoxChange]);
+    // NOTE: Do not depend on `layout` identity here — coordinate changes
+    // (drag/drop overrides) create a new layout object and would refit the camera.
+  }, [layoutKey, camera, onLassoBoxChange]);
 
   // Keep popup anchored to a world position.
   useFrame(() => {

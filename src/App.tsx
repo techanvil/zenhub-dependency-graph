@@ -72,8 +72,14 @@ function App({ authentication, panel }: AppProps) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       // Ignore events triggered by inputs etc.
-      if (event.target !== document.body) {
-        return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        const isFormInput =
+          tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+        if (isFormInput || target.isContentEditable) {
+          return;
+        }
       }
 
       if (event.code === "KeyZ" && (event.ctrlKey || event.metaKey)) {
