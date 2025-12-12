@@ -82,21 +82,31 @@ function App({ authentication, panel }: AppProps) {
         }
       }
 
-      if (event.code === "KeyZ" && (event.ctrlKey || event.metaKey)) {
-        if (event.shiftKey) {
-          if (canRedo) {
-            redo();
-          }
-        } else if (canUndo) {
+      const isMod = event.ctrlKey || event.metaKey;
+      const key = (event.key || "").toLowerCase();
+      const isZ = event.code === "KeyZ" || key === "z";
+      const isY = event.code === "KeyY" || key === "y";
+
+      if (isMod && (isZ || isY)) {
+        // Prevent the browser from handling undo at the page level.
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Redo: Ctrl/Cmd+Shift+Z OR Ctrl/Cmd+Y
+        if (isY || event.shiftKey) {
+          redo();
+        } else {
           undo();
         }
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown, {
+        capture: true,
+      } as any);
     };
   }, [canRedo, canUndo, redo, undo]);
 

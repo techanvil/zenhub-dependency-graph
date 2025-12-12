@@ -121,6 +121,7 @@ function Scene({
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [controlsEnabled, setControlsEnabled] = useState(true);
+  const [dampingEnabled, setDampingEnabled] = useState(true);
 
   const hoverPreviewRef = useRef<{
     timeout: number | null;
@@ -209,6 +210,7 @@ function Scene({
     setHoveredId(null);
     setSelectedIds(new Set());
     setControlsEnabled(true);
+    setDampingEnabled(true);
     onLassoBoxChange({ x: 0, y: 0, w: 0, h: 0, visible: false });
     if (hoverPreviewRef.current.timeout) {
       window.clearTimeout(hoverPreviewRef.current.timeout);
@@ -225,6 +227,15 @@ function Scene({
     // NOTE: Do not depend on `layout` identity here — coordinate changes
     // (drag/drop overrides) create a new layout object and would refit the camera.
   }, [layoutKey, camera, onLassoBoxChange]);
+
+  // Ensure the underlying OrbitControls instance picks up damping changes immediately.
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    controls.enableDamping = dampingEnabled;
+    controls.dampingFactor = 0.08;
+    controls.update?.();
+  }, [dampingEnabled]);
 
   // Keep popup anchored to a world position.
   useFrame(() => {
@@ -333,6 +344,11 @@ function Scene({
       didMove: false,
     };
 
+    // Disable controls + damping during node drag/drop so OrbitControls never "coasts"
+    // or begins rotating while we are determining drag vs click.
+    setControlsEnabled(false);
+    setDampingEnabled(false);
+
     // Capture pointer on the canvas element.
     gl.domElement.setPointerCapture?.(e.pointerId);
   }
@@ -408,6 +424,8 @@ function Scene({
       draggingRef.current.isDragging = false;
       setControlsEnabled(true);
 
+      setDampingEnabled(false);
+
       // Persist overrides
       setNodes((prev) => {
         const updated: CoordinateOverrides = { ...coordinateOverrides };
@@ -442,6 +460,9 @@ function Scene({
       draggingRef.current.dragStartPositions = new Map();
       draggingRef.current.draggedIds = [];
     } else {
+      // This was a click (no drag). Restore OrbitControls + damping.
+      setControlsEnabled(true);
+      setDampingEnabled(true);
       // No drag: treat as click -> open issue.
       window.open(node.data.htmlUrl, "_blank", "noopener,noreferrer");
     }
@@ -475,6 +496,7 @@ function Scene({
     });
 
     setControlsEnabled(false);
+    setDampingEnabled(false);
 
     lassoRef.current.isLassoing = true;
     lassoRef.current.pointerId = e.pointerId;
@@ -563,11 +585,17 @@ function Scene({
       <OrbitControls
         ref={controlsRef}
         enabled={controlsEnabled}
-        enableDamping
+        enableDamping={dampingEnabled}
         dampingFactor={0.08}
         enablePan
         enableZoom
         // With a 3D camera, keep orbit enabled.
+        onStart={() => {
+          // Re-enable damping for normal orbit usage.
+          if (!draggingRef.current.isDragging && !lassoRef.current.isLassoing) {
+            setDampingEnabled(true);
+          }
+        }}
       />
 
       {/* Background plane for pointer events (lasso) */}
