@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { Text as ChakraText } from "@chakra-ui/react";
-import { Html, Line, OrbitControls, Text } from "@react-three/drei";
+import { Line, OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { useAtomValue } from "jotai";
 
@@ -31,6 +31,14 @@ type RuntimeNode = {
   opacity: number;
   color: string;
   data: GraphIssue;
+};
+
+type LassoBox = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  visible: boolean;
 };
 
 function toWorld(x: number, y: number) {
@@ -90,12 +98,14 @@ function Scene({
   additionalColors,
   coordinateOverrides,
   saveCoordinateOverrides,
+  onLassoBoxChange,
 }: {
   layout: GraphLayout;
   appSettings: any;
   additionalColors: Record<string, string>;
   coordinateOverrides: CoordinateOverrides;
   saveCoordinateOverrides: (v: CoordinateOverrides) => void;
+  onLassoBoxChange: (box: LassoBox) => void;
 }) {
   const { camera, gl } = useThree();
   const controlsRef = useRef<any>(null);
@@ -171,16 +181,35 @@ function Scene({
     h: 0,
   });
 
-  const [lassoBox, setLassoBox] = useState<{
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    visible: boolean;
-  }>({ x: 0, y: 0, w: 0, h: 0, visible: false });
+  const layoutKey = useMemo(() => {
+    const ids = layout.nodes.map((n) => n.id).join("|");
+    return `${ids}|${layout.rectWidth}|${layout.rectHeight}|${layout.nodeWidth}|${layout.nodeHeight}`;
+  }, [
+    layout.nodes,
+    layout.rectWidth,
+    layout.rectHeight,
+    layout.nodeWidth,
+    layout.nodeHeight,
+  ]);
 
+  // Keep node positions in sync with latest computed layout/overrides (e.g. undo/redo),
+  // but do NOT re-fit the camera when only coordinates move.
   useEffect(() => {
-    // Initial camera fit
+    if (draggingRef.current.isDragging || lassoRef.current.isLassoing) return;
+    setNodes(layout.nodes);
+  }, [layout.nodes]);
+
+  // Reset interaction state and fit camera only when the graph structure/sizing changes.
+  useEffect(() => {
+    setHoveredId(null);
+    setSelectedIds(new Set());
+    setControlsEnabled(true);
+    onLassoBoxChange({ x: 0, y: 0, w: 0, h: 0, visible: false });
+    if (hoverPreviewRef.current.timeout) {
+      window.clearTimeout(hoverPreviewRef.current.timeout);
+      hoverPreviewRef.current.timeout = null;
+    }
+    // Initial camera fit (and on major layout/sizing changes)
     if ((camera as any).isPerspectiveCamera) {
       fitCameraToLayout(
         camera as THREE.PerspectiveCamera,
@@ -188,19 +217,7 @@ function Scene({
         layout,
       );
     }
-  }, [camera, layout]);
-
-  // Update nodes when layout changes (new epic/settings)
-  useEffect(() => {
-    setNodes(layout.nodes);
-    setHoveredId(null);
-    setSelectedIds(new Set());
-    setControlsEnabled(true);
-    if (hoverPreviewRef.current.timeout) {
-      window.clearTimeout(hoverPreviewRef.current.timeout);
-      hoverPreviewRef.current.timeout = null;
-    }
-  }, [layout]);
+  }, [layoutKey, camera, layout, onLassoBoxChange]);
 
   // Keep popup anchored to a world position.
   useFrame(() => {
@@ -380,14 +397,15 @@ function Scene({
       draggingRef.current.isDragging &&
       draggingRef.current.pointerId === e.pointerId
     ) {
+      const draggedIds = [...draggingRef.current.draggedIds];
       draggingRef.current.isDragging = false;
       setControlsEnabled(true);
 
       // Persist overrides
       setNodes((prev) => {
         const updated: CoordinateOverrides = { ...coordinateOverrides };
-        prev.forEach((n) => {
-          if (!draggingRef.current.draggedIds.includes(n.id)) return;
+        const next = prev.map((n) => {
+          if (!draggedIds.includes(n.id)) return n;
 
           let x = n.x;
           let y = n.y;
@@ -405,10 +423,11 @@ function Scene({
           }
 
           updated[n.id] = { x, y };
+          return { ...n, x, y };
         });
 
         saveCoordinateOverrides(updated);
-        return prev;
+        return next;
       });
 
       draggingRef.current.pointerId = null;
@@ -424,9 +443,10 @@ function Scene({
   }
 
   function beginLasso(e: ThreeEvent<PointerEvent>) {
-    // Left-drag on background creates a lasso rectangle (matches legacy behavior).
-    // Right-drag should be allowed to reach OrbitControls.
+    // Shift+left-drag on background creates a lasso rectangle.
+    // Normal left-drag remains OrbitControls rotate.
     if (e.button !== 0) return;
+    if (!e.shiftKey) return;
     e.stopPropagation();
 
     // Don't lasso while dragging nodes.
@@ -458,7 +478,7 @@ function Scene({
     lassoRef.current.w = 0;
     lassoRef.current.h = 0;
 
-    setLassoBox({ x: e.clientX, y: e.clientY, w: 0, h: 0, visible: true });
+    onLassoBoxChange({ x: e.clientX, y: e.clientY, w: 0, h: 0, visible: true });
     gl.domElement.setPointerCapture?.(e.pointerId);
   }
 
@@ -481,7 +501,7 @@ function Scene({
     lassoRef.current.w = w;
     lassoRef.current.h = h;
 
-    setLassoBox({ x, y, w, h, visible: true });
+    onLassoBoxChange({ x, y, w, h, visible: true });
   }
 
   function endLasso(e: ThreeEvent<PointerEvent>) {
@@ -494,7 +514,7 @@ function Scene({
     setControlsEnabled(true);
     gl.domElement.releasePointerCapture?.(e.pointerId);
 
-    setLassoBox((b) => ({ ...b, visible: false }));
+    onLassoBoxChange({ x: 0, y: 0, w: 0, h: 0, visible: false });
 
     const { x, y, w, h } = lassoRef.current;
     if (w < 4 || h < 4) {
@@ -807,23 +827,7 @@ function Scene({
         );
       })}
 
-      {/* Lasso overlay (DOM) */}
-      {lassoBox.visible ? (
-        <Html fullscreen style={{ pointerEvents: "none" }}>
-          <div
-            style={{
-              position: "fixed",
-              left: `${lassoBox.x}px`,
-              top: `${lassoBox.y}px`,
-              width: `${lassoBox.w}px`,
-              height: `${lassoBox.h}px`,
-              border: "1px dashed #2378ae",
-              borderRadius: "6px",
-              zIndex: 999,
-            }}
-          />
-        </Html>
-      ) : null}
+      {/* Lasso overlay is rendered by GraphCanvas (ReactDOM) */}
     </>
   );
 }
@@ -851,28 +855,54 @@ export default function GraphCanvas(props: GraphCanvasProps) {
     });
   }, [graphData, appSettings, pipelineColors, coordinateOverrides]);
 
+  const [lassoBox, setLassoBox] = useState<LassoBox>({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+    visible: false,
+  });
+
   if (!graphData?.length) {
     return <ChakraText padding="20px">No graph data.</ChakraText>;
   }
 
   return (
-    <Canvas
-      id="zdg-graph"
-      style={{ width: "100%", height: "100%" }}
-      gl={{ antialias: true, preserveDrawingBuffer: true }}
-      onCreated={({ gl }) => {
-        // Use a transparent clear so exports can optionally add a background.
-        gl.setClearColor(new THREE.Color("#ffffff"), 0);
-      }}
-      camera={{ fov: 45, near: 0.1, far: 100000, position: [0, 0, 800] }}
-    >
-      <Scene
-        layout={layout}
-        appSettings={appSettings}
-        additionalColors={additionalColors}
-        coordinateOverrides={coordinateOverrides}
-        saveCoordinateOverrides={saveCoordinateOverrides}
-      />
-    </Canvas>
+    <>
+      <Canvas
+        id="zdg-graph"
+        style={{ width: "100%", height: "100%" }}
+        gl={{ antialias: true, preserveDrawingBuffer: true }}
+        onCreated={({ gl }) => {
+          // Use a transparent clear so exports can optionally add a background.
+          gl.setClearColor(new THREE.Color("#ffffff"), 0);
+        }}
+        camera={{ fov: 45, near: 0.1, far: 100000, position: [0, 0, 800] }}
+      >
+        <Scene
+          layout={layout}
+          appSettings={appSettings}
+          additionalColors={additionalColors}
+          coordinateOverrides={coordinateOverrides}
+          saveCoordinateOverrides={saveCoordinateOverrides}
+          onLassoBoxChange={setLassoBox}
+        />
+      </Canvas>
+      {lassoBox.visible ? (
+        <div
+          style={{
+            position: "fixed",
+            left: `${lassoBox.x}px`,
+            top: `${lassoBox.y}px`,
+            width: `${lassoBox.w}px`,
+            height: `${lassoBox.h}px`,
+            border: "1px dashed #2378ae",
+            borderRadius: "6px",
+            zIndex: 999,
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
+    </>
   );
 }
