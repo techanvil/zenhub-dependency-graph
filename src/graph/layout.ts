@@ -153,7 +153,7 @@ export function computeGraphLayout(
   const nodeWidth = rectWidth * 1.5;
   const nodeHeight = rectHeight * 2;
   const arrowSize = nodeHeight / 2.0;
-  const zStep = nodeHeight * 0.9;
+  const zStep = nodeHeight * 0.3;
 
   // d3-dag's sugiyama typing gets unhappy when swapping decross operators;
   // keep this local operator as `any` to avoid fighting library generics.
