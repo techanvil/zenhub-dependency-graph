@@ -65,10 +65,6 @@ function App({ authentication, panel }: AppProps) {
 
   const APIKey = useAtomValue(APIKeyAtom);
 
-  const { undo, redo, canUndo, canRedo } = useAtomValue(
-    undoCoordinateOverridesAtom,
-  );
-
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       // Ignore events triggered by inputs etc.
@@ -92,11 +88,20 @@ function App({ authentication, panel }: AppProps) {
         event.preventDefault();
         event.stopPropagation();
 
+        // IMPORTANT: Use the app's singleton store (the same store passed to <Provider />).
+        // Hooks in this component run before the Provider is rendered, so they would
+        // otherwise read from the default store and undo/redo wouldn't affect the graph.
+        const history = store.get(undoCoordinateOverridesAtom);
+
         // Redo: Ctrl/Cmd+Shift+Z OR Ctrl/Cmd+Y
         if (isY || event.shiftKey) {
-          redo();
+          if (history.canRedo) {
+            history.redo();
+          }
         } else {
-          undo();
+          if (history.canUndo) {
+            history.undo();
+          }
         }
       }
     }
@@ -108,7 +113,7 @@ function App({ authentication, panel }: AppProps) {
         capture: true,
       } as any);
     };
-  }, [canRedo, canUndo, redo, undo]);
+  }, []);
 
   return (
     <Provider store={store}>
