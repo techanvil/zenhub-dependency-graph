@@ -29,6 +29,7 @@ export type LayoutNode = {
   id: string;
   x: number;
   y: number;
+  z: number;
   opacity: number;
   color: string;
   data: GraphIssue;
@@ -74,6 +75,64 @@ function normalize2D(dx: number, dy: number) {
   return { x: dx / len, y: dy / len };
 }
 
+function computeDepthFromAnchors(graphData: GraphIssue[]) {
+  const ids = new Set(graphData.map((n) => n.id));
+  const parentsById = new Map<string, string[]>();
+  const childrenById = new Map<string, string[]>();
+
+  // Init maps so `get()` is always safe.
+  graphData.forEach((n) => {
+    parentsById.set(n.id, []);
+    childrenById.set(n.id, []);
+  });
+
+  // Build parent/child adjacency lists. `parentIds` are the blockers (parents).
+  graphData.forEach((n) => {
+    const parents = (n.parentIds || []).filter((p) => ids.has(p));
+    parentsById.set(n.id, parents);
+    parents.forEach((p) => {
+      const arr = childrenById.get(p);
+      if (arr) arr.push(n.id);
+      else childrenById.set(p, [n.id]);
+    });
+  });
+
+  // Anchors: issues that don't block any others => no children (out-degree = 0).
+  const anchors = graphData
+    .map((n) => n.id)
+    .filter((id) => (childrenById.get(id)?.length || 0) === 0);
+
+  // BFS from anchors backwards (anchor -> parents) yields shortest distance-to-anchor.
+  const depthById: Record<string, number> = {};
+  const queue: string[] = [];
+
+  anchors.forEach((id) => {
+    depthById[id] = 0;
+    queue.push(id);
+  });
+
+  while (queue.length) {
+    const id = queue.shift()!;
+    const d = depthById[id] ?? 0;
+    const parents = parentsById.get(id) || [];
+    parents.forEach((p) => {
+      const next = d + 1;
+      const curr = depthById[p];
+      if (curr === undefined || next < curr) {
+        depthById[p] = next;
+        queue.push(p);
+      }
+    });
+  }
+
+  // Any nodes not reached (shouldn't happen for a proper DAG) get depth 0.
+  graphData.forEach((n) => {
+    if (depthById[n.id] === undefined) depthById[n.id] = 0;
+  });
+
+  return { depthById, anchors };
+}
+
 export function computeGraphLayout(
   graphData: GraphIssue[],
   {
@@ -94,14 +153,17 @@ export function computeGraphLayout(
   const nodeWidth = rectWidth * 1.5;
   const nodeHeight = rectHeight * 2;
   const arrowSize = nodeHeight / 2.0;
+  const zStep = nodeHeight * 0.9;
 
-  let layout = sugiyama();
+  // d3-dag's sugiyama typing gets unhappy when swapping decross operators;
+  // keep this local operator as `any` to avoid fighting library generics.
+  let layout: any = sugiyama();
   const maxGraphSizeToDecross = 20;
   if (graphData.length < maxGraphSizeToDecross) {
     layout = layout.decross(decrossOpt());
   }
 
-  layout = layout.nodeSize((node) =>
+  layout = layout.nodeSize((node: any) =>
     node === undefined ? [0, 0] : [nodeWidth, nodeHeight],
   );
 
@@ -144,7 +206,7 @@ export function computeGraphLayout(
   }
 
   if (coordinateOverrides && Object.keys(coordinateOverrides).length) {
-    applyOverrides(dag.proots || [dag], coordinateOverrides);
+    applyOverrides((dag as any).proots || [dag], coordinateOverrides);
   }
 
   function getOverlaidIssueOpacities(dagNode: any) {
@@ -191,7 +253,7 @@ export function computeGraphLayout(
     );
   }
 
-  const issueOpacities = getOverlaidIssueOpacities(dag);
+  const issueOpacities = getOverlaidIssueOpacities(dag as any);
 
   const steps = dag.size();
   const interp = d3.interpolateRainbow;
@@ -200,10 +262,15 @@ export function computeGraphLayout(
     colorMap.set(node.data.id, interp(i / steps));
   }
 
+  // Depth layering in Z: use anchors (issues with no children) as z=0,
+  // and push their blockers "behind" them in Z.
+  const { depthById } = computeDepthFromAnchors(graphData);
+
   const nodes: LayoutNode[] = dag.descendants().map((n: any) => ({
     id: n.data.id,
     x: n.x,
     y: n.y,
+    z: -(depthById[n.data.id] || 0) * zStep,
     opacity: issueOpacities[n.data.id] || 1,
     color: getNodeColor(n, pipelineColors, colorMap),
     data: n.data as GraphIssue,

@@ -28,6 +28,7 @@ type RuntimeNode = {
   id: string;
   x: number;
   y: number;
+  z: number;
   opacity: number;
   color: string;
   data: GraphIssue;
@@ -41,13 +42,13 @@ type LassoBox = {
   visible: boolean;
 };
 
-function toWorld(x: number, y: number) {
+function toWorld(x: number, y: number, z: number = 0) {
   // Flip Y so SVG-down becomes screen-down.
-  return new THREE.Vector3(x, -y, 0);
+  return new THREE.Vector3(x, -y, z);
 }
 
 function fromWorld(v: THREE.Vector3) {
-  return { x: v.x, y: -v.y };
+  return { x: v.x, y: -v.y, z: v.z };
 }
 
 function normalize2D(dx: number, dy: number) {
@@ -67,21 +68,29 @@ function fitCameraToLayout(
 ) {
   const xs = layout.nodes.map((n) => n.x);
   const ys = layout.nodes.map((n) => -n.y);
+  const zs = layout.nodes.map((n: any) => (typeof n.z === "number" ? n.z : 0));
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
+  const minZ = Math.min(...zs);
+  const maxZ = Math.max(...zs);
 
-  const center = new THREE.Vector3((minX + maxX) / 2, (minY + maxY) / 2, 0);
+  const center = new THREE.Vector3(
+    (minX + maxX) / 2,
+    (minY + maxY) / 2,
+    (minZ + maxZ) / 2,
+  );
   const sizeX = maxX - minX;
   const sizeY = maxY - minY;
-  const maxSize = Math.max(sizeX, sizeY) || 1;
+  const sizeZ = maxZ - minZ;
+  const maxSize = Math.max(sizeX, sizeY, sizeZ * 1.5) || 1;
 
   // Heuristic distance that keeps the whole graph in view.
   const fov = (camera.fov * Math.PI) / 180;
   const distance = maxSize / 2 / Math.tan(fov / 2) + 200;
 
-  camera.position.set(center.x, center.y, distance);
+  camera.position.set(center.x, center.y, center.z + distance);
   camera.near = 0.1;
   camera.far = distance * 10;
   camera.updateProjectionMatrix();
@@ -398,7 +407,9 @@ function Scene({
         if (!draggingRef.current.draggedIds.includes(n.id)) return n;
         const base = draggingRef.current.dragStartPositions.get(n.id);
         if (!base) return n;
-        const newWorld = toWorld(base.x, base.y).add(delta);
+        const newWorld = toWorld(base.x, base.y, n.z).add(
+          new THREE.Vector3(delta.x, delta.y, 0),
+        );
         const { x, y } = fromWorld(newWorld);
         return { ...n, x, y };
       });
@@ -568,7 +579,7 @@ function Scene({
 
     const nextSelected = new Set<string>();
     nodes.forEach((n) => {
-      const world = toWorld(n.x, n.y);
+      const world = toWorld(n.x, n.y, n.z);
       const ndc = world.clone().project(cam);
       const sx = (ndc.x * 0.5 + 0.5) * rect.width;
       const sy = (-ndc.y * 0.5 + 0.5) * rect.height;
@@ -645,7 +656,10 @@ function Scene({
           (layout.rectHeight + layout.arrowSize / 3) / 2,
         );
 
-        const pts = [toWorld(source.x, source.y), toWorld(dx, dy)];
+        const pts = [
+          toWorld(source.x, source.y, source.z),
+          toWorld(dx, dy, target.z),
+        ];
         const hasValidPoints =
           pts.length >= 2 &&
           pts.every(
@@ -677,7 +691,7 @@ function Scene({
               }
             />
             <mesh
-              position={toWorld(dx, dy)}
+              position={toWorld(dx, dy, target.z)}
               rotation={(() => {
                 const q = new THREE.Quaternion().setFromUnitVectors(
                   new THREE.Vector3(0, 1, 0),
@@ -698,7 +712,7 @@ function Scene({
 
       {/* Nodes */}
       {nodes.map((n) => {
-        const pos = toWorld(n.x, n.y);
+        const pos = toWorld(n.x, n.y, n.z);
         const dimOther =
           appSettings.highlightRelatedIssues && hoveredId && !isRelated(n.id)
             ? 0.3
