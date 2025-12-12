@@ -474,7 +474,13 @@ function Scene({
     // Shift+left-drag on background creates a lasso rectangle.
     // Normal left-drag remains OrbitControls rotate.
     if (e.button !== 0) return;
-    if (!e.shiftKey) return;
+    if (!e.shiftKey) {
+      // Click/drag on empty space clears selection (without interfering with OrbitControls).
+      if (selectedIds.size) {
+        setSelectedIds(new Set());
+      }
+      return;
+    }
     e.stopPropagation();
 
     // Don't lasso while dragging nodes.
