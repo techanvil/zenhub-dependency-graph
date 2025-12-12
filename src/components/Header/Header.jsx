@@ -47,7 +47,7 @@ import {
   sprintAtom,
   workspaceAtom,
 } from "../../store/atoms";
-import { copyPNG, downloadSVG } from "../../utils/svg";
+import { copyPNG, downloadPNG } from "../../utils/svg";
 import PageTitle from "../PageTitle";
 
 function pluralise(count, singular, plural) {
@@ -415,13 +415,13 @@ export default function Header({
                     <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
                     <MenuItem
                       onClick={() =>
-                        downloadSVG(chosenEpic.label, {
+                        downloadPNG(chosenEpic.label, {
                           includeBackground:
                             appSettings.includeBackgroundWhenExporting,
                         })
                       }
                     >
-                      Download (SVG)
+                      Download (PNG)
                     </MenuItem>
                     <MenuItem
                       onClick={() =>

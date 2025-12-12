@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Box, Text } from "@chakra-ui/react";
 
@@ -9,13 +9,14 @@ import { Box, Text } from "@chakra-ui/react";
  * Internal dependencies
  */
 import {
-  generateGraph,
   removeNonEpicIssues,
   removeSelfContainedIssues,
   removePipelineIssues,
+  removeAncestorDependencies,
 } from "../../d3";
 import { getGraphData } from "../../data/graph-data";
 import { isEmpty } from "../../utils/common";
+import GraphCanvas from "../GraphCanvas/GraphCanvas";
 import {
   additionalColorsAtom,
   APIKeyAtom,
@@ -34,7 +35,6 @@ import {
 import IssuePreviewPopup from "../IssuePreviewPopup/IssuePreviewPopup";
 
 export default function SVG() {
-  const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
   const [loading, setLoading] = useState(false);
@@ -85,6 +85,11 @@ export default function SVG() {
         });
         setHiddenIssues(hiddenIssues);
 
+        // Match the previous SVG/D3 behavior.
+        if (!appSettings.showAncestorDependencies) {
+          removeAncestorDependencies(graphData);
+        }
+
         setGraphData(graphData);
       })
       .catch((err) => {
@@ -108,43 +113,6 @@ export default function SVG() {
     pipelineHidden,
   ]);
 
-  useEffect(() => {
-    if (loading || error || !graphData || !ref.current) {
-      return;
-    }
-
-    try {
-      generateGraph(
-        graphData,
-        ref.current,
-        {
-          pipelineColors,
-          additionalColors,
-          epic,
-          coordinateOverrides,
-          saveCoordinateOverrides,
-          setCurrentGraphData,
-        },
-        appSettings,
-      );
-    } catch (err) {
-      console.log("generateGraph error", err);
-      setError(err);
-    }
-  }, [
-    graphData,
-    appSettings,
-    workspace,
-    pipelineColors,
-    additionalColors,
-    coordinateOverrides,
-    saveCoordinateOverrides,
-    epic,
-    setCurrentGraphData,
-    loading,
-    error,
-  ]);
-
   if (loading) {
     return <Text padding="20px">⏳ Loading...</Text>;
   }
@@ -154,8 +122,18 @@ export default function SVG() {
   }
 
   return (
-    <Box h="var(--main-height)" position="relative">
-      <svg id="zdg-graph" style={{ width: "100%", height: "100%" }} ref={ref} />
+    <Box h="var(--main-height)" position="relative" bg="white">
+      {graphData ? (
+        <GraphCanvas
+          graphData={graphData}
+          appSettings={appSettings}
+          pipelineColors={pipelineColors}
+          additionalColors={additionalColors}
+          coordinateOverrides={coordinateOverrides}
+          saveCoordinateOverrides={saveCoordinateOverrides}
+          setCurrentGraphData={setCurrentGraphData}
+        />
+      ) : null}
       <IssuePreviewPopup />
     </Box>
   );

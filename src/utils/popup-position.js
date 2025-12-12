@@ -1,50 +1,19 @@
-import { convertSvgToDocumentCoordinates } from "../d3/coordinate-utils";
-
 /**
- * Calculates the optimal position for a popup given SVG coordinates
+ * Calculates the optimal position for a popup given an anchor point in
+ * screen coordinates (CSS pixels, suitable for `position: fixed`).
  */
 export function calculatePopupPosition(
-  x,
-  y,
-  {
-    svgElement = document.querySelector("#zdg-graph"),
-    panZoomInstance = null,
-    dagWidth = 0,
-    dagHeight = 0,
-    popupWidth = 0,
-    popupHeight = 0,
-    offset = 20,
-  } = {},
+  anchorX,
+  anchorY,
+  { popupWidth = 0, popupHeight = 0, offset = 20 } = {},
 ) {
-  let left, top;
-
-  // Convert SVG coordinates to document coordinates if we have the necessary parameters
-  if (panZoomInstance && dagWidth && dagHeight && svgElement) {
-    const documentCoords = convertSvgToDocumentCoordinates(
-      x,
-      y,
-      panZoomInstance,
-      dagWidth,
-      dagHeight,
-    );
-    left = documentCoords.x + offset;
-    top = documentCoords.y;
-  } else if (svgElement) {
-    // Fallback: calculate position relative to SVG element's document position
-    const rect = svgElement.getBoundingClientRect();
-    left = rect.left + x + offset;
-    top = rect.top + y;
-  } else {
-    // Last resort: use the coordinates as-is
-    left = x + offset;
-    top = y;
-  }
+  let left = anchorX + offset;
+  let top = anchorY - popupHeight / 2;
 
   // Adjust if popup would go off-screen horizontally
   if (left + popupWidth > window.innerWidth) {
-    // Try positioning on the left side of the node (subtract offset to get node position, then subtract popup width)
-    const nodePosition = left - offset;
-    const leftSidePosition = nodePosition - popupWidth - offset;
+    // Try positioning on the left side of the anchor
+    const leftSidePosition = anchorX - popupWidth - offset;
     if (leftSidePosition >= 10) {
       const newLeft = leftSidePosition;
       left = newLeft;
