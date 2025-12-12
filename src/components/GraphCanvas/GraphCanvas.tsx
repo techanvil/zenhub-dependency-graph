@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { Text as ChakraText } from "@chakra-ui/react";
 import { OrbitControls, Text } from "@react-three/drei";
 import * as THREE from "three";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 import {
   computeGraphLayout,
@@ -11,8 +11,19 @@ import {
   GraphIssue,
   GraphLayout,
 } from "../../graph/layout";
-import { getIntersection, roundToGrid } from "../../d3/utils";
-import { issuePreviewPopupAtom, store } from "../../store/atoms";
+import { roundToGrid } from "../../d3/utils";
+import {
+  appSettingsAtom,
+  additionalColorsAtom,
+  pipelineColorsAtom,
+  coordinateOverridesAtom,
+  issuePreviewPopupAtom,
+  store,
+  currentGraphDataAtom,
+} from "../../store/atoms";
+import { toWorld, fromWorld } from "./utils";
+import { RuntimeNode } from "./types";
+import Edge from "./Edge";
 
 type GraphCanvasProps = {
   graphData: GraphIssue[];
@@ -24,16 +35,6 @@ type GraphCanvasProps = {
   setCurrentGraphData: (v: any) => void;
 };
 
-type RuntimeNode = {
-  id: string;
-  x: number;
-  y: number;
-  z: number;
-  opacity: number;
-  color: string;
-  data: GraphIssue;
-};
-
 type LassoBox = {
   x: number;
   y: number;
@@ -41,87 +42,6 @@ type LassoBox = {
   h: number;
   visible: boolean;
 };
-
-function toWorld(x: number, y: number, z: number = 0) {
-  // Flip Y so SVG-down becomes screen-down.
-  return new THREE.Vector3(x, -y, z);
-}
-
-function fromWorld(v: THREE.Vector3) {
-  return { x: v.x, y: -v.y, z: v.z };
-}
-
-function normalize2D(dx: number, dy: number) {
-  const len = Math.hypot(dx, dy) || 1;
-  return { x: dx / len, y: dy / len };
-}
-
-function GradientLine({
-  start,
-  end,
-  startColor,
-  endColor,
-  opacity,
-  lineWidth = 2,
-}: {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  startColor: string;
-  endColor: string;
-  opacity: number;
-  lineWidth?: number;
-}) {
-  // Use per-vertex colors on a BufferGeometry so the GPU interpolates the
-  // gradient between the two endpoints (matching the approach in:
-  // http://www.wayneparrott.com/how-to-create-three-js-gradient-colored-lines-and-circlelines-part-2/)
-  const geometry = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-
-    const positions = new Float32Array([
-      start.x,
-      start.y,
-      start.z,
-      end.x,
-      end.y,
-      end.z,
-    ]);
-
-    const c0 = new THREE.Color(startColor);
-    const c1 = new THREE.Color(endColor);
-    const colors = new Float32Array([c0.r, c0.g, c0.b, c1.r, c1.g, c1.b]);
-
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    return g;
-  }, [start.x, start.y, start.z, end.x, end.y, end.z, startColor, endColor]);
-
-  const material = useMemo(() => {
-    const m = new THREE.LineBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity,
-      linewidth: lineWidth,
-    });
-    m.depthWrite = false;
-    m.toneMapped = false;
-    return m;
-  }, [opacity, lineWidth]);
-
-  const line = useMemo(
-    () => new THREE.Line(geometry, material),
-    [geometry, material],
-  );
-
-  useEffect(() => {
-    return () => {
-      line.removeFromParent();
-      geometry.dispose();
-      material.dispose();
-    };
-  }, [line, geometry, material]);
-
-  return <primitive object={line} />;
-}
 
 function getPipelineAbbreviation(pipelineName: string) {
   const matches = pipelineName.match(/\b([A-Za-z0-9])/g);
@@ -709,80 +629,16 @@ function Scene({
       ) : null}
 
       {/* Edges */}
-      {layout.links.map((l) => {
-        const source = nodesById.get(l.sourceId);
-        const target = nodesById.get(l.targetId);
-        if (!source || !target) return null;
-
-        const [dx, dy] = getIntersection(
-          source.x - target.x,
-          source.y - target.y,
-          target.x,
-          target.y,
-          (layout.rectWidth + layout.arrowSize / 3) / 2,
-          (layout.rectHeight + layout.arrowSize / 3) / 2,
-        );
-
-        const pts = [
-          toWorld(source.x, source.y, source.z),
-          toWorld(dx, dy, target.z),
-        ];
-        const hasValidPoints =
-          pts.length >= 2 &&
-          pts.every(
-            (p) =>
-              Number.isFinite(p.x) &&
-              Number.isFinite(p.y) &&
-              Number.isFinite(p.z),
-          );
-        if (!hasValidPoints) {
-          return null;
-        }
-
-        const dirSvg = normalize2D(dx - source.x, dy - source.y);
-        const dir = new THREE.Vector3(dirSvg.x, -dirSvg.y, 0);
-
-        // Render a gradient line by providing per-vertex colors (source -> target).
-        // This matches the Three.js "vertexColors on geometry" approach:
-        // http://www.wayneparrott.com/how-to-create-three-js-gradient-colored-lines-and-circlelines-part-2/
-        const sourceColor = source.color || l.sourceColor || l.arrowColor;
-        const targetColor = target.color || l.targetColor || l.arrowColor;
-
-        return (
-          <React.Fragment key={`${l.sourceId}->${l.targetId}`}>
-            <GradientLine
-              start={pts[0]}
-              end={pts[1]}
-              startColor={sourceColor}
-              endColor={targetColor}
-              opacity={
-                appSettings.highlightRelatedIssues && hoveredId
-                  ? isRelated(l.sourceId) || isRelated(l.targetId)
-                    ? 1
-                    : 0.3
-                  : 1
-              }
-              lineWidth={2}
-            />
-            <mesh
-              position={toWorld(dx, dy, target.z)}
-              rotation={(() => {
-                const q = new THREE.Quaternion().setFromUnitVectors(
-                  new THREE.Vector3(0, 1, 0),
-                  dir.normalize(),
-                );
-                const euler = new THREE.Euler().setFromQuaternion(q);
-                return euler;
-              })()}
-            >
-              <coneGeometry
-                args={[layout.arrowSize / 10, layout.arrowSize / 6, 3]}
-              />
-              <meshStandardMaterial color={l.arrowColor} />
-            </mesh>
-          </React.Fragment>
-        );
-      })}
+      {layout.links.map((l) => (
+        <Edge
+          key={l.sourceId + ":" + l.targetId}
+          link={l}
+          layout={layout}
+          nodesById={nodesById}
+          isRelated={isRelated}
+          hoveredId={hoveredId}
+        />
+      ))}
 
       {/* Nodes */}
       {nodes.map((n) => {
@@ -962,15 +818,16 @@ function Scene({
 }
 
 export default function GraphCanvas(props: GraphCanvasProps) {
-  const {
-    graphData,
-    appSettings,
-    pipelineColors,
-    additionalColors,
-    coordinateOverrides,
-    saveCoordinateOverrides,
-    setCurrentGraphData,
-  } = props;
+  const { graphData } = props;
+
+  const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
+
+  const appSettings = useAtomValue(appSettingsAtom);
+  const pipelineColors = useAtomValue(pipelineColorsAtom);
+  const additionalColors = useAtomValue(additionalColorsAtom);
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom,
+  );
 
   useEffect(() => {
     setCurrentGraphData(graphData);

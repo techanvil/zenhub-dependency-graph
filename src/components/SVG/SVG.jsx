@@ -123,17 +123,7 @@ export default function SVG() {
 
   return (
     <Box h="var(--main-height)" position="relative" bg="white">
-      {graphData ? (
-        <GraphCanvas
-          graphData={graphData}
-          appSettings={appSettings}
-          pipelineColors={pipelineColors}
-          additionalColors={additionalColors}
-          coordinateOverrides={coordinateOverrides}
-          saveCoordinateOverrides={saveCoordinateOverrides}
-          setCurrentGraphData={setCurrentGraphData}
-        />
-      ) : null}
+      {graphData ? <GraphCanvas graphData={graphData} /> : null}
       <IssuePreviewPopup />
     </Box>
   );
