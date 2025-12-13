@@ -278,6 +278,11 @@ export function setupDependencyEdit({
       state.dragSourceId = d.data.id;
       setEditModeClass(true);
 
+      // Hide any non-dragging node handles during the drag.
+      state.hoveredNodeId = null;
+      state.hoveredNodeEl = null;
+      nodes.classed("zdg-dependency-handle-visible", false);
+
       const startX = d.x;
       const startY = d.y;
 
@@ -335,6 +340,10 @@ export function setupDependencyEdit({
         state.dragging = false;
         state.dragSourceId = null;
         clearDragArtifacts();
+        // Handles will re-appear on the next ctrl+hover.
+        state.hoveredNodeId = null;
+        state.hoveredNodeEl = null;
+        nodes.classed("zdg-dependency-handle-visible", false);
         return;
       }
 
@@ -346,6 +355,7 @@ export function setupDependencyEdit({
 
       if (!canAddEdge({ sourceId, targetId, data: graphData })) {
         clearDragArtifacts();
+        nodes.classed("zdg-dependency-handle-visible", false);
         return;
       }
 
