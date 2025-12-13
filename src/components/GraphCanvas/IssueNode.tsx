@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import type { ThreeEvent } from "@react-three/fiber";
@@ -9,6 +9,51 @@ import type { RuntimeNode } from "./types";
 function getPipelineAbbreviation(pipelineName: string) {
   const matches = pipelineName.match(/\b([A-Za-z0-9])/g);
   return matches ? matches.join("").toUpperCase() : pipelineName;
+}
+
+function getCombinedSprints(sprints?: string[]) {
+  if (!sprints || sprints.length === 0) return "";
+  return "Sprint " + sprints.map((s) => s.replace("Sprint ", "")).join(", ");
+}
+
+function makeRoundedRectExtrudeGeometry({
+  width,
+  height,
+  radius,
+  depth,
+}: {
+  width: number;
+  height: number;
+  radius: number;
+  depth: number;
+}) {
+  const w = width;
+  const h = height;
+  const r = Math.max(0, Math.min(radius, Math.min(w, h) / 2));
+
+  const x = -w / 2;
+  const y = -h / 2;
+
+  const shape = new THREE.Shape();
+  shape.moveTo(x + r, y);
+  shape.lineTo(x + w - r, y);
+  shape.quadraticCurveTo(x + w, y, x + w, y + r);
+  shape.lineTo(x + w, y + h - r);
+  shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  shape.lineTo(x + r, y + h);
+  shape.quadraticCurveTo(x, y + h, x, y + h - r);
+  shape.lineTo(x, y + r);
+  shape.quadraticCurveTo(x, y, x + r, y);
+
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth,
+    steps: 1,
+    bevelEnabled: false,
+  });
+
+  // Center geometry around the node origin in Z.
+  geometry.translate(0, 0, -depth / 2);
+  return geometry;
 }
 
 export type IssueNodeProps = {
@@ -40,6 +85,47 @@ const IssueNode: React.FC<IssueNodeProps> = ({
   onPointerMove,
   onPointerUp,
 }) => {
+  const opacity = (node.opacity || 1) * dimOpacity;
+
+  // Match the older 2D style: rounded corners + flat/unlit colors.
+  const cornerRadius = 6;
+  const depth = 1;
+  const borderPad = 3;
+
+  const fillGeometry = useMemo(() => {
+    return makeRoundedRectExtrudeGeometry({
+      width: layout.rectWidth,
+      height: layout.rectHeight,
+      radius: cornerRadius,
+      depth,
+    });
+  }, [layout.rectWidth, layout.rectHeight]);
+
+  const borderGeometry = useMemo(() => {
+    return makeRoundedRectExtrudeGeometry({
+      width: layout.rectWidth + borderPad * 2,
+      height: layout.rectHeight + borderPad * 2,
+      radius: cornerRadius + borderPad,
+      depth: depth * 0.8,
+    });
+  }, [layout.rectWidth, layout.rectHeight]);
+
+  const borderColor = selected
+    ? "#2378ae"
+    : node.data.isChosenSprint
+      ? additionalColors["Selected sprint"]
+      : null;
+
+  const sprintLabel =
+    appSettings.showIssueSprints && node.data.sprints?.length
+      ? getCombinedSprints(node.data.sprints)
+      : "";
+
+  const pipelineAbbrev = getPipelineAbbreviation(node.data.pipelineName);
+
+  const padding = 4;
+  const zText = 1.2;
+
   return (
     <group
       position={position}
@@ -49,39 +135,44 @@ const IssueNode: React.FC<IssueNodeProps> = ({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
-      {/* Selected sprint outline */}
-      {node.data.isChosenSprint ? (
-        <mesh>
-          <boxGeometry
-            args={[layout.rectWidth + 4, layout.rectHeight + 4, 1]}
-          />
-          <meshStandardMaterial color={additionalColors["Selected sprint"]} />
+      {/* Border (selected or chosen sprint) */}
+      {borderColor ? (
+        <mesh geometry={borderGeometry} position={[0, 0, -0.05]}>
+          <meshBasicMaterial color={borderColor} toneMapped={false} />
         </mesh>
       ) : null}
 
-      <mesh>
-        <boxGeometry args={[layout.rectWidth, layout.rectHeight, 2]} />
-        <meshStandardMaterial
+      {/* Main card */}
+      <mesh geometry={fillGeometry}>
+        <meshBasicMaterial
           color={node.color}
           transparent
-          opacity={(node.opacity || 1) * dimOpacity}
+          opacity={opacity}
+          toneMapped={false}
         />
       </mesh>
 
-      {/* Selected border */}
-      {selected ? (
-        <mesh position={[0, 0, 2]}>
-          <boxGeometry
-            args={[layout.rectWidth + 2, layout.rectHeight + 2, 0.5]}
-          />
-          <meshBasicMaterial color="#2378ae" wireframe />
-        </mesh>
+      {/* Top-left sprint label (2D-style) */}
+      {sprintLabel ? (
+        <Text
+          position={[
+            -layout.rectWidth / 2 + padding,
+            layout.rectHeight / 2 - padding,
+            zText,
+          ]}
+          fontSize={6}
+          color="black"
+          anchorX="left"
+          anchorY="top"
+        >
+          {sprintLabel}
+        </Text>
       ) : null}
 
-      {/* Labels */}
+      {/* Main issue id */}
       <Text
-        position={[0, 0, 3]}
-        fontSize={14}
+        position={[0, 0, zText]}
+        fontSize={18}
         color="black"
         anchorX="center"
         anchorY="middle"
@@ -89,32 +180,55 @@ const IssueNode: React.FC<IssueNodeProps> = ({
         {node.data.id}
       </Text>
 
+      {/* Underline the id (to mimic 2D styling) */}
+      <mesh position={[0, -7.5, zText]}>
+        <planeGeometry args={[layout.rectWidth * 0.55, 0.6]} />
+        <meshBasicMaterial color="black" toneMapped={false} />
+      </mesh>
+
       {appSettings.showIssueDetails ? (
         <Text
-          position={[0, -layout.rectHeight / 2 + 10, 3]}
+          position={[0, -8, zText]}
           fontSize={5}
           color="black"
           anchorX="center"
-          anchorY="middle"
+          anchorY="top"
           maxWidth={layout.rectWidth - 6}
         >
           {node.data.title}
         </Text>
       ) : null}
 
-      {/* bottom row */}
+      {/* Bottom-left estimate */}
+      {appSettings.showIssueEstimates && node.data.estimate ? (
+        <Text
+          position={[
+            -layout.rectWidth / 2 + padding,
+            -layout.rectHeight / 2 + padding + 2,
+            zText,
+          ]}
+          fontSize={6}
+          color="black"
+          anchorX="left"
+          anchorY="bottom"
+        >
+          {node.data.estimate}
+        </Text>
+      ) : null}
+
+      {/* Bottom-right pipeline abbreviation */}
       <Text
-        position={[0, layout.rectHeight / 2 - 8, 3]}
+        position={[
+          layout.rectWidth / 2 - padding,
+          -layout.rectHeight / 2 + padding + 2,
+          zText,
+        ]}
         fontSize={6}
         color="black"
-        anchorX="center"
-        anchorY="middle"
+        anchorX="right"
+        anchorY="bottom"
       >
-        {`${getPipelineAbbreviation(node.data.pipelineName)}${
-          appSettings.showIssueEstimates && node.data.estimate
-            ? `  ${node.data.estimate}`
-            : ""
-        }${node.data.isNonEpicIssue ? "  External" : ""}`}
+        {`${pipelineAbbrev}${node.data.isNonEpicIssue ? "  External" : ""}`}
       </Text>
     </group>
   );
