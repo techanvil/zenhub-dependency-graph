@@ -37,3 +37,40 @@ code {
 .zdg-arrow {
   transition: opacity 0.2s ease-in-out;
 }
+
+/* Dependency edit mode (Ctrl + hover) */
+.zdg-dependency-handles {
+  display: none;
+}
+
+.zdg-dependency-handle-visible .zdg-dependency-handles {
+  display: block;
+}
+
+.zdg-dependency-handle,
+.zdg-dependency-edge-handle {
+  fill: #ffffff;
+  stroke: #2378ae;
+  stroke-width: 2;
+  cursor: crosshair;
+}
+
+.zdg-dependency-dragline {
+  stroke: #2378ae;
+  stroke-width: 2;
+  stroke-dasharray: 6, 3;
+  pointer-events: none;
+}
+
+.zdg-line-hit {
+  pointer-events: none;
+}
+
+.zdg-dependency-edit-mode .zdg-line-hit {
+  pointer-events: stroke;
+}
+
+.zdg-dependency-drop-hover rect {
+  stroke: #2378ae;
+  stroke-width: 2;
+}

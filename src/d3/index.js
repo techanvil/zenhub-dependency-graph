@@ -17,6 +17,7 @@ import {
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
+import { setupDependencyEdit } from "./dependency-edit";
 import { store } from "../store/atoms";
 import { issuePreviewPopupAtom } from "../store/atoms";
 
@@ -711,6 +712,33 @@ export const generateGraph = (
     },
     appSettings,
   );
+
+  // Dependency editing UI (Ctrl + hover + drag). In-memory only for now.
+  setupDependencyEdit({
+    svgSelection,
+    nodes,
+    lines,
+    rectWidth,
+    rectHeight,
+    arrowSize,
+    graphData,
+    selectAndDragState,
+    isAncestorOfNode,
+    rerender: (updatedGraphData) =>
+      generateGraph(
+        updatedGraphData,
+        svgElement,
+        {
+          pipelineColors,
+          additionalColors,
+          epic,
+          coordinateOverrides,
+          saveCoordinateOverrides,
+          setCurrentGraphData,
+        },
+        appSettings,
+      ),
+  });
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   if (typeof svgPanZoom === "function") {
