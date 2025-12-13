@@ -67,11 +67,22 @@ export function setupDependencyEdit({
     dropTargetId: null,
   };
 
-  // --- Overlay for dragline + edge handle ---
+  // --- Underlay/overlay ---
+  // We want preview lines *behind* nodes, but handles *above* nodes.
+  const firstNode = nodes.node();
+  const nodesRoot = firstNode?.parentNode || null;
+  const nodesRootParent = nodesRoot?.parentNode || svgSelection.node();
+
+  const underlay = d3
+    .select(nodesRootParent)
+    .insert("g", () => nodesRoot)
+    .attr("class", "zdg-edit-underlay");
+
   const overlay = svgSelection.append("g").attr("class", "zdg-edit-overlay");
 
   let dragline = null;
   let edgeHandle = null;
+  let nodeDragHandle = null;
   let edgePreviewLine = null;
   let edgePreviewArrow = null;
 
@@ -100,11 +111,24 @@ export function setupDependencyEdit({
     dragline = null;
     edgeHandle?.remove();
     edgeHandle = null;
+    nodeDragHandle?.remove();
+    nodeDragHandle = null;
     edgePreviewLine?.remove();
     edgePreviewLine = null;
     edgePreviewArrow?.remove();
     edgePreviewArrow = null;
     clearDropHover();
+  }
+  function getNodeBoundaryIntersection({ fromX, fromY, toX, toY }) {
+    // Intersection point on the node rectangle boundary, moving from center toward (toX,toY).
+    return getIntersection(
+      toX - fromX,
+      toY - fromY,
+      fromX,
+      fromY,
+      rectWidth / 2,
+      rectHeight / 2,
+    );
   }
 
   function getPointerSvgXY(dragEvent) {
@@ -257,7 +281,15 @@ export function setupDependencyEdit({
       const startX = d.x;
       const startY = d.y;
 
-      dragline = overlay
+      // Floating handle that follows the cursor during drag.
+      nodeDragHandle = overlay
+        .append("circle")
+        .attr("class", "zdg-dependency-handle zdg-dependency-handle-dragging")
+        .attr("r", handleRadius)
+        .attr("cx", startX)
+        .attr("cy", startY + rectHeight / 2 + handleOffset);
+
+      dragline = underlay
         .append("path")
         .attr("class", "zdg-dependency-dragline")
         .attr("fill", "none")
@@ -268,10 +300,34 @@ export function setupDependencyEdit({
       if (!event.sourceEvent?.ctrlKey) return;
 
       const { x, y } = getPointerSvgXY(event);
-      dragline?.attr("d", `M ${d.x} ${d.y} L ${x} ${y}`);
+      nodeDragHandle?.attr("cx", x).attr("cy", y);
 
       const targetId = findNodeAtPoint(x, y, { excludeId: state.dragSourceId });
       setDropHover(targetId);
+
+      // Draw preview from source boundary (not center), and to target boundary if hovering a node.
+      let endX = x;
+      let endY = y;
+      if (targetId) {
+        const t = nodeIdToDatum.get(targetId);
+        if (t) {
+          [endX, endY] = getNodeBoundaryIntersection({
+            fromX: t.x,
+            fromY: t.y,
+            toX: d.x,
+            toY: d.y,
+          });
+        }
+      }
+
+      const [startIx, startIy] = getNodeBoundaryIntersection({
+        fromX: d.x,
+        fromY: d.y,
+        toX: endX,
+        toY: endY,
+      });
+
+      dragline?.attr("d", `M ${startIx} ${startIy} L ${endX} ${endY}`);
     })
     .on("end", function (event, d) {
       if (!state.dragging) return;
@@ -370,7 +426,13 @@ export function setupDependencyEdit({
 
     function updateEdgePreview({ endX, endY }) {
       ensureEdgePreview();
-      edgePreviewLine.attr("d", `M ${source.x} ${source.y} L ${endX} ${endY}`);
+      const [startIx, startIy] = getNodeBoundaryIntersection({
+        fromX: source.x,
+        fromY: source.y,
+        toX: endX,
+        toY: endY,
+      });
+      edgePreviewLine.attr("d", `M ${startIx} ${startIy} L ${endX} ${endY}`);
 
       const rdx = source.x - endX;
       const rdy = source.y - endY;

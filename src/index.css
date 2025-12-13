@@ -73,6 +73,10 @@ code {
   pointer-events: none;
 }
 
+.zdg-edit-underlay {
+  pointer-events: none;
+}
+
 .zdg-line-hit {
   pointer-events: none;
 }
