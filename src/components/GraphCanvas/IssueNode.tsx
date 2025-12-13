@@ -180,12 +180,6 @@ const IssueNode: React.FC<IssueNodeProps> = ({
         {node.data.id}
       </Text>
 
-      {/* Underline the id (to mimic 2D styling) */}
-      <mesh position={[0, -7.5, zText]}>
-        <planeGeometry args={[layout.rectWidth * 0.55, 0.6]} />
-        <meshBasicMaterial color="black" toneMapped={false} />
-      </mesh>
-
       {appSettings.showIssueDetails ? (
         <Text
           position={[0, -8, zText]}
