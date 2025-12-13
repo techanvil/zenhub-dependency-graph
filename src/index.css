@@ -70,6 +70,10 @@ code {
   pointer-events: stroke;
 }
 
+.zdg-dependency-edit-mode .zdg-arrow {
+  pointer-events: none;
+}
+
 .zdg-dependency-drop-hover rect {
   stroke: #2378ae;
   stroke-width: 2;

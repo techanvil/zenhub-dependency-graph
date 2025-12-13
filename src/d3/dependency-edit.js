@@ -53,7 +53,8 @@ export function setupDependencyEdit({
   activeController = controller;
 
   const handleRadius = 6;
-  const handleOffset = 10;
+  // Keep the handle touching the node to avoid a “dead gap” that breaks hover.
+  const handleOffset = handleRadius;
 
   const state = {
     ctrlDown: false,
@@ -159,8 +160,9 @@ export function setupDependencyEdit({
     .append("circle")
     .attr("class", "zdg-dependency-handle")
     .attr("r", handleRadius)
-    .attr("cx", rectWidth / 2 + handleOffset)
-    .attr("cy", 0);
+    // Place handle below the node (centered) for intuitive “drag down” affordance.
+    .attr("cx", 0)
+    .attr("cy", rectHeight / 2 + handleOffset);
 
   function updateNodeHandleVisibility() {
     // show/hide by toggling class on the hovered node element
@@ -184,8 +186,35 @@ export function setupDependencyEdit({
       setEditModeClass(state.ctrlDown);
       updateNodeHandleVisibility();
     })
-    .on("mouseleave.dependencyEdit", function () {
+    .on("mouseleave.dependencyEdit", function (e) {
       if (state.dragging) return;
+      // If we're moving within the same node group (e.g. toward the handle), don't clear hover.
+      if (e.relatedTarget && this.contains(e.relatedTarget)) {
+        return;
+      }
+      state.hoveredNodeId = null;
+      state.hoveredNodeEl = null;
+      updateNodeHandleVisibility();
+    });
+
+  // Keep node handle visible when hovering over the handle itself.
+  nodeHandleCircle
+    .on("mouseenter.dependencyEdit", function (e, d) {
+      if (selectAndDragState?.isLassooing || selectAndDragState?.isDragging) {
+        return;
+      }
+      state.hoveredNodeId = d.data.id;
+      state.hoveredNodeEl = nodeIdToEl.get(d.data.id) || null;
+      state.ctrlDown = !!e.ctrlKey;
+      setEditModeClass(state.ctrlDown);
+      updateNodeHandleVisibility();
+    })
+    .on("mouseleave.dependencyEdit", function (e, d) {
+      if (state.dragging) return;
+      const nodeEl = nodeIdToEl.get(d.data.id);
+      if (e.relatedTarget && nodeEl && nodeEl.contains(e.relatedTarget)) {
+        return;
+      }
       state.hoveredNodeId = null;
       state.hoveredNodeEl = null;
       updateNodeHandleVisibility();
@@ -385,7 +414,14 @@ export function setupDependencyEdit({
       state.hoveredLink = link;
       showEdgeHandleForLink(link);
     })
-    .on("mouseleave.dependencyEdit", function () {
+    .on("mouseleave.dependencyEdit", function (e) {
+      // If moving from the hit path to the edge handle (or arrow), keep it visible.
+      if (
+        e.relatedTarget?.classList?.contains("zdg-dependency-edge-handle") ||
+        e.relatedTarget?.classList?.contains("zdg-arrow")
+      ) {
+        return;
+      }
       hideEdgeHandle();
     });
 
