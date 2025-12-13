@@ -29,7 +29,7 @@ import {
   useDragAndLassoInteractions,
 } from "./useDragAndLassoInteractions";
 import {
-  getIssueNodePointerHandlers,
+  createIssueNodeInteractions,
   type HoverPreviewRefState,
 } from "./issueNodePointerHandlers";
 
@@ -349,7 +349,7 @@ function Scene({
             : 1;
         const selected = selectedIds.has(n.id);
 
-        const pointerHandlers = getIssueNodePointerHandlers(
+        const nodeInteractions = createIssueNodeInteractions(
           {
             appSettings,
             camera,
@@ -376,11 +376,11 @@ function Scene({
             additionalColors={additionalColors}
             dimOpacity={dimOther}
             selected={selected}
-            onPointerOver={pointerHandlers.onPointerOver}
-            onPointerOut={pointerHandlers.onPointerOut}
-            onPointerDown={pointerHandlers.onPointerDown}
-            onPointerMove={pointerHandlers.onPointerMove}
-            onPointerUp={pointerHandlers.onPointerUp}
+            onPointerOver={nodeInteractions.onHoverSetAndSchedulePreview}
+            onPointerOut={nodeInteractions.onHoverClearAndCancelPreview}
+            onPointerDown={nodeInteractions.onPressStartDragCandidate}
+            onPointerMove={nodeInteractions.onMoveUpdateDrag}
+            onPointerUp={nodeInteractions.onReleaseCommitDragOrOpen}
           />
         );
       })}

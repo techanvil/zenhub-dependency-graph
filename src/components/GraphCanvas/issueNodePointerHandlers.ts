@@ -14,7 +14,7 @@ export type HoverPreviewRefState = {
   ctrlKey: boolean;
 };
 
-type CommonDeps = {
+type IssueNodeInteractionDeps = {
   appSettings: any;
   camera: THREE.Camera;
   domElement: HTMLElement;
@@ -28,19 +28,19 @@ type CommonDeps = {
   endNodePointer: (e: ThreeEvent<PointerEvent>, node: RuntimeNode) => void;
 };
 
-type NodeContext = {
+type IssueNodeContext = {
   node: RuntimeNode;
   position: THREE.Vector3;
 };
 
-export function getIssueNodePointerHandlers(
-  deps: CommonDeps,
-  ctx: NodeContext,
+export function createIssueNodeInteractions(
+  deps: IssueNodeInteractionDeps,
+  ctx: IssueNodeContext,
 ) {
   const { node, position } = ctx;
 
   return {
-    onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+    onHoverSetAndSchedulePreview: (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
 
       if (
@@ -105,7 +105,7 @@ export function getIssueNodePointerHandlers(
       }
     },
 
-    onPointerOut: (e: ThreeEvent<PointerEvent>) => {
+    onHoverClearAndCancelPreview: (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
 
       if (
@@ -121,11 +121,12 @@ export function getIssueNodePointerHandlers(
       deps.hoverPreviewRef.current.world = null;
     },
 
-    onPointerDown: (e: ThreeEvent<PointerEvent>) =>
+    onPressStartDragCandidate: (e: ThreeEvent<PointerEvent>) =>
       deps.beginNodeDragCandidate(e, node.id),
 
-    onPointerMove: deps.updateNodePointer,
+    onMoveUpdateDrag: deps.updateNodePointer,
 
-    onPointerUp: (e: ThreeEvent<PointerEvent>) => deps.endNodePointer(e, node),
+    onReleaseCommitDragOrOpen: (e: ThreeEvent<PointerEvent>) =>
+      deps.endNodePointer(e, node),
   };
 }
