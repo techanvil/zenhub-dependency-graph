@@ -82,6 +82,9 @@ export function setupSelectAndDrag(
     rectWidth,
     svgSelection,
     coordinateOverrides,
+    // When the graph is re-rendered with temporary layout overrides (e.g. while editing dependencies),
+    // we still want persisted node drags to merge into the *stored* overrides, not the temporary ones.
+    coordinateOverridesForSave,
     saveCoordinateOverrides,
   },
   appSettings,
@@ -359,7 +362,7 @@ export function setupSelectAndDrag(
       });
 
       saveCoordinateOverrides({
-        ...coordinateOverrides,
+        ...(coordinateOverridesForSave || coordinateOverrides),
         ...newCoords,
       });
     }

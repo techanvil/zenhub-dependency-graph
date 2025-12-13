@@ -72,6 +72,8 @@ export function setupDependencyEdit({
 
   let dragline = null;
   let edgeHandle = null;
+  let edgePreviewLine = null;
+  let edgePreviewArrow = null;
 
   function setEditModeClass(isOn) {
     svgSelection.classed("zdg-dependency-edit-mode", !!isOn);
@@ -98,6 +100,10 @@ export function setupDependencyEdit({
     dragline = null;
     edgeHandle?.remove();
     edgeHandle = null;
+    edgePreviewLine?.remove();
+    edgePreviewLine = null;
+    edgePreviewArrow?.remove();
+    edgePreviewArrow = null;
     clearDropHover();
   }
 
@@ -115,6 +121,16 @@ export function setupDependencyEdit({
     nodeIdToEl.set(d.data.id, this);
     nodeIdToDatum.set(d.data.id, d);
   });
+
+  function snapshotLayoutOverrides() {
+    // Capture the currently displayed node coordinates so dependency edits don't trigger a re-layout jump.
+    // This is intentionally in-memory only.
+    const overrides = {};
+    nodeIdToDatum.forEach((d, id) => {
+      overrides[id] = { x: d.x, y: d.y };
+    });
+    return overrides;
+  }
 
   function findNodeAtPoint(x, y, { excludeId } = {}) {
     // Linear scan; graphs are typically small enough.
@@ -177,6 +193,7 @@ export function setupDependencyEdit({
 
   nodes
     .on("mouseenter.dependencyEdit", function (e, d) {
+      if (state.dragging) return;
       if (selectAndDragState?.isLassooing || selectAndDragState?.isDragging) {
         return;
       }
@@ -200,6 +217,7 @@ export function setupDependencyEdit({
   // Keep node handle visible when hovering over the handle itself.
   nodeHandleCircle
     .on("mouseenter.dependencyEdit", function (e, d) {
+      if (state.dragging) return;
       if (selectAndDragState?.isLassooing || selectAndDragState?.isDragging) {
         return;
       }
@@ -280,7 +298,7 @@ export function setupDependencyEdit({
       target.parentIds = uniq([...(target.parentIds || []), sourceId]);
 
       clearDragArtifacts();
-      rerender(updated);
+      rerender(updated, snapshotLayoutOverrides());
     });
 
   nodeHandleCircle.call(createDrag);
@@ -334,6 +352,35 @@ export function setupDependencyEdit({
       .attr("cx", dx)
       .attr("cy", dy);
 
+    function ensureEdgePreview() {
+      if (!edgePreviewLine) {
+        edgePreviewLine = overlay
+          .append("path")
+          .attr("class", "zdg-dependency-edge-preview")
+          .attr("fill", "none");
+      }
+      if (!edgePreviewArrow) {
+        const arrow = d3.symbol().type(d3.symbolTriangle).size(arrowSize);
+        edgePreviewArrow = overlay
+          .append("path")
+          .attr("class", "zdg-dependency-edge-preview-arrow")
+          .attr("d", arrow);
+      }
+    }
+
+    function updateEdgePreview({ endX, endY }) {
+      ensureEdgePreview();
+      edgePreviewLine.attr("d", `M ${source.x} ${source.y} L ${endX} ${endY}`);
+
+      const rdx = source.x - endX;
+      const rdy = source.y - endY;
+      const angle = (Math.atan2(-rdy, -rdx) * 180) / Math.PI + 90;
+      edgePreviewArrow.attr(
+        "transform",
+        `translate(${endX}, ${endY}) rotate(${angle})`,
+      );
+    }
+
     const moveDrag = d3Drag()
       .filter(() => true)
       .on("start", (event) => {
@@ -347,6 +394,9 @@ export function setupDependencyEdit({
           sourceId: source.data.id,
           oldTargetId: target.data.id,
         };
+
+        // Initialize preview at the existing edge endpoint.
+        updateEdgePreview({ endX: dx, endY: dy });
       })
       .on("drag", (event) => {
         if (!state.dragging || !state.dragOriginalLink) return;
@@ -358,6 +408,25 @@ export function setupDependencyEdit({
           excludeId: state.dragOriginalLink.sourceId,
         });
         setDropHover(targetId);
+
+        if (targetId) {
+          const t = nodeIdToDatum.get(targetId);
+          if (t) {
+            const [ix, iy] = getIntersection(
+              source.x - t.x,
+              source.y - t.y,
+              t.x,
+              t.y,
+              (rectWidth + arrowSize / 3) / 2,
+              (rectHeight + arrowSize / 3) / 2,
+            );
+            updateEdgePreview({ endX: ix, endY: iy });
+          } else {
+            updateEdgePreview({ endX: x, endY: y });
+          }
+        } else {
+          updateEdgePreview({ endX: x, endY: y });
+        }
       })
       .on("end", (event) => {
         if (!state.dragging || !state.dragOriginalLink) return;
@@ -397,7 +466,7 @@ export function setupDependencyEdit({
         newTarget.parentIds = uniq([...(newTarget.parentIds || []), sourceId]);
 
         clearDragArtifacts();
-        rerender(updated);
+        rerender(updated, snapshotLayoutOverrides());
       });
 
     edgeHandle.call(moveDrag);
@@ -405,6 +474,7 @@ export function setupDependencyEdit({
 
   lineHits
     .on("mouseenter.dependencyEdit", function (e, link) {
+      if (state.dragging) return;
       if (!e.ctrlKey) return;
       if (selectAndDragState?.isLassooing || selectAndDragState?.isDragging) {
         return;

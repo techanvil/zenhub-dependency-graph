@@ -62,6 +62,17 @@ code {
   pointer-events: none;
 }
 
+.zdg-dependency-edge-preview {
+  stroke: #2378ae;
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.zdg-dependency-edge-preview-arrow {
+  fill: #2378ae;
+  pointer-events: none;
+}
+
 .zdg-line-hit {
   pointer-events: none;
 }

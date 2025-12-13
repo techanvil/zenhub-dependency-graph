@@ -196,6 +196,7 @@ export const generateGraph = (
     additionalColors,
     epic,
     coordinateOverrides,
+    coordinateOverridesForSave,
     saveCoordinateOverrides,
     setCurrentGraphData,
   },
@@ -708,6 +709,7 @@ export const generateGraph = (
       rectWidth,
       svgSelection,
       coordinateOverrides,
+      coordinateOverridesForSave,
       saveCoordinateOverrides,
     },
     appSettings,
@@ -724,7 +726,7 @@ export const generateGraph = (
     graphData,
     selectAndDragState,
     isAncestorOfNode,
-    rerender: (updatedGraphData) =>
+    rerender: (updatedGraphData, layoutOverrides) =>
       generateGraph(
         updatedGraphData,
         svgElement,
@@ -732,7 +734,13 @@ export const generateGraph = (
           pipelineColors,
           additionalColors,
           epic,
-          coordinateOverrides,
+          coordinateOverrides: {
+            ...(coordinateOverrides || {}),
+            ...(layoutOverrides || {}),
+          },
+          // Keep drag persistence based on the stored overrides, not the temporary layout overrides.
+          coordinateOverridesForSave:
+            coordinateOverridesForSave || coordinateOverrides,
           saveCoordinateOverrides,
           setCurrentGraphData,
         },
