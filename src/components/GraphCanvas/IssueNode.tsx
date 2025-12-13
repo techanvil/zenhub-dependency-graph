@@ -142,7 +142,14 @@ const IssueNode: React.FC<IssueNodeProps> = ({
           position={[0, 0, -0.05]}
           renderOrder={1}
         >
-          <meshBasicMaterial color={borderColor} toneMapped={false} />
+          <meshBasicMaterial
+            color={borderColor}
+            toneMapped={false}
+            transparent
+            opacity={1}
+            depthTest={false}
+            depthWrite={false}
+          />
         </mesh>
       ) : null}
 
@@ -153,6 +160,8 @@ const IssueNode: React.FC<IssueNodeProps> = ({
           transparent
           opacity={opacity}
           toneMapped={false}
+          depthTest={false}
+          depthWrite={false}
         />
       </mesh>
 
