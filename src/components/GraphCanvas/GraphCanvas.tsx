@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Text as ChakraText } from "@chakra-ui/react";
-import { OrbitControls, Text } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
@@ -11,7 +11,6 @@ import {
   GraphIssue,
   GraphLayout,
 } from "../../graph/layout";
-import { roundToGrid } from "../../d3/utils";
 import {
   appSettingsAtom,
   additionalColorsAtom,
@@ -21,9 +20,14 @@ import {
   store,
   currentGraphDataAtom,
 } from "../../store/atoms";
-import { toWorld, fromWorld } from "./utils";
+import { toWorld } from "./utils";
 import { RuntimeNode } from "./types";
 import Edge from "./Edge";
+import IssueNode from "./IssueNode";
+import {
+  LassoBox,
+  useDragAndLassoInteractions,
+} from "./useDragAndLassoInteractions";
 
 type GraphCanvasProps = {
   graphData: GraphIssue[];
@@ -35,18 +39,15 @@ type GraphCanvasProps = {
   setCurrentGraphData: (v: any) => void;
 };
 
-type LassoBox = {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  visible: boolean;
-};
-
-function getPipelineAbbreviation(pipelineName: string) {
-  const matches = pipelineName.match(/\b([A-Za-z0-9])/g);
-  return matches ? matches.join("").toUpperCase() : pipelineName;
-}
+const HIDDEN_ISSUE_POPUP_STATE = {
+  isOpen: false,
+  issueData: null,
+  position: { x: 0, y: 0 },
+  isMeasuring: false,
+  anchor: undefined,
+  world: undefined,
+  popupSize: undefined,
+} as const;
 
 function fitCameraToLayout(
   camera: THREE.PerspectiveCamera,
@@ -115,9 +116,6 @@ function Scene({
   }, [nodes]);
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [controlsEnabled, setControlsEnabled] = useState(true);
-  const [dampingEnabled, setDampingEnabled] = useState(true);
 
   const hoverPreviewRef = useRef<{
     timeout: number | null;
@@ -133,49 +131,45 @@ function Scene({
     ctrlKey: false,
   });
 
-  const draggingRef = useRef<{
-    isDragging: boolean;
-    pointerId: number | null;
-    dragStartWorld: THREE.Vector3 | null;
-    dragStartPositions: Map<string, { x: number; y: number }>;
-    draggedIds: string[];
-  }>({
-    isDragging: false,
-    pointerId: null,
-    dragStartWorld: null,
-    dragStartPositions: new Map(),
-    draggedIds: [],
-  });
+  const cancelHoverPreview = () => {
+    if (hoverPreviewRef.current.timeout) {
+      window.clearTimeout(hoverPreviewRef.current.timeout);
+      hoverPreviewRef.current.timeout = null;
+    }
+  };
 
-  const dragCandidateRef = useRef<{
-    pointerId: number;
-    nodeId: string;
-    startClientX: number;
-    startClientY: number;
-    startWorld: THREE.Vector3;
-    draggedIds: string[];
-    dragStartPositions: Map<string, { x: number; y: number }>;
-    didMove: boolean;
-  } | null>(null);
+  const hideIssuePopup = () => {
+    store.set(issuePreviewPopupAtom, HIDDEN_ISSUE_POPUP_STATE);
+  };
 
-  const lassoRef = useRef<{
-    isLassoing: boolean;
-    pointerId: number | null;
-    startX: number;
-    startY: number;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  }>({
-    isLassoing: false,
-    pointerId: null,
-    startX: 0,
-    startY: 0,
-    x: 0,
-    y: 0,
-    w: 0,
-    h: 0,
+  const {
+    selectedIds,
+    controlsEnabled,
+    dampingEnabled,
+    setDampingEnabled,
+    draggingRef,
+    lassoRef,
+    resetInteractions,
+    beginNodeDragCandidate,
+    updateNodePointer,
+    endNodePointer,
+    beginLasso,
+    updateLasso,
+    endLasso,
+  } = useDragAndLassoInteractions({
+    camera,
+    domElement: gl.domElement,
+    layout,
+    nodes,
+    setNodes,
+    nodesById,
+    appSettings,
+    coordinateOverrides,
+    saveCoordinateOverrides,
+    onLassoBoxChange,
+    cancelHoverPreview,
+    hideIssuePopup,
+    openIssue: (url) => window.open(url, "_blank", "noopener,noreferrer"),
   });
 
   const layoutKey = useMemo(() => {
@@ -204,14 +198,8 @@ function Scene({
   // Reset interaction state and fit camera only when the graph structure/sizing changes.
   useEffect(() => {
     setHoveredId(null);
-    setSelectedIds(new Set());
-    setControlsEnabled(true);
-    setDampingEnabled(true);
-    onLassoBoxChange({ x: 0, y: 0, w: 0, h: 0, visible: false });
-    if (hoverPreviewRef.current.timeout) {
-      window.clearTimeout(hoverPreviewRef.current.timeout);
-      hoverPreviewRef.current.timeout = null;
-    }
+    resetInteractions();
+    cancelHoverPreview();
     // Initial camera fit (and on major layout/sizing changes)
     if ((camera as any).isPerspectiveCamera) {
       fitCameraToLayout(
@@ -293,292 +281,6 @@ function Scene({
     };
   }, [hoveredId, relatedSets]);
 
-  function beginNodeDragCandidate(e: ThreeEvent<PointerEvent>, nodeId: string) {
-    e.stopPropagation();
-    if (e.button !== 0) return;
-
-    // Cancel any pending preview and hide current popup.
-    if (hoverPreviewRef.current.timeout) {
-      window.clearTimeout(hoverPreviewRef.current.timeout);
-      hoverPreviewRef.current.timeout = null;
-    }
-    store.set(issuePreviewPopupAtom, {
-      isOpen: false,
-      issueData: null,
-      position: { x: 0, y: 0 },
-      isMeasuring: false,
-      anchor: undefined,
-      world: undefined,
-      popupSize: undefined,
-    });
-
-    const isSelected = selectedIds.has(nodeId);
-    const draggedIds = isSelected ? Array.from(selectedIds) : [nodeId];
-
-    // If clicking a non-selected node, reset selection to just that node.
-    if (!isSelected) {
-      setSelectedIds(new Set([nodeId]));
-    }
-
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const p = new THREE.Vector3();
-    e.ray.intersectPlane(plane, p);
-
-    dragCandidateRef.current = {
-      pointerId: e.pointerId,
-      nodeId,
-      startClientX: e.clientX,
-      startClientY: e.clientY,
-      startWorld: p.clone(),
-      draggedIds,
-      dragStartPositions: new Map(
-        draggedIds
-          .map((id) => nodesById.get(id))
-          .filter((n): n is RuntimeNode => !!n)
-          .map((n) => [n.id, { x: n.x, y: n.y }]),
-      ),
-      didMove: false,
-    };
-
-    // Disable controls + damping during node drag/drop so OrbitControls never "coasts"
-    // or begins rotating while we are determining drag vs click.
-    setControlsEnabled(false);
-    setDampingEnabled(false);
-
-    // Capture pointer on the canvas element.
-    gl.domElement.setPointerCapture?.(e.pointerId);
-  }
-
-  function updateNodePointer(e: ThreeEvent<PointerEvent>) {
-    const cand = dragCandidateRef.current;
-    if (!cand) return;
-    if (cand.pointerId !== e.pointerId) return;
-    e.stopPropagation();
-
-    // Start drag only after a small movement threshold (prevents click opening tab).
-    const dxScreen = e.clientX - cand.startClientX;
-    const dyScreen = e.clientY - cand.startClientY;
-    const dist2 = dxScreen * dxScreen + dyScreen * dyScreen;
-    const threshold2 = 4 * 4;
-
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const p = new THREE.Vector3();
-    e.ray.intersectPlane(plane, p);
-
-    if (!draggingRef.current.isDragging) {
-      if (dist2 < threshold2) {
-        return;
-      }
-
-      cand.didMove = true;
-      draggingRef.current.isDragging = true;
-      draggingRef.current.pointerId = cand.pointerId;
-      draggingRef.current.draggedIds = cand.draggedIds;
-      draggingRef.current.dragStartPositions = cand.dragStartPositions;
-      draggingRef.current.dragStartWorld = cand.startWorld.clone();
-
-      setControlsEnabled(false);
-    }
-
-    // Active drag: update node positions
-    if (!draggingRef.current.isDragging) return;
-    if (draggingRef.current.pointerId !== e.pointerId) return;
-
-    const start = draggingRef.current.dragStartWorld;
-    if (!start) return;
-
-    const delta = p.clone().sub(start);
-
-    setNodes((prev) => {
-      const next = prev.map((n) => {
-        if (!draggingRef.current.draggedIds.includes(n.id)) return n;
-        const base = draggingRef.current.dragStartPositions.get(n.id);
-        if (!base) return n;
-        const newWorld = toWorld(base.x, base.y, n.z).add(
-          new THREE.Vector3(delta.x, delta.y, 0),
-        );
-        const { x, y } = fromWorld(newWorld);
-        return { ...n, x, y };
-      });
-      return next;
-    });
-  }
-
-  function endNodePointer(e: ThreeEvent<PointerEvent>, node: RuntimeNode) {
-    const cand = dragCandidateRef.current;
-    if (!cand || cand.pointerId !== e.pointerId) {
-      return;
-    }
-    e.stopPropagation();
-
-    gl.domElement.releasePointerCapture?.(e.pointerId);
-
-    // If a drag was started, finish it and persist overrides.
-    if (
-      draggingRef.current.isDragging &&
-      draggingRef.current.pointerId === e.pointerId
-    ) {
-      const draggedIds = [...draggingRef.current.draggedIds];
-      draggingRef.current.isDragging = false;
-      setControlsEnabled(true);
-
-      setDampingEnabled(false);
-
-      // Persist overrides
-      setNodes((prev) => {
-        const updated: CoordinateOverrides = { ...coordinateOverrides };
-        const next = prev.map((n) => {
-          if (!draggedIds.includes(n.id)) return n;
-
-          let x = n.x;
-          let y = n.y;
-          if (appSettings.snapToGrid) {
-            const [gx, gy] = roundToGrid(
-              layout.gridWidth,
-              layout.gridHeight,
-              layout.nodeWidth,
-              layout.nodeHeight,
-              x,
-              y,
-            );
-            x = gx;
-            y = gy;
-          }
-
-          updated[n.id] = { x, y };
-          return { ...n, x, y };
-        });
-
-        saveCoordinateOverrides(updated);
-        return next;
-      });
-
-      draggingRef.current.pointerId = null;
-      draggingRef.current.dragStartWorld = null;
-      draggingRef.current.dragStartPositions = new Map();
-      draggingRef.current.draggedIds = [];
-    } else {
-      // This was a click (no drag). Restore OrbitControls + damping.
-      setControlsEnabled(true);
-      setDampingEnabled(true);
-      // No drag: treat as click -> open issue.
-      window.open(node.data.htmlUrl, "_blank", "noopener,noreferrer");
-    }
-
-    dragCandidateRef.current = null;
-  }
-
-  function beginLasso(e: ThreeEvent<PointerEvent>) {
-    // Shift+left-drag on background creates a lasso rectangle.
-    // Normal left-drag remains OrbitControls rotate.
-    if (e.button !== 0) return;
-    if (!e.shiftKey) {
-      // Click/drag on empty space clears selection (without interfering with OrbitControls).
-      if (selectedIds.size) {
-        setSelectedIds(new Set());
-      }
-      return;
-    }
-    e.stopPropagation();
-
-    // Don't lasso while dragging nodes.
-    if (draggingRef.current.isDragging || dragCandidateRef.current) return;
-
-    // Cancel any pending preview and hide current popup.
-    if (hoverPreviewRef.current.timeout) {
-      window.clearTimeout(hoverPreviewRef.current.timeout);
-      hoverPreviewRef.current.timeout = null;
-    }
-    store.set(issuePreviewPopupAtom, {
-      isOpen: false,
-      issueData: null,
-      position: { x: 0, y: 0 },
-      isMeasuring: false,
-      anchor: undefined,
-      world: undefined,
-      popupSize: undefined,
-    });
-
-    setControlsEnabled(false);
-    setDampingEnabled(false);
-
-    lassoRef.current.isLassoing = true;
-    lassoRef.current.pointerId = e.pointerId;
-    lassoRef.current.startX = e.clientX;
-    lassoRef.current.startY = e.clientY;
-    lassoRef.current.x = e.clientX;
-    lassoRef.current.y = e.clientY;
-    lassoRef.current.w = 0;
-    lassoRef.current.h = 0;
-
-    onLassoBoxChange({ x: e.clientX, y: e.clientY, w: 0, h: 0, visible: true });
-    gl.domElement.setPointerCapture?.(e.pointerId);
-  }
-
-  function updateLasso(e: ThreeEvent<PointerEvent>) {
-    if (!lassoRef.current.isLassoing) return;
-    if (lassoRef.current.pointerId !== e.pointerId) return;
-
-    const x0 = lassoRef.current.startX;
-    const y0 = lassoRef.current.startY;
-    const x1 = e.clientX;
-    const y1 = e.clientY;
-
-    const x = Math.min(x0, x1);
-    const y = Math.min(y0, y1);
-    const w = Math.abs(x1 - x0);
-    const h = Math.abs(y1 - y0);
-
-    lassoRef.current.x = x;
-    lassoRef.current.y = y;
-    lassoRef.current.w = w;
-    lassoRef.current.h = h;
-
-    onLassoBoxChange({ x, y, w, h, visible: true });
-  }
-
-  function endLasso(e: ThreeEvent<PointerEvent>) {
-    if (!lassoRef.current.isLassoing) return;
-    if (lassoRef.current.pointerId !== e.pointerId) return;
-    e.stopPropagation();
-
-    lassoRef.current.isLassoing = false;
-    lassoRef.current.pointerId = null;
-    setControlsEnabled(true);
-    gl.domElement.releasePointerCapture?.(e.pointerId);
-
-    onLassoBoxChange({ x: 0, y: 0, w: 0, h: 0, visible: false });
-
-    const { x, y, w, h } = lassoRef.current;
-    if (w < 4 || h < 4) {
-      // Tiny drag: treat as click clearing selection.
-      setSelectedIds(new Set());
-      return;
-    }
-
-    const rect = gl.domElement.getBoundingClientRect();
-    const xMin = x - rect.left;
-    const xMax = xMin + w;
-    const yMin = y - rect.top;
-    const yMax = yMin + h;
-
-    const cam = camera as THREE.PerspectiveCamera;
-
-    const nextSelected = new Set<string>();
-    nodes.forEach((n) => {
-      const world = toWorld(n.x, n.y, n.z);
-      const ndc = world.clone().project(cam);
-      const sx = (ndc.x * 0.5 + 0.5) * rect.width;
-      const sy = (-ndc.y * 0.5 + 0.5) * rect.height;
-
-      if (sx >= xMin && sx <= xMax && sy >= yMin && sy <= yMax) {
-        nextSelected.add(n.id);
-      }
-    });
-
-    setSelectedIds(nextSelected);
-  }
-
   const planeSize = Math.max(layout.dagWidth, layout.dagHeight, 1000);
 
   return (
@@ -650,9 +352,15 @@ function Scene({
         const selected = selectedIds.has(n.id);
 
         return (
-          <group
+          <IssueNode
             key={n.id}
+            node={n}
             position={pos}
+            layout={layout}
+            appSettings={appSettings}
+            additionalColors={additionalColors}
+            dimOpacity={dimOther}
+            selected={selected}
             onPointerOver={(e) => {
               e.stopPropagation();
               if (
@@ -664,17 +372,10 @@ function Scene({
 
               hoverPreviewRef.current.nodeId = n.id;
               hoverPreviewRef.current.issue = n.data;
-              hoverPreviewRef.current.world = {
-                x: pos.x,
-                y: pos.y,
-                z: pos.z,
-              };
+              hoverPreviewRef.current.world = { x: pos.x, y: pos.y, z: pos.z };
               hoverPreviewRef.current.ctrlKey = !!e.ctrlKey;
 
-              if (hoverPreviewRef.current.timeout) {
-                window.clearTimeout(hoverPreviewRef.current.timeout);
-                hoverPreviewRef.current.timeout = null;
-              }
+              cancelHoverPreview();
 
               if (appSettings.showIssuePreviews && !e.ctrlKey) {
                 hoverPreviewRef.current.timeout = window.setTimeout(() => {
@@ -727,10 +428,7 @@ function Scene({
                 setHoveredId((curr) => (curr === n.id ? null : curr));
               }
 
-              if (hoverPreviewRef.current.timeout) {
-                window.clearTimeout(hoverPreviewRef.current.timeout);
-                hoverPreviewRef.current.timeout = null;
-              }
+              cancelHoverPreview();
               hoverPreviewRef.current.nodeId = null;
               hoverPreviewRef.current.issue = null;
               hoverPreviewRef.current.world = null;
@@ -738,77 +436,7 @@ function Scene({
             onPointerDown={(e) => beginNodeDragCandidate(e, n.id)}
             onPointerMove={updateNodePointer}
             onPointerUp={(e) => endNodePointer(e, n)}
-          >
-            {/* Selected sprint outline */}
-            {n.data.isChosenSprint ? (
-              <mesh>
-                <boxGeometry
-                  args={[layout.rectWidth + 4, layout.rectHeight + 4, 1]}
-                />
-                <meshStandardMaterial
-                  color={additionalColors["Selected sprint"]}
-                />
-              </mesh>
-            ) : null}
-
-            <mesh>
-              <boxGeometry args={[layout.rectWidth, layout.rectHeight, 2]} />
-              <meshStandardMaterial
-                color={n.color}
-                transparent
-                opacity={(n.opacity || 1) * dimOther}
-              />
-            </mesh>
-
-            {/* Selected border */}
-            {selected ? (
-              <mesh position={[0, 0, 2]}>
-                <boxGeometry
-                  args={[layout.rectWidth + 2, layout.rectHeight + 2, 0.5]}
-                />
-                <meshBasicMaterial color="#2378ae" wireframe />
-              </mesh>
-            ) : null}
-
-            {/* Labels */}
-            <Text
-              position={[0, 0, 3]}
-              fontSize={14}
-              color="black"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {n.data.id}
-            </Text>
-
-            {appSettings.showIssueDetails ? (
-              <Text
-                position={[0, -layout.rectHeight / 2 + 10, 3]}
-                fontSize={5}
-                color="black"
-                anchorX="center"
-                anchorY="middle"
-                maxWidth={layout.rectWidth - 6}
-              >
-                {n.data.title}
-              </Text>
-            ) : null}
-
-            {/* bottom row */}
-            <Text
-              position={[0, layout.rectHeight / 2 - 8, 3]}
-              fontSize={6}
-              color="black"
-              anchorX="center"
-              anchorY="middle"
-            >
-              {`${getPipelineAbbreviation(n.data.pipelineName)}${
-                appSettings.showIssueEstimates && n.data.estimate
-                  ? `  ${n.data.estimate}`
-                  : ""
-              }${n.data.isNonEpicIssue ? "  External" : ""}`}
-            </Text>
-          </group>
+          />
         );
       })}
 
