@@ -28,6 +28,10 @@ import {
   LassoBox,
   useDragAndLassoInteractions,
 } from "./useDragAndLassoInteractions";
+import {
+  getIssueNodePointerHandlers,
+  type HoverPreviewRefState,
+} from "./issueNodePointerHandlers";
 
 type GraphCanvasProps = {
   graphData: GraphIssue[];
@@ -117,13 +121,7 @@ function Scene({
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  const hoverPreviewRef = useRef<{
-    timeout: number | null;
-    nodeId: string | null;
-    issue: GraphIssue | null;
-    world: { x: number; y: number; z: number } | null;
-    ctrlKey: boolean;
-  }>({
+  const hoverPreviewRef = useRef<HoverPreviewRefState>({
     timeout: null,
     nodeId: null,
     issue: null,
@@ -351,6 +349,23 @@ function Scene({
             : 1;
         const selected = selectedIds.has(n.id);
 
+        const pointerHandlers = getIssueNodePointerHandlers(
+          {
+            appSettings,
+            camera,
+            domElement: gl.domElement,
+            draggingRef,
+            lassoRef,
+            setHoveredId,
+            hoverPreviewRef,
+            cancelHoverPreview,
+            beginNodeDragCandidate,
+            updateNodePointer,
+            endNodePointer,
+          },
+          { node: n, position: pos },
+        );
+
         return (
           <IssueNode
             key={n.id}
@@ -361,81 +376,11 @@ function Scene({
             additionalColors={additionalColors}
             dimOpacity={dimOther}
             selected={selected}
-            onPointerOver={(e) => {
-              e.stopPropagation();
-              if (
-                !draggingRef.current.isDragging &&
-                !lassoRef.current.isLassoing
-              ) {
-                setHoveredId(n.id);
-              }
-
-              hoverPreviewRef.current.nodeId = n.id;
-              hoverPreviewRef.current.issue = n.data;
-              hoverPreviewRef.current.world = { x: pos.x, y: pos.y, z: pos.z };
-              hoverPreviewRef.current.ctrlKey = !!e.ctrlKey;
-
-              cancelHoverPreview();
-
-              if (appSettings.showIssuePreviews && !e.ctrlKey) {
-                hoverPreviewRef.current.timeout = window.setTimeout(() => {
-                  if (
-                    draggingRef.current.isDragging ||
-                    lassoRef.current.isLassoing ||
-                    hoverPreviewRef.current.nodeId !== n.id
-                  ) {
-                    return;
-                  }
-
-                  const issueData = {
-                    id: n.data.id,
-                    title: n.data.title,
-                    body: n.data.body || "",
-                    htmlUrl: n.data.htmlUrl,
-                    assignees: n.data.assignees || [],
-                    estimate: n.data.estimate,
-                    pipelineName: n.data.pipelineName,
-                  };
-
-                  const rect = gl.domElement.getBoundingClientRect();
-                  const w = hoverPreviewRef.current.world;
-                  if (!w) return;
-                  const world = new THREE.Vector3(w.x, w.y, w.z);
-                  const ndc = world
-                    .clone()
-                    .project(camera as THREE.PerspectiveCamera);
-                  const anchorX = (ndc.x * 0.5 + 0.5) * rect.width + rect.left;
-                  const anchorY = (-ndc.y * 0.5 + 0.5) * rect.height + rect.top;
-
-                  store.set(issuePreviewPopupAtom, {
-                    isOpen: false,
-                    issueData,
-                    position: { x: -9999, y: -9999 },
-                    isMeasuring: true,
-                    anchor: { x: anchorX, y: anchorY },
-                    world: { x: w.x, y: w.y, z: w.z },
-                    popupSize: undefined,
-                  });
-                }, 1000);
-              }
-            }}
-            onPointerOut={(e) => {
-              e.stopPropagation();
-              if (
-                !draggingRef.current.isDragging &&
-                !lassoRef.current.isLassoing
-              ) {
-                setHoveredId((curr) => (curr === n.id ? null : curr));
-              }
-
-              cancelHoverPreview();
-              hoverPreviewRef.current.nodeId = null;
-              hoverPreviewRef.current.issue = null;
-              hoverPreviewRef.current.world = null;
-            }}
-            onPointerDown={(e) => beginNodeDragCandidate(e, n.id)}
-            onPointerMove={updateNodePointer}
-            onPointerUp={(e) => endNodePointer(e, n)}
+            onPointerOver={pointerHandlers.onPointerOver}
+            onPointerOut={pointerHandlers.onPointerOut}
+            onPointerDown={pointerHandlers.onPointerDown}
+            onPointerMove={pointerHandlers.onPointerMove}
+            onPointerUp={pointerHandlers.onPointerUp}
           />
         );
       })}
