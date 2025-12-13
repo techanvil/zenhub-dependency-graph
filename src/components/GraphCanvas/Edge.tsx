@@ -70,11 +70,14 @@ function GradientTube({
       opacity,
     });
     m.depthWrite = false;
+    // Edges should never occlude node text; force them into the "background"
+    // regardless of camera angle / transparency sorting.
+    m.depthTest = false;
     m.toneMapped = false;
     return m;
   }, [opacity]);
 
-  return <mesh geometry={geometry} material={material} />;
+  return <mesh geometry={geometry} material={material} renderOrder={0} />;
 }
 
 type EdgeProps = {
@@ -147,6 +150,7 @@ const Edge: React.FC<EdgeProps> = ({
       />
       <mesh
         position={toWorld(dx, dy, target.z)}
+        renderOrder={0}
         rotation={(() => {
           const q = new THREE.Quaternion().setFromUnitVectors(
             new THREE.Vector3(0, 1, 0),
@@ -161,6 +165,8 @@ const Edge: React.FC<EdgeProps> = ({
           color={targetColor}
           transparent
           opacity={opacity}
+          depthTest={false}
+          depthWrite={false}
           toneMapped={false}
         />
       </mesh>

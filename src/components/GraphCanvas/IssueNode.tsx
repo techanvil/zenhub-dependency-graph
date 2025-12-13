@@ -137,13 +137,17 @@ const IssueNode: React.FC<IssueNodeProps> = ({
     >
       {/* Border (selected or chosen sprint) */}
       {borderColor ? (
-        <mesh geometry={borderGeometry} position={[0, 0, -0.05]}>
+        <mesh
+          geometry={borderGeometry}
+          position={[0, 0, -0.05]}
+          renderOrder={1}
+        >
           <meshBasicMaterial color={borderColor} toneMapped={false} />
         </mesh>
       ) : null}
 
       {/* Main card */}
-      <mesh geometry={fillGeometry}>
+      <mesh geometry={fillGeometry} renderOrder={1}>
         <meshBasicMaterial
           color={node.color}
           transparent
@@ -164,6 +168,9 @@ const IssueNode: React.FC<IssueNodeProps> = ({
           color="black"
           anchorX="left"
           anchorY="top"
+          renderOrder={2}
+          material-depthTest={false}
+          material-depthWrite={false}
         >
           {sprintLabel}
         </Text>
@@ -176,6 +183,9 @@ const IssueNode: React.FC<IssueNodeProps> = ({
         color="black"
         anchorX="center"
         anchorY="middle"
+        renderOrder={2}
+        material-depthTest={false}
+        material-depthWrite={false}
       >
         {node.data.id}
       </Text>
@@ -188,6 +198,9 @@ const IssueNode: React.FC<IssueNodeProps> = ({
           anchorX="center"
           anchorY="top"
           maxWidth={layout.rectWidth - 6}
+          renderOrder={2}
+          material-depthTest={false}
+          material-depthWrite={false}
         >
           {node.data.title}
         </Text>
@@ -205,6 +218,9 @@ const IssueNode: React.FC<IssueNodeProps> = ({
           color="black"
           anchorX="left"
           anchorY="bottom"
+          renderOrder={2}
+          material-depthTest={false}
+          material-depthWrite={false}
         >
           {node.data.estimate}
         </Text>
@@ -221,6 +237,9 @@ const IssueNode: React.FC<IssueNodeProps> = ({
         color="black"
         anchorX="right"
         anchorY="bottom"
+        renderOrder={2}
+        material-depthTest={false}
+        material-depthWrite={false}
       >
         {`${pipelineAbbrev}${node.data.isNonEpicIssue ? "  External" : ""}`}
       </Text>
