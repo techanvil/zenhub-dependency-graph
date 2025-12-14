@@ -25,6 +25,9 @@ export const nonEpicIssuesAtom = atom();
 export const selfContainedIssuesAtom = atom();
 export const hiddenIssuesAtom = atom();
 export const currentGraphDataAtom = atom();
+// Last-known persisted dependency state for the currently loaded graph.
+// In-memory only (not persisted to localStorage).
+export const baselineGraphDataAtom = atom();
 
 export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
   getOnInit: true,
