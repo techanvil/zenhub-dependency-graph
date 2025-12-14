@@ -454,30 +454,28 @@ export default function Header({
                 {/* <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings
                 </Button> */}
+                {pendingOps.length > 0 && (
+                  <Button
+                    colorScheme="green"
+                    mr={3}
+                    onClick={onApplyChanges}
+                    isDisabled={isApplyingChanges}
+                    isLoading={isApplyingChanges}
+                    loadingText="Applying"
+                    title={`Apply ${pendingOps.length} pending dependency change${
+                      pendingOps.length === 1 ? "" : "s"
+                    }`}
+                  >
+                    Apply Changes
+                    {pendingOps.length ? ` (${pendingOps.length})` : ""}
+                  </Button>
+                )}
                 <Button
                   colorScheme="blue"
                   mr={3}
                   onClick={() => setPane(PANES.LEGEND)}
                 >
                   Legend
-                </Button>
-                <Button
-                  colorScheme="green"
-                  mr={3}
-                  onClick={onApplyChanges}
-                  isDisabled={!pendingOps.length || isApplyingChanges}
-                  isLoading={isApplyingChanges}
-                  loadingText="Applying"
-                  title={
-                    pendingOps.length
-                      ? `Apply ${pendingOps.length} pending dependency change${
-                          pendingOps.length === 1 ? "" : "s"
-                        }`
-                      : "No pending dependency changes"
-                  }
-                >
-                  Apply Changes
-                  {pendingOps.length ? ` (${pendingOps.length})` : ""}
                 </Button>
                 {panel && (
                   <Button
