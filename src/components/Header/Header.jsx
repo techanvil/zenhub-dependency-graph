@@ -42,6 +42,7 @@ import {
   baselineGraphDataAtom,
   currentGraphDataAtom,
   epicAtom,
+  graphRenderNonceAtom,
   hiddenIssuesAtom,
   isManualEpicAtom,
   nonEpicIssuesAtom,
@@ -109,6 +110,7 @@ export default function Header({
   const baselineGraphData = useAtomValue(baselineGraphDataAtom);
   const currentGraphData = useAtomValue(currentGraphDataAtom);
   const setBaselineGraphData = useSetAtom(baselineGraphDataAtom);
+  const bumpGraphRenderNonce = useSetAtom(graphRenderNonceAtom);
 
   const toast = useToast();
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
@@ -306,6 +308,10 @@ export default function Header({
       // Clear pending by treating the now-applied graph as baseline.
       // (We use the updated baseline derived from applied operations, so retries don't re-send.)
       setBaselineGraphData(nextBaseline);
+      // After all ops have been successfully applied, redraw using in-memory graph state.
+      if (appliedCount === totalCount) {
+        bumpGraphRenderNonce((n) => (typeof n === "number" ? n + 1 : 1));
+      }
 
       toast({
         title: "Applied changes",

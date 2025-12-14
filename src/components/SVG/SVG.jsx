@@ -24,12 +24,14 @@ import {
   baselineGraphDataAtom,
   currentGraphDataAtom,
   epicAtom,
+  graphRenderNonceAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   pipelineColorsAtom,
   pipelineHiddenAtom,
   selfContainedIssuesAtom,
   sprintAtom,
+  store,
   workspaceAtom,
 } from "../../store/atoms";
 import IssuePreviewPopup from "../IssuePreviewPopup/IssuePreviewPopup";
@@ -65,6 +67,7 @@ export default function SVG() {
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
     coordinateOverridesAtom,
   );
+  const graphRenderNonce = useAtomValue(graphRenderNonceAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
@@ -128,8 +131,10 @@ export default function SVG() {
     }
 
     try {
+      // Use the latest in-memory graph when forcing a redraw (e.g. after applying pending ops).
+      const latestGraphData = store.get(currentGraphDataAtom) || graphData;
       generateGraph(
-        graphData,
+        latestGraphData,
         ref.current,
         {
           pipelineColors,
@@ -147,6 +152,7 @@ export default function SVG() {
     }
   }, [
     graphData,
+    graphRenderNonce,
     appSettings,
     workspace,
     pipelineColors,

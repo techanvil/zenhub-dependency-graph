@@ -28,6 +28,8 @@ export const currentGraphDataAtom = atom();
 // Last-known persisted dependency state for the currently loaded graph.
 // In-memory only (not persisted to localStorage).
 export const baselineGraphDataAtom = atom();
+// Increment to force an SVG graph regeneration (re-run d3 generateGraph).
+export const graphRenderNonceAtom = atom(0);
 
 export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
   getOnInit: true,
