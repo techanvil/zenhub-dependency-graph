@@ -85,6 +85,7 @@ export function setupDependencyEdit({
   let nodeDragHandle = null;
   let edgePreviewLine = null;
   let edgePreviewArrow = null;
+  let edgeDeleteButton = null;
 
   function setEditModeClass(isOn) {
     svgSelection.classed("zdg-dependency-edit-mode", !!isOn);
@@ -111,6 +112,8 @@ export function setupDependencyEdit({
     dragline = null;
     edgeHandle?.remove();
     edgeHandle = null;
+    edgeDeleteButton?.remove();
+    edgeDeleteButton = null;
     nodeDragHandle?.remove();
     nodeDragHandle = null;
     edgePreviewLine?.remove();
@@ -397,8 +400,77 @@ export function setupDependencyEdit({
     if (state.dragging) return;
     edgeHandle?.remove();
     edgeHandle = null;
+    edgeDeleteButton?.remove();
+    edgeDeleteButton = null;
     state.hoveredLink = null;
     clearDropHover();
+  }
+
+  function showEdgeDeleteButtonForLink(link, hitPathEl) {
+    if (!hitPathEl?.getTotalLength || !hitPathEl?.getPointAtLength) return;
+    if (state.dragging) return;
+
+    // Midpoint of the hover hit path (matches the rendered edge curve).
+    let p = null;
+    try {
+      const len = hitPathEl.getTotalLength();
+      if (!Number.isFinite(len) || len <= 0) return;
+      p = hitPathEl.getPointAtLength(len / 2);
+    } catch {
+      return;
+    }
+    if (!p) return;
+
+    edgeDeleteButton?.remove();
+
+    const g = overlay
+      .append("g")
+      .attr("class", "zdg-dependency-edge-delete")
+      .attr("transform", `translate(${p.x}, ${p.y})`);
+
+    g.append("title").text("Delete dependency");
+
+    g.append("circle").attr("class", "zdg-dependency-edge-delete-bg").attr("r", 10);
+
+    g.append("path")
+      .attr("class", "zdg-dependency-edge-delete-x")
+      // Simple X glyph (two strokes)
+      .attr("d", "M -4 -4 L 4 4 M -4 4 L 4 -4");
+
+    g.on("click.dependencyEdit", (event) => {
+      event?.stopPropagation?.();
+      event?.preventDefault?.();
+
+      if (state.dragging) return;
+
+      const sourceId = link?.source?.data?.id;
+      const targetId = link?.target?.data?.id;
+      if (!sourceId || !targetId) return;
+
+      const updated = cloneGraphData(graphData);
+      const target = updated.find((n) => n.id === targetId);
+      if (!target) return;
+      target.parentIds = removeFromArray(target.parentIds || [], sourceId);
+
+      clearDragArtifacts();
+      const layoutOverrides = snapshotLayoutOverrides();
+      rerender(updated, layoutOverrides);
+    });
+
+    // Keep visible when moving from hit-path to delete button and back.
+    g.on("mouseleave.dependencyEdit", (e) => {
+      if (state.dragging) return;
+      const rt = e?.relatedTarget;
+      if (
+        rt?.classList?.contains("zdg-line-hit") ||
+        rt?.classList?.contains("zdg-dependency-edge-handle")
+      ) {
+        return;
+      }
+      hideEdgeHandle();
+    });
+
+    edgeDeleteButton = g;
   }
 
   function showEdgeHandleForLink(link) {
@@ -559,12 +631,14 @@ export function setupDependencyEdit({
       setEditModeClass(true);
       state.hoveredLink = link;
       showEdgeHandleForLink(link);
+      showEdgeDeleteButtonForLink(link, this);
     })
     .on("mouseleave.dependencyEdit", function (e) {
       // If moving from the hit path to the edge handle (or arrow), keep it visible.
       if (
         e.relatedTarget?.classList?.contains("zdg-dependency-edge-handle") ||
-        e.relatedTarget?.classList?.contains("zdg-arrow")
+        e.relatedTarget?.classList?.contains("zdg-arrow") ||
+        e.relatedTarget?.closest?.(".zdg-dependency-edge-delete")
       ) {
         return;
       }
