@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import { drag as d3Drag } from "d3-drag";
 
 import { getIntersection } from "./utils";
+import { cloneGraphData } from "../utils/clone-graph-data";
 
 let globalListenersInstalled = false;
 let activeController = null;
@@ -12,13 +13,6 @@ function getViewportNode(svgSelection) {
     svgSelection.node() ||
     document.documentElement
   );
-}
-
-function cloneGraphData(graphData) {
-  return graphData.map((n) => ({
-    ...n,
-    parentIds: n.parentIds ? [...n.parentIds] : [],
-  }));
 }
 
 function uniq(arr) {

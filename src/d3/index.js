@@ -39,7 +39,7 @@ function isAncestorOfNode(nodeId, ancestorId, graphData) {
   });
 }
 
-function removeAncestors(graphData) {
+export function removeAncestors(graphData) {
   graphData?.forEach((node) => {
     const { parentIds } = node;
 

@@ -57,6 +57,8 @@ import {
   applyPendingDependencyOps,
   computePendingDependencyOps,
 } from "../../data/dependency-changes";
+import { removeAncestors } from "../../d3";
+import { cloneGraphData } from "../../utils/clone-graph-data";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -115,8 +117,16 @@ export default function Header({
   const toast = useToast();
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
 
+  let baseline;
+  if (appSettings.showAncestorDependencies) {
+    baseline = baselineGraphData;
+  } else if (baselineGraphData) {
+    baseline = cloneGraphData(baselineGraphData);
+    removeAncestors(baseline);
+  }
+
   const { ops: pendingOps } = computePendingDependencyOps(
-    baselineGraphData,
+    baseline,
     currentGraphData,
   );
 
