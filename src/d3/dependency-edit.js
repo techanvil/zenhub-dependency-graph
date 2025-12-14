@@ -62,9 +62,11 @@ export function setupDependencyEdit({
     hoveredNodeEl: null,
     hoveredLink: null,
     dragging: false,
+    edgeHandleDragging: false,
     dragSourceId: null,
     dragOriginalLink: null, // { sourceId, oldTargetId }
     dropTargetId: null,
+    hiddenEdge: null, // { sourceId, targetId } for temporarily-hidden “current edge”
   };
 
   // --- Underlay/overlay ---
@@ -91,6 +93,44 @@ export function setupDependencyEdit({
     svgSelection.classed("zdg-dependency-edit-mode", !!isOn);
   }
 
+  function setRenderedEdgeHidden({ sourceId, targetId }, isHidden) {
+    const vis = isHidden ? "hidden" : null;
+
+    // Hide the actual rendered edge path.
+    lines
+      .filter(
+        (l) =>
+          l?.source?.data?.id === sourceId && l?.target?.data?.id === targetId,
+      )
+      .style("visibility", vis);
+
+    // Hide the corresponding arrow head too (it’s rendered separately).
+    svgSelection
+      .selectAll(".zdg-graph-arrows path.zdg-arrow")
+      .filter(
+        (l) =>
+          l?.source?.data?.id === sourceId && l?.target?.data?.id === targetId,
+      )
+      .style("visibility", vis);
+  }
+
+  function restoreHiddenEdge() {
+    if (!state.hiddenEdge) return;
+    setRenderedEdgeHidden(state.hiddenEdge, false);
+    state.hiddenEdge = null;
+  }
+
+  function hideCurrentEdgeForLink(link) {
+    const sourceId = link?.source?.data?.id;
+    const targetId = link?.target?.data?.id;
+    if (!sourceId || !targetId) return;
+
+    // Only ever hide one at a time; restore any previous just in case.
+    restoreHiddenEdge();
+    state.hiddenEdge = { sourceId, targetId };
+    setRenderedEdgeHidden(state.hiddenEdge, true);
+  }
+
   function clearDropHover() {
     if (!state.dropTargetId) return;
     const el = nodeIdToEl.get(state.dropTargetId);
@@ -108,6 +148,7 @@ export function setupDependencyEdit({
   }
 
   function clearDragArtifacts() {
+    restoreHiddenEdge();
     dragline?.remove();
     dragline = null;
     edgeHandle?.remove();
@@ -430,7 +471,9 @@ export function setupDependencyEdit({
 
     g.append("title").text("Delete dependency");
 
-    g.append("circle").attr("class", "zdg-dependency-edge-delete-bg").attr("r", 10);
+    g.append("circle")
+      .attr("class", "zdg-dependency-edge-delete-bg")
+      .attr("r", 10);
 
     g.append("path")
       .attr("class", "zdg-dependency-edge-delete-x")
@@ -535,11 +578,17 @@ export function setupDependencyEdit({
         event.sourceEvent.preventDefault?.();
 
         state.dragging = true;
+        state.edgeHandleDragging = true;
         state.dragSourceId = source.data.id;
         state.dragOriginalLink = {
           sourceId: source.data.id,
           oldTargetId: target.data.id,
         };
+
+        // Hide the current edge and delete button while the edge handle is being dragged.
+        edgeDeleteButton?.remove();
+        edgeDeleteButton = null;
+        hideCurrentEdgeForLink(link);
 
         // Initialize preview at the existing edge endpoint.
         updateEdgePreview({ endX: dx, endY: dy });
@@ -581,6 +630,7 @@ export function setupDependencyEdit({
         const newTargetId = state.dropTargetId;
 
         state.dragging = false;
+        state.edgeHandleDragging = false;
         state.dragSourceId = null;
         state.dragOriginalLink = null;
 
