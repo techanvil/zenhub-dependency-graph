@@ -21,6 +21,8 @@ const documents = {
     "\n  query GetSimpleIssueByNumber($repositoryGhId: Int!, $issueNumber: Int!) {\n    issueByInfo(issueNumber: $issueNumber, repositoryGhId: $repositoryGhId) {\n      id\n      number\n      title\n    }\n  }\n": types.GetSimpleIssueByNumberDocument,
     "\n  query GetAllOrganizations {\n    viewer {\n      id\n      zenhubOrganizations {\n        nodes {\n          id\n          name\n          workspaces {\n            nodes {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": types.GetAllOrganizationsDocument,
     "\n  query GetAllEpics($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      epics {\n        nodes {\n          id\n          issue {\n            id\n            number\n            title\n            closedAt\n          }\n        }\n      }\n    }\n  }\n": types.GetAllEpicsDocument,
+    "\n  mutation CreateBlockage($blockingId: ID!, $blockedId: ID!) {\n    createBlockage(\n      input: {\n        blocking: { id: $blockingId, type: ISSUE }\n        blocked: { id: $blockedId, type: ISSUE }\n      }\n    ) {\n      blockage {\n        id\n      }\n    }\n  }\n": types.CreateBlockageDocument,
+    "\n  mutation DeleteIssueDependency(\n    $repositoryGhId: Int!\n    $blockingIssueNumber: Int!\n    $blockedIssueNumber: Int!\n  ) {\n    deleteIssueDependency(\n      input: {\n        blockingIssue: {\n          repositoryGhId: $repositoryGhId\n          issueNumber: $blockingIssueNumber\n        }\n        blockedIssue: {\n          repositoryGhId: $repositoryGhId\n          issueNumber: $blockedIssueNumber\n        }\n      }\n    ) {\n      issueDependency {\n        id\n      }\n    }\n  }\n": types.DeleteIssueDependencyDocument,
 };
 
 /**
@@ -65,6 +67,14 @@ export function graphql(source: "\n  query GetAllOrganizations {\n    viewer {\n
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetAllEpics($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      epics {\n        nodes {\n          id\n          issue {\n            id\n            number\n            title\n            closedAt\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetAllEpics($workspaceId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      epics {\n        nodes {\n          id\n          issue {\n            id\n            number\n            title\n            closedAt\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateBlockage($blockingId: ID!, $blockedId: ID!) {\n    createBlockage(\n      input: {\n        blocking: { id: $blockingId, type: ISSUE }\n        blocked: { id: $blockedId, type: ISSUE }\n      }\n    ) {\n      blockage {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateBlockage($blockingId: ID!, $blockedId: ID!) {\n    createBlockage(\n      input: {\n        blocking: { id: $blockingId, type: ISSUE }\n        blocked: { id: $blockedId, type: ISSUE }\n      }\n    ) {\n      blockage {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteIssueDependency(\n    $repositoryGhId: Int!\n    $blockingIssueNumber: Int!\n    $blockedIssueNumber: Int!\n  ) {\n    deleteIssueDependency(\n      input: {\n        blockingIssue: {\n          repositoryGhId: $repositoryGhId\n          issueNumber: $blockingIssueNumber\n        }\n        blockedIssue: {\n          repositoryGhId: $repositoryGhId\n          issueNumber: $blockedIssueNumber\n        }\n      }\n    ) {\n      issueDependency {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteIssueDependency(\n    $repositoryGhId: Int!\n    $blockingIssueNumber: Int!\n    $blockedIssueNumber: Int!\n  ) {\n    deleteIssueDependency(\n      input: {\n        blockingIssue: {\n          repositoryGhId: $repositoryGhId\n          issueNumber: $blockingIssueNumber\n        }\n        blockedIssue: {\n          repositoryGhId: $repositoryGhId\n          issueNumber: $blockedIssueNumber\n        }\n      }\n    ) {\n      issueDependency {\n        id\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

@@ -311,3 +311,43 @@ export const getAllEpicsQueryDocument = graphql(`
     }
   }
 `);
+
+export const createBlockageMutationDocument = graphql(`
+  mutation CreateBlockage($blockingId: ID!, $blockedId: ID!) {
+    createBlockage(
+      input: {
+        blocking: { id: $blockingId, type: ISSUE }
+        blocked: { id: $blockedId, type: ISSUE }
+      }
+    ) {
+      blockage {
+        id
+      }
+    }
+  }
+`);
+
+export const deleteIssueDependencyMutationDocument = graphql(`
+  mutation DeleteIssueDependency(
+    $repositoryGhId: Int!
+    $blockingIssueNumber: Int!
+    $blockedIssueNumber: Int!
+  ) {
+    deleteIssueDependency(
+      input: {
+        blockingIssue: {
+          repositoryGhId: $repositoryGhId
+          issueNumber: $blockingIssueNumber
+        }
+        blockedIssue: {
+          repositoryGhId: $repositoryGhId
+          issueNumber: $blockedIssueNumber
+        }
+      }
+    ) {
+      issueDependency {
+        id
+      }
+    }
+  }
+`);

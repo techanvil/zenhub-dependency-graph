@@ -37,3 +37,81 @@ code {
 .zdg-arrow {
   transition: opacity 0.2s ease-in-out;
 }
+
+/* Dependency edit mode (Ctrl + hover) */
+.zdg-dependency-handles {
+  display: none;
+}
+
+.zdg-dependency-handle-visible .zdg-dependency-handles {
+  display: block;
+}
+
+.zdg-dependency-handle,
+.zdg-dependency-edge-handle {
+  fill: #ffffff;
+  stroke: #2378ae;
+  stroke-width: 2;
+  cursor: crosshair;
+}
+
+.zdg-dependency-edge-delete {
+  cursor: pointer;
+}
+
+.zdg-dependency-edge-delete-bg {
+  fill: #ffffff;
+  stroke: #c53030;
+  stroke-width: 2;
+}
+
+.zdg-dependency-edge-delete-x {
+  fill: none;
+  stroke: #c53030;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.zdg-dependency-edge-delete:hover .zdg-dependency-edge-delete-bg {
+  fill: #fff5f5;
+}
+
+.zdg-dependency-dragline {
+  stroke: #2378ae;
+  stroke-width: 2;
+  stroke-dasharray: 6, 3;
+  pointer-events: none;
+}
+
+.zdg-dependency-edge-preview {
+  stroke: #2378ae;
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.zdg-dependency-edge-preview-arrow {
+  fill: #2378ae;
+  pointer-events: none;
+}
+
+.zdg-edit-underlay {
+  pointer-events: none;
+}
+
+.zdg-line-hit {
+  pointer-events: none;
+}
+
+.zdg-dependency-edit-mode .zdg-line-hit {
+  pointer-events: stroke;
+}
+
+.zdg-dependency-edit-mode .zdg-arrow {
+  pointer-events: none;
+}
+
+.zdg-dependency-drop-hover rect {
+  stroke: #2378ae;
+  stroke-width: 2;
+}

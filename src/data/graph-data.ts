@@ -18,6 +18,8 @@ import {
   getAllOrganizationsQueryDocument,
   getEpicChildIssuesQueryDocument,
   getSimpleIssueByNumberQueryDocument,
+  createBlockageMutationDocument,
+  deleteIssueDependencyMutationDocument,
 } from "./queries";
 import { makeDefaultStorage } from "./cache-exchange-storage";
 import { GetEpicChildIssuesQuery } from "../gql/graphql";
@@ -114,6 +116,77 @@ function executeQuery<Data, Variables extends AnyVariables>(
       unsubscribe();
     });
   });
+}
+
+function executeMutation<Data, Variables extends AnyVariables>(
+  mutation: DocumentInput<Data, Variables>,
+  variables: Variables,
+  signal: AbortSignal,
+): Promise<OperationResult<Data, Variables>> {
+  return new Promise((resolve) => {
+    const { unsubscribe } = pipe(
+      client.mutation(mutation, variables),
+      subscribe((result) => {
+        resolve(result);
+      }),
+    );
+
+    signal.addEventListener("abort", () => {
+      unsubscribe();
+    });
+  });
+}
+
+export async function createBlockage(
+  {
+    blockingZenhubIssueId,
+    blockedZenhubIssueId,
+  }: { blockingZenhubIssueId: string; blockedZenhubIssueId: string },
+  signal: AbortSignal = new AbortController().signal,
+) {
+  const result = await executeMutation(
+    createBlockageMutationDocument,
+    {
+      blockingId: blockingZenhubIssueId,
+      blockedId: blockedZenhubIssueId,
+    },
+    signal,
+  );
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return result.data;
+}
+
+export async function deleteIssueDependency(
+  {
+    repositoryGhId,
+    blockingIssueNumber,
+    blockedIssueNumber,
+  }: {
+    repositoryGhId: number;
+    blockingIssueNumber: number;
+    blockedIssueNumber: number;
+  },
+  signal: AbortSignal = new AbortController().signal,
+) {
+  const result = await executeMutation(
+    deleteIssueDependencyMutationDocument,
+    {
+      repositoryGhId,
+      blockingIssueNumber,
+      blockedIssueNumber,
+    },
+    signal,
+  );
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return result.data;
 }
 
 type Issue = NonNullable<
@@ -506,6 +579,7 @@ export async function getGraphData(
       }
 
       const {
+        id: zenhubIssueId,
         number: id,
         title,
         body,
@@ -522,6 +596,9 @@ export async function getGraphData(
       } = issue;
       return {
         id: `${id}`,
+        // Needed for persisting dependency edits via Zenhub GraphQL mutations.
+        zenhubIssueId,
+        repositoryGhId,
         title,
         body,
         htmlUrl,
