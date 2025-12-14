@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { useCallback, useEffect, useState } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Box,
   Button,
@@ -18,6 +18,7 @@ import {
   Switch,
   Text,
   useColorModeValue,
+  useToast,
   VStack,
   Wrap,
   WrapItem,
@@ -38,7 +39,10 @@ import {
   activePaneAtom,
   APIKeyAtom,
   appSettingsAtom,
+  baselineGraphDataAtom,
+  currentGraphDataAtom,
   epicAtom,
+  graphRenderNonceAtom,
   hiddenIssuesAtom,
   isManualEpicAtom,
   nonEpicIssuesAtom,
@@ -49,6 +53,10 @@ import {
 } from "../../store/atoms";
 import { copyPNG, downloadSVG } from "../../utils/svg";
 import PageTitle from "../PageTitle";
+import {
+  applyPendingDependencyOps,
+  computePendingDependencyOps,
+} from "../../data/dependency-changes";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -99,6 +107,18 @@ export default function Header({
   const [workspace, saveWorkspace] = useAtom(workspaceAtom);
   const [epic, saveEpic] = useAtom(epicAtom);
   const [sprint, saveSprint] = useAtom(sprintAtom);
+  const baselineGraphData = useAtomValue(baselineGraphDataAtom);
+  const currentGraphData = useAtomValue(currentGraphDataAtom);
+  const setBaselineGraphData = useSetAtom(baselineGraphDataAtom);
+  const bumpGraphRenderNonce = useSetAtom(graphRenderNonceAtom);
+
+  const toast = useToast();
+  const [isApplyingChanges, setIsApplyingChanges] = useState(false);
+
+  const { ops: pendingOps } = computePendingDependencyOps(
+    baselineGraphData,
+    currentGraphData,
+  );
 
   const setChosenWorkspaceAndSprint = useCallback(
     (workspace) => {
@@ -271,6 +291,59 @@ export default function Header({
 
   usePageTitle(chosenEpic ? `Epic: ${chosenEpic.label} - ZDG` : "ZDG");
 
+  async function onApplyChanges() {
+    if (isApplyingChanges) return;
+    if (!pendingOps.length) return;
+    if (!baselineGraphData?.length || !currentGraphData?.length) return;
+
+    setIsApplyingChanges(true);
+    try {
+      const { nextBaseline, appliedCount, totalCount } =
+        await applyPendingDependencyOps({
+          baseline: baselineGraphData,
+          current: currentGraphData,
+          ops: pendingOps,
+        });
+
+      // Clear pending by treating the now-applied graph as baseline.
+      // (We use the updated baseline derived from applied operations, so retries don't re-send.)
+      setBaselineGraphData(nextBaseline);
+      // After all ops have been successfully applied, redraw using in-memory graph state.
+      if (appliedCount === totalCount) {
+        bumpGraphRenderNonce((n) => (typeof n === "number" ? n + 1 : 1));
+      }
+
+      toast({
+        title: "Applied changes",
+        description:
+          appliedCount === totalCount
+            ? `Applied ${appliedCount} dependency change${
+                appliedCount === 1 ? "" : "s"
+              }.`
+            : `Applied ${appliedCount}/${totalCount} changes.`,
+        status: "success",
+        duration: 4000,
+        isClosable: true,
+      });
+    } catch (err) {
+      // Stop on first failure; keep remaining changes pending.
+      if (err?.nextBaseline) {
+        setBaselineGraphData(err.nextBaseline);
+      }
+
+      toast({
+        title: "Failed to apply changes",
+        description:
+          err?.message || "An error occurred while applying changes.",
+        status: "error",
+        duration: 8000,
+        isClosable: true,
+      });
+    } finally {
+      setIsApplyingChanges(false);
+    }
+  }
+
   return (
     <>
       <Box as="section" h="var(--header-height)">
@@ -387,6 +460,22 @@ export default function Header({
                 {/* <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings
                 </Button> */}
+                {pendingOps.length > 0 && (
+                  <Button
+                    colorScheme="green"
+                    mr={3}
+                    onClick={onApplyChanges}
+                    isDisabled={isApplyingChanges}
+                    isLoading={isApplyingChanges}
+                    loadingText="Applying"
+                    title={`Apply ${pendingOps.length} pending dependency change${
+                      pendingOps.length === 1 ? "" : "s"
+                    }`}
+                  >
+                    Apply Changes
+                    {pendingOps.length ? ` (${pendingOps.length})` : ""}
+                  </Button>
+                )}
                 <Button
                   colorScheme="blue"
                   mr={3}

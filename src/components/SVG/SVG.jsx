@@ -21,14 +21,17 @@ import {
   APIKeyAtom,
   appSettingsAtom,
   coordinateOverridesAtom,
+  baselineGraphDataAtom,
   currentGraphDataAtom,
   epicAtom,
+  graphRenderNonceAtom,
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   pipelineColorsAtom,
   pipelineHiddenAtom,
   selfContainedIssuesAtom,
   sprintAtom,
+  store,
   workspaceAtom,
 } from "../../store/atoms";
 import IssuePreviewPopup from "../IssuePreviewPopup/IssuePreviewPopup";
@@ -39,10 +42,19 @@ export default function SVG() {
   const [error, setError] = useState();
   const [loading, setLoading] = useState(false);
 
+  function cloneGraphData(data) {
+    if (!Array.isArray(data)) return data;
+    return data.map((n) => ({
+      ...n,
+      parentIds: n.parentIds ? [...n.parentIds] : [],
+    }));
+  }
+
   const setNonEpicIssues = useSetAtom(nonEpicIssuesAtom);
   const setSelfContainedIssues = useSetAtom(selfContainedIssuesAtom);
   const setHiddenIssues = useSetAtom(hiddenIssuesAtom);
   const setCurrentGraphData = useSetAtom(currentGraphDataAtom);
+  const setBaselineGraphData = useSetAtom(baselineGraphDataAtom);
 
   const APIKey = useAtomValue(APIKeyAtom);
   const appSettings = useAtomValue(appSettingsAtom);
@@ -55,6 +67,7 @@ export default function SVG() {
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
     coordinateOverridesAtom,
   );
+  const graphRenderNonce = useAtomValue(graphRenderNonceAtom);
 
   useEffect(() => {
     if (isEmpty(APIKey) || isEmpty(workspace) || isEmpty(epic)) {
@@ -63,6 +76,8 @@ export default function SVG() {
 
     setError(null);
     setLoading(true);
+    // Reset baseline while loading a new graph so pending changes don't leak between epics/workspaces.
+    setBaselineGraphData(undefined);
 
     const controller = new AbortController();
     const { signal } = controller;
@@ -85,7 +100,9 @@ export default function SVG() {
         });
         setHiddenIssues(hiddenIssues);
 
-        setGraphData(graphData);
+        const loaded = cloneGraphData(graphData);
+        setGraphData(loaded);
+        setBaselineGraphData(cloneGraphData(loaded));
       })
       .catch((err) => {
         console.log("getGraphData error", err);
@@ -114,8 +131,10 @@ export default function SVG() {
     }
 
     try {
+      // Use the latest in-memory graph when forcing a redraw (e.g. after applying pending ops).
+      const latestGraphData = store.get(currentGraphDataAtom) || graphData;
       generateGraph(
-        graphData,
+        latestGraphData,
         ref.current,
         {
           pipelineColors,
@@ -133,6 +152,7 @@ export default function SVG() {
     }
   }, [
     graphData,
+    graphRenderNonce,
     appSettings,
     workspace,
     pipelineColors,

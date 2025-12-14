@@ -17,6 +17,7 @@ import {
 import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
+import { setupDependencyEdit } from "./dependency-edit";
 import { store } from "../store/atoms";
 import { issuePreviewPopupAtom } from "../store/atoms";
 
@@ -195,6 +196,7 @@ export const generateGraph = (
     additionalColors,
     epic,
     coordinateOverrides,
+    coordinateOverridesForSave,
     saveCoordinateOverrides,
     setCurrentGraphData,
   },
@@ -707,10 +709,44 @@ export const generateGraph = (
       rectWidth,
       svgSelection,
       coordinateOverrides,
+      coordinateOverridesForSave,
       saveCoordinateOverrides,
     },
     appSettings,
   );
+
+  // Dependency editing UI (Ctrl + hover + drag). In-memory only for now.
+  setupDependencyEdit({
+    svgSelection,
+    nodes,
+    lines,
+    rectWidth,
+    rectHeight,
+    arrowSize,
+    graphData,
+    selectAndDragState,
+    isAncestorOfNode,
+    rerender: (updatedGraphData, layoutOverrides) =>
+      generateGraph(
+        updatedGraphData,
+        svgElement,
+        {
+          pipelineColors,
+          additionalColors,
+          epic,
+          coordinateOverrides: {
+            ...(coordinateOverrides || {}),
+            ...(layoutOverrides || {}),
+          },
+          // Keep drag persistence based on the stored overrides, not the temporary layout overrides.
+          coordinateOverridesForSave:
+            coordinateOverridesForSave || coordinateOverrides,
+          saveCoordinateOverrides,
+          setCurrentGraphData,
+        },
+        appSettings,
+      ),
+  });
 
   // FIXME: Adding this pan/zoom currently breaks clicking away from a dropdown to close it.
   if (typeof svgPanZoom === "function") {
