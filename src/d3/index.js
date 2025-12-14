@@ -18,6 +18,7 @@ import { renderDetailedIssues } from "./detailed-issues";
 import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
 import { setupDependencyEdit } from "./dependency-edit";
+import { createBlockage, deleteIssueDependency } from "../data/graph-data";
 import { store } from "../store/atoms";
 import { issuePreviewPopupAtom } from "../store/atoms";
 
@@ -726,6 +727,8 @@ export const generateGraph = (
     graphData,
     selectAndDragState,
     isAncestorOfNode,
+    createBlockage,
+    deleteIssueDependency,
     rerender: (updatedGraphData, layoutOverrides) =>
       generateGraph(
         updatedGraphData,

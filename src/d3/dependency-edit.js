@@ -48,6 +48,8 @@ export function setupDependencyEdit({
   rerender,
   isAncestorOfNode,
   selectAndDragState,
+  createBlockage,
+  deleteIssueDependency,
 }) {
   const controller = {};
   activeController = controller;
@@ -359,12 +361,38 @@ export function setupDependencyEdit({
         return;
       }
 
+      const previous = cloneGraphData(graphData);
       const updated = cloneGraphData(graphData);
       const target = updated.find((n) => n.id === targetId);
       target.parentIds = uniq([...(target.parentIds || []), sourceId]);
 
       clearDragArtifacts();
-      rerender(updated, snapshotLayoutOverrides());
+      const layoutOverrides = snapshotLayoutOverrides();
+      rerender(updated, layoutOverrides);
+
+      // Persist (best-effort). UI is already updated optimistically.
+      const blocking = previous.find((n) => n.id === sourceId);
+      const blocked = previous.find((n) => n.id === targetId);
+
+      if (!blocking?.zenhubIssueId || !blocked?.zenhubIssueId) {
+        console.warn("Missing ids for persisting dependency", {
+          blocking,
+          blocked,
+        });
+        return;
+      }
+
+      (async () => {
+        try {
+          await createBlockage({
+            blockingZenhubIssueId: blocking.zenhubIssueId,
+            blockedZenhubIssueId: blocked.zenhubIssueId,
+          });
+        } catch (err) {
+          console.error("Failed to persist dependency (createBlockage)", err);
+          rerender(previous, layoutOverrides);
+        }
+      })();
     });
 
   nodeHandleCircle.call(createDrag);
@@ -522,6 +550,7 @@ export function setupDependencyEdit({
           return;
         }
 
+        const previous = cloneGraphData(graphData);
         const updated = cloneGraphData(graphData);
 
         const oldTarget = updated.find((n) => n.id === oldTargetId);
@@ -538,7 +567,67 @@ export function setupDependencyEdit({
         newTarget.parentIds = uniq([...(newTarget.parentIds || []), sourceId]);
 
         clearDragArtifacts();
-        rerender(updated, snapshotLayoutOverrides());
+        const layoutOverrides = snapshotLayoutOverrides();
+        rerender(updated, layoutOverrides);
+
+        // Persist retarget (best-effort):
+        // Prefer ordering: create new first, then delete old. If delete fails after create,
+        // attempt to delete the newly created edge as compensation.
+        const blocking = previous.find((n) => n.id === sourceId);
+        const oldBlocked = previous.find((n) => n.id === oldTargetId);
+        const newBlocked = previous.find((n) => n.id === newTargetId);
+
+        if (
+          !blocking?.zenhubIssueId ||
+          !newBlocked?.zenhubIssueId ||
+          !blocking?.repositoryGhId
+        ) {
+          console.warn("Missing ids for persisting retarget", {
+            blocking,
+            oldBlocked,
+            newBlocked,
+          });
+          return;
+        }
+
+        const repositoryGhId = blocking.repositoryGhId;
+
+        (async () => {
+          let createdNew = false;
+          try {
+            await createBlockage({
+              blockingZenhubIssueId: blocking.zenhubIssueId,
+              blockedZenhubIssueId: newBlocked.zenhubIssueId,
+            });
+            createdNew = true;
+
+            await deleteIssueDependency({
+              repositoryGhId,
+              blockingIssueNumber: parseInt(sourceId, 10),
+              blockedIssueNumber: parseInt(oldTargetId, 10),
+            });
+          } catch (err) {
+            console.error("Failed to persist retargeted dependency", err);
+            // Rollback UI to previous (server may already have changed).
+            rerender(previous, layoutOverrides);
+
+            // Best-effort server compensation to avoid server/UI divergence.
+            if (createdNew) {
+              try {
+                await deleteIssueDependency({
+                  repositoryGhId,
+                  blockingIssueNumber: parseInt(sourceId, 10),
+                  blockedIssueNumber: parseInt(newTargetId, 10),
+                });
+              } catch (compErr) {
+                console.error(
+                  "Failed to compensate after retarget failure; server may be out of sync",
+                  compErr,
+                );
+              }
+            }
+          }
+        })();
       });
 
     edgeHandle.call(moveDrag);
