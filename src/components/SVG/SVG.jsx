@@ -35,20 +35,13 @@ import {
   workspaceAtom,
 } from "../../store/atoms";
 import IssuePreviewPopup from "../IssuePreviewPopup/IssuePreviewPopup";
+import { cloneGraphData } from "../../utils/clone-graph-data";
 
 export default function SVG() {
   const ref = useRef();
   const [graphData, setGraphData] = useState();
   const [error, setError] = useState();
   const [loading, setLoading] = useState(false);
-
-  function cloneGraphData(data) {
-    if (!Array.isArray(data)) return data;
-    return data.map((n) => ({
-      ...n,
-      parentIds: n.parentIds ? [...n.parentIds] : [],
-    }));
-  }
 
   const setNonEpicIssues = useSetAtom(nonEpicIssuesAtom);
   const setSelfContainedIssues = useSetAtom(selfContainedIssuesAtom);

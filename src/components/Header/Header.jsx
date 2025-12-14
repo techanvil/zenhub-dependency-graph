@@ -58,6 +58,7 @@ import {
   computePendingDependencyOps,
 } from "../../data/dependency-changes";
 import { removeAncestors } from "../../d3";
+import { cloneGraphData } from "../../utils/clone-graph-data";
 
 function pluralise(count, singular, plural) {
   return count === 1 ? singular : plural;
@@ -115,14 +116,6 @@ export default function Header({
 
   const toast = useToast();
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
-
-  function cloneGraphData(graphData) {
-    if (!Array.isArray(graphData)) return graphData;
-    return graphData.map((n) => ({
-      ...n,
-      parentIds: n.parentIds ? [...n.parentIds] : [],
-    }));
-  }
 
   let baseline;
   if (appSettings.showAncestorDependencies) {

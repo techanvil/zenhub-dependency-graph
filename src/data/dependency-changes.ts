@@ -1,4 +1,5 @@
 import { createBlockage, deleteIssueDependency } from "./graph-data";
+import { cloneGraphData } from "../utils/clone-graph-data";
 
 type GraphNode = {
   id: string;
@@ -25,13 +26,6 @@ function uniq(arr: string[]) {
 
 function removeFromArray(arr: string[], value: string) {
   return arr.filter((v) => v !== value);
-}
-
-function cloneGraphData(data: GraphNode[]) {
-  return data.map((n) => ({
-    ...n,
-    parentIds: n.parentIds ? [...n.parentIds] : [],
-  }));
 }
 
 function edgeKey(e: Edge) {
