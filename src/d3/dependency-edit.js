@@ -465,14 +465,25 @@ export function setupDependencyEdit({
 
     g.append("title").text("Delete dependency");
 
+    // Keep a generous click target, but match the handle size visually.
+    g.append("circle")
+      .attr("class", "zdg-dependency-edge-delete-hit")
+      .attr("r", 10)
+      .attr("fill", "transparent");
+
     g.append("circle")
       .attr("class", "zdg-dependency-edge-delete-bg")
-      .attr("r", 10);
+      .attr("r", handleRadius);
 
+    // Scale the X down to comfortably fit inside the smaller circle.
+    const xHalf = handleRadius * 0.4;
     g.append("path")
       .attr("class", "zdg-dependency-edge-delete-x")
       // Simple X glyph (two strokes)
-      .attr("d", "M -4 -4 L 4 4 M -4 4 L 4 -4");
+      .attr(
+        "d",
+        `M -${xHalf} -${xHalf} L ${xHalf} ${xHalf} M -${xHalf} ${xHalf} L ${xHalf} -${xHalf}`,
+      );
 
     g.on("click.dependencyEdit", (event) => {
       event?.stopPropagation?.();
