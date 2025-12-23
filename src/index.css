@@ -68,8 +68,8 @@ code {
 .zdg-dependency-edge-delete-x {
   fill: none;
   stroke: #c53030;
-  stroke-width: 2.5;
-  stroke-linecap: round;
+  stroke-width: 2;
+  stroke-linecap: butt;
   pointer-events: none;
 }
 
