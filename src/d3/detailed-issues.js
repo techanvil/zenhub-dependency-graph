@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 
-import { getCombinedSprints, getRectDimensions } from "./utils";
+import { getCombinedSprints, getNodeTextColor, getRectDimensions } from "./utils";
 import { pipelineAbbreviations } from "./constants";
 
 function getPipelineAbbreviation(node) {
@@ -57,7 +57,7 @@ function wrapLines(text, width, maxLines, truncate) {
   });
 }
 
-export function renderDetailedIssues(nodes, appSettings) {
+export function renderDetailedIssues(nodes, appSettings, pipelineColors, colorMap) {
   const { showIssueEstimates, showIssueSprints } = appSettings;
   const { rectWidth, rectHeight } = getRectDimensions(appSettings);
 
@@ -86,7 +86,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)")
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap))
     .call(wrapLines, rectWidth - padding * 2, 3, truncate);
 
   // Add assignees to nodes
@@ -102,7 +102,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 4)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)")
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap))
     .each(truncate);
 
   if (showIssueEstimates) {
@@ -116,7 +116,7 @@ export function renderDetailedIssues(nodes, appSettings) {
       .attr("font-size", 5)
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
-      .style("fill", "var(--zdg-node-text)");
+      .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
   }
 
   const issueNumberRowY = showIssueSprints ? 11 : rectHeight / 2 - 5;
@@ -134,7 +134,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)");
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
 
   // Add pipeline name to nodes
   nodes
@@ -147,7 +147,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)");
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
 
   // Add "External" text for non-epic issues to nodes
   nodes
@@ -160,7 +160,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)");
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
 
   if (showIssueSprints) {
     // Add issue sprints to nodes
@@ -174,6 +174,6 @@ export function renderDetailedIssues(nodes, appSettings) {
       .attr("font-size", 5)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .style("fill", "var(--zdg-node-text)");
+      .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
   }
 }

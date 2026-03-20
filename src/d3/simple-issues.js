@@ -1,4 +1,8 @@
-import { getCombinedSprints, getRectDimensions } from "./utils.js";
+import {
+  getCombinedSprints,
+  getNodeTextColor,
+  getRectDimensions,
+} from "./utils.js";
 import { pipelineAbbreviations } from "./constants.js";
 
 function getPipelineAbbreviation(node) {
@@ -13,7 +17,7 @@ function getPipelineAbbreviation(node) {
 
 const padding = 3;
 
-export function renderSimpleIssues(nodes, appSettings) {
+export function renderSimpleIssues(nodes, appSettings, pipelineColors, colorMap) {
   const { showIssueEstimates, showIssueSprints } = appSettings;
   const { rectWidth, rectHeight } = getRectDimensions(appSettings);
 
@@ -29,7 +33,7 @@ export function renderSimpleIssues(nodes, appSettings) {
       .attr("font-size", 6)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .style("fill", "var(--zdg-node-text)");
+      .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
   }
 
   // Add issue number to nodes
@@ -44,7 +48,7 @@ export function renderSimpleIssues(nodes, appSettings) {
     .attr("font-size", 20)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)");
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
 
   // TODO: GH issue on hover?
 
@@ -62,7 +66,7 @@ export function renderSimpleIssues(nodes, appSettings) {
       .attr("font-size", 8)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .style("fill", "var(--zdg-node-text)");
+      .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
   }
 
   // Add pipeline name to nodes
@@ -76,7 +80,7 @@ export function renderSimpleIssues(nodes, appSettings) {
     .attr("font-size", 8)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)");
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
 
   // Add "External" text for non-epic issues to nodes
   nodes
@@ -89,5 +93,5 @@ export function renderSimpleIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .style("fill", "var(--zdg-node-text)");
+    .style("fill", (d) => getNodeTextColor(d, pipelineColors, colorMap));
 }

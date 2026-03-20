@@ -688,9 +688,9 @@ export const generateGraph = (
   }
 
   if (showIssueDetails) {
-    renderDetailedIssues(issues, appSettings);
+    renderDetailedIssues(issues, appSettings, pipelineColors, colorMap);
   } else {
-    renderSimpleIssues(issues, appSettings);
+    renderSimpleIssues(issues, appSettings, pipelineColors, colorMap);
   }
 
   if (showIssuePreviews) {
