@@ -86,7 +86,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black")
+    .style("fill", "var(--zdg-node-text)")
     .call(wrapLines, rectWidth - padding * 2, 3, truncate);
 
   // Add assignees to nodes
@@ -102,7 +102,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 4)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black")
+    .style("fill", "var(--zdg-node-text)")
     .each(truncate);
 
   if (showIssueEstimates) {
@@ -116,7 +116,7 @@ export function renderDetailedIssues(nodes, appSettings) {
       .attr("font-size", 5)
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
-      .attr("fill", "black");
+      .style("fill", "var(--zdg-node-text)");
   }
 
   const issueNumberRowY = showIssueSprints ? 11 : rectHeight / 2 - 5;
@@ -134,7 +134,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+    .style("fill", "var(--zdg-node-text)");
 
   // Add pipeline name to nodes
   nodes
@@ -147,7 +147,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+    .style("fill", "var(--zdg-node-text)");
 
   // Add "External" text for non-epic issues to nodes
   nodes
@@ -160,7 +160,7 @@ export function renderDetailedIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+    .style("fill", "var(--zdg-node-text)");
 
   if (showIssueSprints) {
     // Add issue sprints to nodes
@@ -174,6 +174,6 @@ export function renderDetailedIssues(nodes, appSettings) {
       .attr("font-size", 5)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("fill", "black");
+      .style("fill", "var(--zdg-node-text)");
   }
 }

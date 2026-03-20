@@ -4,6 +4,39 @@
 
   --header-height: 70px;
   --main-height: calc(100vh - 70px);
+
+  /* Graph theme variables (light mode defaults) */
+  --zdg-node-bg: #ffffff;
+  --zdg-node-text: black;
+  --zdg-info-icon-bg: white;
+  --zdg-info-icon-stroke: #888;
+  --zdg-info-icon-text: #555;
+  --zdg-grid-stroke: gray;
+  --zdg-bg-transparent: rgba(0, 0, 0, 0);
+  --zdg-handle-fill: #ffffff;
+  --zdg-handle-stroke: #2378ae;
+  --zdg-delete-bg: #ffffff;
+  --zdg-delete-stroke: #c53030;
+  --zdg-delete-hover-bg: #fff5f5;
+  --zdg-edge-preview-stroke: #2378ae;
+  --zdg-drop-hover-stroke: #2378ae;
+}
+
+.chakra-ui-dark {
+  --zdg-node-bg: #2d3748;
+  --zdg-node-text: #e2e8f0;
+  --zdg-info-icon-bg: #2d3748;
+  --zdg-info-icon-stroke: #a0aec0;
+  --zdg-info-icon-text: #cbd5e0;
+  --zdg-grid-stroke: #4a5568;
+  --zdg-bg-transparent: rgba(0, 0, 0, 0);
+  --zdg-handle-fill: #2d3748;
+  --zdg-handle-stroke: #63b3ed;
+  --zdg-delete-bg: #2d3748;
+  --zdg-delete-stroke: #fc8181;
+  --zdg-delete-hover-bg: #3b2020;
+  --zdg-edge-preview-stroke: #63b3ed;
+  --zdg-drop-hover-stroke: #63b3ed;
 }
 
 body {
@@ -54,8 +87,8 @@ code {
 
 .zdg-dependency-handle,
 .zdg-dependency-edge-handle {
-  fill: #ffffff;
-  stroke: #2378ae;
+  fill: var(--zdg-handle-fill);
+  stroke: var(--zdg-handle-stroke);
   stroke-width: 2;
   cursor: crosshair;
 }
@@ -65,38 +98,38 @@ code {
 }
 
 .zdg-dependency-edge-delete-bg {
-  fill: #ffffff;
-  stroke: #c53030;
+  fill: var(--zdg-delete-bg);
+  stroke: var(--zdg-delete-stroke);
   stroke-width: 2;
 }
 
 .zdg-dependency-edge-delete-x {
   fill: none;
-  stroke: #c53030;
+  stroke: var(--zdg-delete-stroke);
   stroke-width: 2;
   stroke-linecap: butt;
   pointer-events: none;
 }
 
 .zdg-dependency-edge-delete:hover .zdg-dependency-edge-delete-bg {
-  fill: #fff5f5;
+  fill: var(--zdg-delete-hover-bg);
 }
 
 .zdg-dependency-dragline {
-  stroke: #2378ae;
+  stroke: var(--zdg-edge-preview-stroke);
   stroke-width: 2;
   stroke-dasharray: 6, 3;
   pointer-events: none;
 }
 
 .zdg-dependency-edge-preview {
-  stroke: #2378ae;
+  stroke: var(--zdg-edge-preview-stroke);
   stroke-width: 3;
   pointer-events: none;
 }
 
 .zdg-dependency-edge-preview-arrow {
-  fill: #2378ae;
+  fill: var(--zdg-edge-preview-stroke);
   pointer-events: none;
 }
 
@@ -117,6 +150,6 @@ code {
 }
 
 .zdg-dependency-drop-hover rect {
-  stroke: #2378ae;
+  stroke: var(--zdg-drop-hover-stroke);
   stroke-width: 2;
 }

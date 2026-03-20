@@ -84,6 +84,24 @@ function getGraphElement({
 
   clonedGraphElement.querySelector("#svg-pan-zoom-controls")?.remove();
 
+  // Resolve CSS custom properties so the exported SVG is self-contained.
+  const computedStyle = getComputedStyle(document.documentElement);
+  clonedGraphElement.querySelectorAll("*").forEach((el) => {
+    const style = (el as HTMLElement).style;
+    if (!style) return;
+    for (let i = 0; i < style.length; i++) {
+      const prop = style[i];
+      const value = style.getPropertyValue(prop);
+      const match = value.match(/var\(--([^)]+)\)/);
+      if (match) {
+        const resolved = computedStyle.getPropertyValue(`--${match[1]}`).trim();
+        if (resolved) {
+          style.setProperty(prop, resolved);
+        }
+      }
+    }
+  });
+
   const originalViewport = graphElement.querySelector(
     ".svg-pan-zoom_viewport",
   ) as SVGGElement;
@@ -96,7 +114,10 @@ function getGraphElement({
     // The graph dimensions may have been changed by drag/drop or pan/zoom, so update the background rect dimensions.
     backgroundRect.setAttribute("width", width.toString());
     backgroundRect.setAttribute("height", height.toString());
-    backgroundRect.setAttribute("fill", "white");
+    const bgColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--zdg-node-bg")
+      .trim() || "white";
+    backgroundRect.setAttribute("fill", bgColor);
   }
 
   return {

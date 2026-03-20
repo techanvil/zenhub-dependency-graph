@@ -7,6 +7,7 @@ import {
   HStack,
   Badge,
   CloseButton,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { unified } from "unified";
@@ -171,6 +172,11 @@ function IssuePreviewPopup() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, closePopup]);
 
+  const popupBg = useColorModeValue("white", "gray.800");
+  const popupBorderColor = useColorModeValue("gray.300", "gray.600");
+  const mutedTextColor = useColorModeValue("gray.600", "gray.400");
+  const codeBg = useColorModeValue("gray.100", "gray.700");
+
   // Don't render if no issue data and not measuring
   if (!issueData || (!isOpen && !isMeasuring)) {
     return null;
@@ -182,9 +188,9 @@ function IssuePreviewPopup() {
       position="fixed"
       left={`${position.x}px`}
       top={`${position.y}px`}
-      bg="white"
+      bg={popupBg}
       border="1px solid"
-      borderColor="gray.300"
+      borderColor={popupBorderColor}
       borderRadius="md"
       p={3}
       maxW="min(800px, 100vw)" // TODO: Create constants for the popup width and height.
@@ -213,13 +219,13 @@ function IssuePreviewPopup() {
         </HStack>
 
         {issueData.assignees.length > 0 && (
-          <Text fontSize="xs" color="gray.600">
+          <Text fontSize="xs" color={mutedTextColor}>
             Assignees: {issueData.assignees.join(", ")}
           </Text>
         )}
 
         {issueData.estimate && (
-          <Text fontSize="xs" color="gray.600">
+          <Text fontSize="xs" color={mutedTextColor}>
             Estimate: {issueData.estimate}
           </Text>
         )}
@@ -239,14 +245,14 @@ function IssuePreviewPopup() {
               },
               "& ul, & ol": { paddingLeft: "1rem" },
               "& code": {
-                bg: "gray.100",
+                bg: codeBg,
                 px: 1,
                 py: 0.5,
                 borderRadius: "sm",
                 fontSize: "xs",
               },
               "& pre": {
-                bg: "gray.100",
+                bg: codeBg,
                 p: 2,
                 borderRadius: "sm",
                 overflow: "auto",

@@ -29,7 +29,7 @@ export function renderSimpleIssues(nodes, appSettings) {
       .attr("font-size", 6)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("fill", "black");
+      .style("fill", "var(--zdg-node-text)");
   }
 
   // Add issue number to nodes
@@ -44,7 +44,7 @@ export function renderSimpleIssues(nodes, appSettings) {
     .attr("font-size", 20)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+    .style("fill", "var(--zdg-node-text)");
 
   // TODO: GH issue on hover?
 
@@ -62,7 +62,7 @@ export function renderSimpleIssues(nodes, appSettings) {
       .attr("font-size", 8)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("fill", "black");
+      .style("fill", "var(--zdg-node-text)");
   }
 
   // Add pipeline name to nodes
@@ -76,7 +76,7 @@ export function renderSimpleIssues(nodes, appSettings) {
     .attr("font-size", 8)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+    .style("fill", "var(--zdg-node-text)");
 
   // Add "External" text for non-epic issues to nodes
   nodes
@@ -89,5 +89,5 @@ export function renderSimpleIssues(nodes, appSettings) {
     .attr("font-size", 5)
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
+    .style("fill", "var(--zdg-node-text)");
 }
