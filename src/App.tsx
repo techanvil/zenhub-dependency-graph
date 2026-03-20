@@ -30,6 +30,14 @@ export const theme = extendTheme({
     initialColorMode: "system",
     useSystemColorMode: false,
   },
+  styles: {
+    global: (props: { colorMode: string }) => ({
+      body: {
+        // bg: props.colorMode === "dark" ? "gray.900" : "white",
+        bg: props.colorMode === "dark" ? "#0d1117" : "white",
+      },
+    }),
+  },
   components: {
     Popover: {
       variants: {
