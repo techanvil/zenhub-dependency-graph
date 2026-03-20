@@ -665,17 +665,29 @@ export const generateGraph = (
   }
 
   if (showIssuePreviews) {
+    const iconRadius = 7;
+    const iconGap = 3;
+    const iconOffsetX = rectWidth / 2 + iconRadius + iconGap;
+
     const infoIcons = nodes
       .append("g")
       .attr("class", "zdg-info-icon")
       .attr("opacity", 0)
       .attr("pointer-events", "none")
       .attr("cursor", "pointer")
-      .attr("transform", `translate(${rectWidth / 2}, 0)`);
+      .attr("transform", `translate(${iconOffsetX}, 0)`);
+
+    infoIcons
+      .append("rect")
+      .attr("x", -(iconRadius + iconGap))
+      .attr("y", -iconRadius)
+      .attr("width", iconRadius + iconGap)
+      .attr("height", iconRadius * 2)
+      .attr("fill", "transparent");
 
     infoIcons
       .append("circle")
-      .attr("r", 7)
+      .attr("r", iconRadius)
       .attr("fill", "white")
       .attr("stroke", "#888")
       .attr("stroke-width", 1);
