@@ -590,6 +590,8 @@ export const generateGraph = (
 
   // Highlight blocked and blocking issues on hover, and show info icon for issue preview.
   if (highlightRelatedIssues || showIssuePreviews) {
+    let hoveredNodeEl = null;
+
     nodes
       .on("mouseenter", (e, d) => {
         const { data } = d;
@@ -626,10 +628,14 @@ export const generateGraph = (
         }
 
         if (showIssuePreviews) {
-          d3.select(e.currentTarget)
-            .select(".zdg-info-icon")
-            .attr("opacity", 1)
-            .attr("pointer-events", "all");
+          hoveredNodeEl = e.currentTarget;
+
+          if (!e.ctrlKey) {
+            d3.select(e.currentTarget)
+              .select(".zdg-info-icon")
+              .attr("opacity", 1)
+              .attr("pointer-events", "all");
+          }
         }
       })
       .on("mouseleave", (e, d) => {
@@ -644,6 +650,8 @@ export const generateGraph = (
         }
 
         if (showIssuePreviews) {
+          hoveredNodeEl = null;
+
           const popupState = store.get(issuePreviewPopupAtom);
           const isPopupOpenForThisIssue =
             popupState.isOpen && popupState.issueData?.id === d.data.id;
@@ -656,6 +664,27 @@ export const generateGraph = (
           }
         }
       });
+
+    if (showIssuePreviews) {
+      function onCtrlKeyDown(e) {
+        if (e.key !== "Control" || !hoveredNodeEl) return;
+        d3.select(hoveredNodeEl)
+          .select(".zdg-info-icon")
+          .attr("opacity", 0)
+          .attr("pointer-events", "none");
+      }
+
+      function onCtrlKeyUp(e) {
+        if (e.key !== "Control" || !hoveredNodeEl) return;
+        d3.select(hoveredNodeEl)
+          .select(".zdg-info-icon")
+          .attr("opacity", 1)
+          .attr("pointer-events", "all");
+      }
+
+      window.addEventListener("keydown", onCtrlKeyDown);
+      window.addEventListener("keyup", onCtrlKeyUp);
+    }
   }
 
   if (showIssueDetails) {
@@ -713,6 +742,17 @@ export const generateGraph = (
       const popupState = store.get(issuePreviewPopupAtom);
 
       if (popupState.isOpen && popupState.issueData?.id === data.id) {
+        store.set(issuePreviewPopupAtom, {
+          isOpen: false,
+          issueData: null,
+          position: { x: 0, y: 0 },
+          isMeasuring: false,
+          originalX: undefined,
+          originalY: undefined,
+          panZoomInstance: null,
+          dagWidth: 0,
+          dagHeight: 0,
+        });
         return;
       }
 
