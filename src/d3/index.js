@@ -402,12 +402,12 @@ export const generateGraph = (
       .append("path")
       .attr("d", `M ${gridWidth} 0 L 0 0 0 ${gridHeight}`) //"M 8 0 L 0 0 0 8")
       .attr("fill", "none")
-      .attr("stroke", "gray")
+      .style("stroke", "var(--zdg-grid-stroke)")
       .attr("stroke-width", 0.5);
 
     backgroundRect.attr("fill", "url(#smallGrid)");
   } else {
-    backgroundRect.attr("fill", "rgba(0,0,0,0)");
+    backgroundRect.style("fill", "var(--zdg-bg-transparent)");
   }
 
   const steps = dag.size();
@@ -495,7 +495,7 @@ export const generateGraph = (
     .enter()
     .append("g")
     .attr("transform", ({ x, y }) => `translate(${x}, ${y})`)
-    // Append a white background rect which retains full opacity to avoid showing lines through opaque nodes.
+    // Append a background rect which retains full opacity to avoid showing lines through opaque nodes.
     // TODO: DRY the rect creation?
     .append("rect")
     .attr("width", rectWidth)
@@ -504,7 +504,7 @@ export const generateGraph = (
     .attr("ry", 5)
     .attr("x", -rectWidth / 2)
     .attr("y", -rectHeight / 2)
-    .attr("fill", "white")
+    .style("fill", "var(--zdg-node-bg)")
     .select(function () {
       return this.parentNode;
     })
@@ -688,9 +688,9 @@ export const generateGraph = (
   }
 
   if (showIssueDetails) {
-    renderDetailedIssues(issues, appSettings);
+    renderDetailedIssues(issues, appSettings, pipelineColors, colorMap);
   } else {
-    renderSimpleIssues(issues, appSettings);
+    renderSimpleIssues(issues, appSettings, pipelineColors, colorMap);
   }
 
   if (showIssuePreviews) {
@@ -717,8 +717,8 @@ export const generateGraph = (
     infoIcons
       .append("circle")
       .attr("r", iconRadius)
-      .attr("fill", "white")
-      .attr("stroke", "#888")
+      .style("fill", "var(--zdg-info-icon-bg)")
+      .style("stroke", "var(--zdg-info-icon-stroke)")
       .attr("stroke-width", 1);
 
     infoIcons
@@ -727,7 +727,7 @@ export const generateGraph = (
       .attr("dominant-baseline", "central")
       .attr("font-size", "10px")
       .attr("font-weight", "bold")
-      .attr("fill", "#555")
+      .style("fill", "var(--zdg-info-icon-text)")
       .attr("pointer-events", "none")
       .text("i");
 

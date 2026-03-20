@@ -35,6 +35,13 @@ export const APIKeyAtom = atomWithStorage("zenhubAPIKey", "", undefined, {
   getOnInit: true,
 });
 
+export const colorModePreferenceAtom = atomWithStorage(
+  "colorModePreference",
+  "system",
+  undefined,
+  { getOnInit: true },
+);
+
 export const appSettingsAtom = atomWithParameterPersistence(
   "appSettings",
   {}, // Initial value.

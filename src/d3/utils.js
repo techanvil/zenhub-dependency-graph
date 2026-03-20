@@ -4,6 +4,29 @@ export function getNodeColor(target, pipelineColors, colorMap) {
   );
 }
 
+function getRelativeLuminance(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+  const linearize = (c) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+
+  return (
+    0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
+  );
+}
+
+export function getContrastingTextColor(bgColor) {
+  if (!bgColor) return "var(--zdg-node-text)";
+  return getRelativeLuminance(bgColor) > 0.179 ? "#000000" : "#ffffff";
+}
+
+export function getNodeTextColor(node, pipelineColors, colorMap) {
+  const bgColor = getNodeColor(node, pipelineColors, colorMap);
+  return getContrastingTextColor(bgColor);
+}
+
 export function getArrowEndColor(source, target, pipelineColors, colorMap) {
   if (!source.data.isNonEpicIssue && target.data.isNonEpicIssue) {
     return "tomato";

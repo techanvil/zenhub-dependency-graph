@@ -7,6 +7,7 @@ import {
   Button,
   FormControl,
   FormHelperText,
+  HStack,
   Link,
   Input,
   Modal,
@@ -17,6 +18,8 @@ import {
   ModalBody,
   ModalCloseButton,
   FormLabel,
+  Radio,
+  RadioGroup,
   Switch,
 } from "@chakra-ui/react";
 import { deepEquals } from "../../utils/common";
@@ -29,6 +32,7 @@ import {
   additionalColorsAtom,
   APIKeyAtom,
   appSettingsAtom,
+  colorModePreferenceAtom,
   coordinateOverridesAtom,
   pipelineColorsAtom,
   pipelineHiddenAtom,
@@ -44,6 +48,9 @@ export default function SettingsModal({ isOpen, onClose }) {
   const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
     coordinateOverridesAtom,
+  );
+  const [colorModePreference, setColorModePreference] = useAtom(
+    colorModePreferenceAtom,
   );
 
   // TODO: Clean this up.
@@ -118,6 +125,19 @@ export default function SettingsModal({ isOpen, onClose }) {
               </Link>
               .
             </FormHelperText>
+          </FormControl>
+          <FormControl pt="5">
+            <FormLabel>Theme (takes effect immediately)</FormLabel>
+            <RadioGroup
+              value={colorModePreference}
+              onChange={setColorModePreference}
+            >
+              <HStack spacing="24px">
+                <Radio value="light">Light</Radio>
+                <Radio value="dark">Dark</Radio>
+                <Radio value="system">System</Radio>
+              </HStack>
+            </RadioGroup>
           </FormControl>
           <FormControl pt="5">
             <FormLabel>Snap to grid</FormLabel>
