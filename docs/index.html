@@ -13,11 +13,27 @@
     <link rel="manifest" href="/zenhub-dependency-graph/manifest.json" />
     <title>ZDG</title>
     <script defer src="/zenhub-dependency-graph/js/svg-pan-zoom.js"></script>
-    <script type="module" crossorigin src="/zenhub-dependency-graph/assets/index-DfodssZR.js"></script>
-    <link rel="stylesheet" crossorigin href="/zenhub-dependency-graph/assets/index-DIuTbzTZ.css">
+    <script type="module" crossorigin src="/zenhub-dependency-graph/assets/index-DzcRkNCA.js"></script>
+    <link rel="stylesheet" crossorigin href="/zenhub-dependency-graph/assets/index-DrONgunn.css">
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <script>
+      // Prevents flash of wrong theme on load.
+      // Reads the user preference and Chakra's resolved color mode from localStorage.
+      (function() {
+        var pref;
+        try { pref = JSON.parse(localStorage.getItem("colorModePreference")); } catch(e) {}
+        var mode = pref || "system";
+        if (mode === "system") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        var cl = document.documentElement.classList;
+        cl.add(mode === "dark" ? "chakra-ui-dark" : "chakra-ui-light");
+        document.documentElement.setAttribute("data-theme", mode);
+        document.documentElement.style.colorScheme = mode;
+      })();
+    </script>
     <div id="root"></div>
   </body>
 </html>
