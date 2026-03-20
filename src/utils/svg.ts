@@ -84,6 +84,13 @@ function getGraphElement({
 
   clonedGraphElement.querySelector("#svg-pan-zoom-controls")?.remove();
 
+  // Remove interactive dependency-editing UI elements from the export.
+  clonedGraphElement
+    .querySelectorAll(
+      ".zdg-dependency-handles, .zdg-edit-overlay, .zdg-edit-underlay, .zdg-line-hits",
+    )
+    .forEach((el) => el.remove());
+
   // Resolve CSS custom properties so the exported SVG is self-contained.
   const computedStyle = getComputedStyle(document.documentElement);
   clonedGraphElement.querySelectorAll("*").forEach((el) => {
