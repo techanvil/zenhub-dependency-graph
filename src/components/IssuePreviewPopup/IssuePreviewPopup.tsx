@@ -1,5 +1,13 @@
 import React, { useEffect, useCallback } from "react";
-import { Box, Text, Link, VStack, HStack, Badge } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  Link,
+  VStack,
+  HStack,
+  Badge,
+  CloseButton,
+} from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
@@ -8,7 +16,6 @@ import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import { issuePreviewPopupAtom } from "../../store/atoms";
 import { store } from "../../store/atoms";
-import { getIssueNodeAtMousePosition } from "../../utils/mouse-position";
 import { calculatePopupPosition } from "../../utils/popup-position";
 
 function IssuePreviewPopup() {
@@ -137,25 +144,7 @@ function IssuePreviewPopup() {
     processMarkdown();
   }, [issueData]);
 
-  function onClose(e: React.MouseEvent<HTMLDivElement>) {
-    // Don't allow closing when measuring
-    if (isMeasuring) {
-      return;
-    }
-
-    const issueNode = getIssueNodeAtMousePosition({
-      x: e.clientX,
-      y: e.clientY,
-    });
-
-    // Don't close if the issue node is the same as the one that opened the popup
-    if (issueNode?.data?.id === issueData?.id) {
-      return;
-    }
-
-    // TODO:
-    // - Consider using `useSetAtom` instead of `store.set`.
-    // - Create a `hideIssuePreviewPopupAtom` atom or function as we're now hiding in multiple places.
+  const closePopup = useCallback(() => {
     store.set(issuePreviewPopupAtom, {
       isOpen: false,
       issueData: null,
@@ -167,7 +156,20 @@ function IssuePreviewPopup() {
       dagWidth: 0,
       dagHeight: 0,
     });
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        closePopup();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, closePopup]);
 
   // Don't render if no issue data and not measuring
   if (!issueData || (!isOpen && !isMeasuring)) {
@@ -193,7 +195,6 @@ function IssuePreviewPopup() {
       fontSize="sm"
       lineHeight="1.4"
       className="zdg-issue-preview-popup"
-      onMouseLeave={onClose}
       opacity={isMeasuring ? 0 : 1}
       visibility={isMeasuring ? "hidden" : "visible"}
       pointerEvents={isMeasuring ? "none" : "auto"}
@@ -203,9 +204,12 @@ function IssuePreviewPopup() {
           <Text fontWeight="bold" fontSize="md" noOfLines={2}>
             {issueData.title}
           </Text>
-          <Badge colorScheme="blue" variant="subtle">
-            #{issueData.id}
-          </Badge>
+          <HStack spacing={1} flexShrink={0}>
+            <Badge colorScheme="blue" variant="subtle">
+              #{issueData.id}
+            </Badge>
+            <CloseButton size="sm" onClick={closePopup} />
+          </HStack>
         </HStack>
 
         {issueData.assignees.length > 0 && (

@@ -38,6 +38,11 @@ code {
   transition: opacity 0.2s ease-in-out;
 }
 
+/* Issue preview info icon */
+.zdg-info-icon {
+  transition: opacity 0.15s ease-in-out;
+}
+
 /* Dependency edit mode (Ctrl + hover) */
 .zdg-dependency-handles {
   display: none;

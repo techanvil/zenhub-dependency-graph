@@ -188,6 +188,8 @@ const panZoom = {
   hasInteracted: false,
 };
 
+let unsubscribePreviewPopup = null;
+
 export const generateGraph = (
   graphData,
   svgElement,
@@ -247,6 +249,11 @@ export const generateGraph = (
     // TODO: This is a bit of a nuclear option, we should recover more gracefully.
     window.location.reload();
   }
+  if (unsubscribePreviewPopup) {
+    unsubscribePreviewPopup();
+    unsubscribePreviewPopup = null;
+  }
+
   d3.selectAll("svg > *").remove();
 
   if (!showAncestorDependencies) {
@@ -581,10 +588,8 @@ export const generateGraph = (
       getArrowEndColor(source, target, pipelineColors, colorMap),
     );
 
-  // Highlight blocked and blocking issues and/or show a preview of the related GH issue on hover.
+  // Highlight blocked and blocking issues on hover, and show info icon for issue preview.
   if (highlightRelatedIssues || showIssuePreviews) {
-    let previewTimeout;
-
     nodes
       .on("mouseenter", (e, d) => {
         const { data } = d;
@@ -620,37 +625,14 @@ export const generateGraph = (
             .attr("opacity", "0.3");
         }
 
-        // Don't show the preview if the user is holding down the ctrl key, this allows
-        // them to view the related issues without the preview getting in the way.
-        if (showIssuePreviews && !e.ctrlKey) {
-          previewTimeout = setTimeout(() => {
-            // Show React popup preview of the related GH issue
-            const issueData = {
-              id: data.id,
-              title: data.title,
-              body: data.body || "",
-              htmlUrl: data.htmlUrl,
-              assignees: data.assignees || [],
-              estimate: data.estimate,
-              pipelineName: data.pipelineName,
-            };
-
-            // Start with measuring mode - render invisibly to get dimensions
-            store.set(issuePreviewPopupAtom, {
-              isOpen: false,
-              isMeasuring: true,
-              issueData,
-              position: { x: -9999, y: -9999 }, // Off-screen position during measurement
-              originalX: d.x,
-              originalY: d.y,
-              panZoomInstance: panZoom.instance,
-              dagWidth,
-              dagHeight,
-            });
-          }, 1000); // Show after 1 second
+        if (showIssuePreviews) {
+          d3.select(e.currentTarget)
+            .select(".zdg-info-icon")
+            .attr("opacity", 1)
+            .attr("pointer-events", "all");
         }
       })
-      .on("mouseleave", (e) => {
+      .on("mouseleave", (e, d) => {
         if (selectAndDragState.isLassooing || selectAndDragState.isDragging) {
           return;
         }
@@ -661,24 +643,17 @@ export const generateGraph = (
           arrows.attr("opacity", "1");
         }
 
-        if (
-          showIssuePreviews &&
-          !e.relatedTarget?.classList.contains("zdg-issue-preview-popup")
-        ) {
-          clearTimeout(previewTimeout);
+        if (showIssuePreviews) {
+          const popupState = store.get(issuePreviewPopupAtom);
+          const isPopupOpenForThisIssue =
+            popupState.isOpen && popupState.issueData?.id === d.data.id;
 
-          // Hide the React popup preview of the related GH issue
-          store.set(issuePreviewPopupAtom, {
-            isOpen: false,
-            issueData: null,
-            position: { x: 0, y: 0 },
-            isMeasuring: false,
-            originalX: undefined,
-            originalY: undefined,
-            panZoomInstance: null,
-            dagWidth: 0,
-            dagHeight: 0,
-          });
+          if (!isPopupOpenForThisIssue) {
+            d3.select(e.currentTarget)
+              .select(".zdg-info-icon")
+              .attr("opacity", 0)
+              .attr("pointer-events", "none");
+          }
         }
       });
   }
@@ -687,6 +662,89 @@ export const generateGraph = (
     renderDetailedIssues(issues, appSettings);
   } else {
     renderSimpleIssues(issues, appSettings);
+  }
+
+  if (showIssuePreviews) {
+    const infoIcons = nodes
+      .append("g")
+      .attr("class", "zdg-info-icon")
+      .attr("opacity", 0)
+      .attr("pointer-events", "none")
+      .attr("cursor", "pointer")
+      .attr("transform", `translate(${rectWidth / 2}, 0)`);
+
+    infoIcons
+      .append("circle")
+      .attr("r", 7)
+      .attr("fill", "white")
+      .attr("stroke", "#888")
+      .attr("stroke-width", 1);
+
+    infoIcons
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("font-size", "10px")
+      .attr("font-weight", "bold")
+      .attr("fill", "#555")
+      .attr("pointer-events", "none")
+      .text("i");
+
+    infoIcons.on("mousedown", (e) => {
+      e.stopPropagation();
+    });
+
+    infoIcons.on("click", (e, d) => {
+      e.stopPropagation();
+
+      const { data } = d;
+      const popupState = store.get(issuePreviewPopupAtom);
+
+      if (popupState.isOpen && popupState.issueData?.id === data.id) {
+        return;
+      }
+
+      // When switching from a different issue, hide the old issue's info icon.
+      if (popupState.isOpen && popupState.issueData?.id) {
+        nodes
+          .filter((nd) => nd.data.id === popupState.issueData.id)
+          .select(".zdg-info-icon")
+          .attr("opacity", 0)
+          .attr("pointer-events", "none");
+      }
+
+      const issueData = {
+        id: data.id,
+        title: data.title,
+        body: data.body || "",
+        htmlUrl: data.htmlUrl,
+        assignees: data.assignees || [],
+        estimate: data.estimate,
+        pipelineName: data.pipelineName,
+      };
+
+      store.set(issuePreviewPopupAtom, {
+        isOpen: false,
+        isMeasuring: true,
+        issueData,
+        position: { x: -9999, y: -9999 },
+        originalX: d.x,
+        originalY: d.y,
+        panZoomInstance: panZoom.instance,
+        dagWidth,
+        dagHeight,
+      });
+    });
+
+    unsubscribePreviewPopup = store.sub(issuePreviewPopupAtom, () => {
+      const state = store.get(issuePreviewPopupAtom);
+      if (!state.isOpen && !state.isMeasuring) {
+        nodes
+          .selectAll(".zdg-info-icon")
+          .attr("opacity", 0)
+          .attr("pointer-events", "none");
+      }
+    });
   }
 
   setupSelectAndDrag(
