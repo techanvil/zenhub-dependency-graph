@@ -1,6 +1,12 @@
 import { useAtom } from "jotai";
 
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
   Box,
   Button,
   Flex,
@@ -15,9 +21,10 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
-import { additionalColorDefaults } from "../d3/constants";
+import { additionalColorDefaults, pipelineColorDefaults } from "../d3/constants";
+import { deepEquals } from "../utils/common";
 import {
   additionalColorsAtom,
   pipelineColorsAtom,
@@ -118,7 +125,26 @@ export function Legend() {
     useAtom(additionalColorsAtom);
   const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
 
+  const {
+    isOpen: isResetOpen,
+    onOpen: onResetOpen,
+    onClose: onResetClose,
+  } = useDisclosure();
+  const resetCancelRef = useRef();
+
+  const {
+    isOpen: isUnhideOpen,
+    onOpen: onUnhideOpen,
+    onClose: onUnhideClose,
+  } = useDisclosure();
+  const unhideCancelRef = useRef();
+
   const pipelineColorItems = Object.entries(pipelineColors);
+
+  const colorsAreCustomised = !(
+    deepEquals(pipelineColors, pipelineColorDefaults) &&
+    deepEquals(additionalColors, additionalColorDefaults)
+  );
 
   return (
     <Flex direction="column">
@@ -185,6 +211,84 @@ export function Legend() {
           );
         })
       }
+      {Object.keys(pipelineHidden).length > 0 && (
+        <>
+          <hr />
+          <Button mt={2} size="sm" colorScheme="blue" onClick={onUnhideOpen}>
+            Unhide all pipelines
+          </Button>
+        </>
+      )}
+      {colorsAreCustomised && (
+        <>
+          <hr />
+          <Button mt={2} size="sm" colorScheme="blue" onClick={onResetOpen}>
+            Reset colours
+          </Button>
+        </>
+      )}
+
+      <AlertDialog
+        isOpen={isUnhideOpen}
+        leastDestructiveRef={unhideCancelRef}
+        onClose={onUnhideClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Unhide all pipelines</AlertDialogHeader>
+            <AlertDialogBody>
+              This will make all hidden pipelines visible again.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={unhideCancelRef} onClick={onUnhideClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="blue"
+                ml={3}
+                onClick={() => {
+                  savePipelineHidden({});
+                  onUnhideClose();
+                }}
+              >
+                Unhide all
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      <AlertDialog
+        isOpen={isResetOpen}
+        leastDestructiveRef={resetCancelRef}
+        onClose={onResetClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Reset colours</AlertDialogHeader>
+            <AlertDialogBody>
+              This will restore all pipeline and issue colours to their
+              defaults. This cannot be undone.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={resetCancelRef} onClick={onResetClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                ml={3}
+                onClick={() => {
+                  savePipelineColors(pipelineColorDefaults);
+                  saveAdditionalColors(additionalColorDefaults);
+                  onResetClose();
+                }}
+              >
+                Reset
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Flex>
   );
 }

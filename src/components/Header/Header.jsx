@@ -1,9 +1,15 @@
 /**
  * External dependencies
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Box,
   Button,
   Container,
@@ -13,11 +19,13 @@ import {
   Input,
   Menu,
   MenuButton,
+  MenuDivider,
   MenuItem,
   MenuList,
   Switch,
   Text,
   useColorModeValue,
+  useDisclosure,
   useToast,
   VStack,
   Wrap,
@@ -29,6 +37,7 @@ import { AsyncSelect, Select } from "chakra-react-select";
  * Internal dependencies
  */
 import {
+  clearGraphCache,
   getAllOrganizations,
   getAllEpics,
   getWorkspaces,
@@ -40,6 +49,7 @@ import {
   APIKeyAtom,
   appSettingsAtom,
   baselineGraphDataAtom,
+  coordinateOverridesAtom,
   currentGraphDataAtom,
   epicAtom,
   graphRenderNonceAtom,
@@ -114,8 +124,26 @@ export default function Header({
   const setBaselineGraphData = useSetAtom(baselineGraphDataAtom);
   const bumpGraphRenderNonce = useSetAtom(graphRenderNonceAtom);
 
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom,
+  );
+
   const toast = useToast();
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
+
+  const {
+    isOpen: isResetLayoutOpen,
+    onOpen: onResetLayoutOpen,
+    onClose: onResetLayoutClose,
+  } = useDisclosure();
+  const resetLayoutCancelRef = useRef();
+
+  const {
+    isOpen: isFlushCacheOpen,
+    onOpen: onFlushCacheOpen,
+    onClose: onFlushCacheClose,
+  } = useDisclosure();
+  const flushCacheCancelRef = useRef();
 
   let baseline;
   if (appSettings.showAncestorDependencies) {
@@ -512,6 +540,7 @@ export default function Header({
                       <AuthenticationMenuItem authentication={authentication} />
                     )}
                     <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
+                    <MenuDivider />
                     <MenuItem
                       onClick={() =>
                         downloadSVG(chosenEpic.label, {
@@ -532,6 +561,13 @@ export default function Header({
                     >
                       Copy to clipboard (PNG)
                     </MenuItem>
+                    <MenuDivider />
+                    {Object.keys(coordinateOverrides || {}).length > 0 && (
+                      <MenuItem onClick={onResetLayoutOpen}>
+                        Reset layout
+                      </MenuItem>
+                    )}
+                    <MenuItem onClick={onFlushCacheOpen}>Flush cache</MenuItem>
                   </MenuList>
                 </Menu>
               </WrapItem>
@@ -539,6 +575,68 @@ export default function Header({
           </Container>
         </Box>
       </Box>
+
+      <AlertDialog
+        isOpen={isResetLayoutOpen}
+        leastDestructiveRef={resetLayoutCancelRef}
+        onClose={onResetLayoutClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Reset layout</AlertDialogHeader>
+            <AlertDialogBody>
+              This will reset the epic layout to its default positions. Any
+              manual positioning will be lost.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={resetLayoutCancelRef} onClick={onResetLayoutClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                ml={3}
+                onClick={() => {
+                  saveCoordinateOverrides(null);
+                  onResetLayoutClose();
+                }}
+              >
+                Reset
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      <AlertDialog
+        isOpen={isFlushCacheOpen}
+        leastDestructiveRef={flushCacheCancelRef}
+        onClose={onFlushCacheClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Flush cache</AlertDialogHeader>
+            <AlertDialogBody>
+              This will clear all cached graph data. The next graph load will
+              make fresh requests to the Zenhub API.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={flushCacheCancelRef} onClick={onFlushCacheClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="blue"
+                ml={3}
+                onClick={() => {
+                  clearGraphCache();
+                  onFlushCacheClose();
+                }}
+              >
+                Flush cache
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 }

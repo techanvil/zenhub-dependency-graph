@@ -121,9 +121,10 @@ function getGraphElement({
     // The graph dimensions may have been changed by drag/drop or pan/zoom, so update the background rect dimensions.
     backgroundRect.setAttribute("width", width.toString());
     backgroundRect.setAttribute("height", height.toString());
-    const bgColor = getComputedStyle(document.documentElement)
-      .getPropertyValue("--zdg-node-bg")
-      .trim() || "white";
+    const bgColor =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--zdg-node-bg")
+        .trim() || "white";
     backgroundRect.setAttribute("fill", bgColor);
   }
 
