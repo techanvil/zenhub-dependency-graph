@@ -1,6 +1,12 @@
 import { useAtom } from "jotai";
 
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
   Box,
   Button,
   Flex,
@@ -15,7 +21,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
 import { additionalColorDefaults, pipelineColorDefaults } from "../d3/constants";
 import { deepEquals } from "../utils/common";
@@ -119,7 +125,19 @@ export function Legend() {
     useAtom(additionalColorsAtom);
   const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
 
+  const {
+    isOpen: isResetOpen,
+    onOpen: onResetOpen,
+    onClose: onResetClose,
+  } = useDisclosure();
+  const resetCancelRef = useRef();
+
   const pipelineColorItems = Object.entries(pipelineColors);
+
+  const colorsAreCustomised = !(
+    deepEquals(pipelineColors, pipelineColorDefaults) &&
+    deepEquals(additionalColors, additionalColorDefaults)
+  );
 
   return (
     <Flex direction="column">
@@ -186,25 +204,46 @@ export function Legend() {
           );
         })
       }
-      {!(
-        deepEquals(pipelineColors, pipelineColorDefaults) &&
-        deepEquals(additionalColors, additionalColorDefaults)
-      ) && (
+      {colorsAreCustomised && (
         <>
           <hr />
-          <Button
-            mt={2}
-            size="sm"
-            colorScheme="blue"
-            onClick={() => {
-              savePipelineColors(pipelineColorDefaults);
-              saveAdditionalColors(additionalColorDefaults);
-            }}
-          >
+          <Button mt={2} size="sm" colorScheme="blue" onClick={onResetOpen}>
             Reset colours
           </Button>
         </>
       )}
+
+      <AlertDialog
+        isOpen={isResetOpen}
+        leastDestructiveRef={resetCancelRef}
+        onClose={onResetClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Reset colours</AlertDialogHeader>
+            <AlertDialogBody>
+              This will restore all pipeline and issue colours to their
+              defaults. This cannot be undone.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={resetCancelRef} onClick={onResetClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                ml={3}
+                onClick={() => {
+                  savePipelineColors(pipelineColorDefaults);
+                  saveAdditionalColors(additionalColorDefaults);
+                  onResetClose();
+                }}
+              >
+                Reset
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Flex>
   );
 }
