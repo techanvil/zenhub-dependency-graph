@@ -295,7 +295,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <SettingsCard>
                   <SwitchSetting
                     label="Show non-epic issues"
-                    tooltip="Include issues that aren't children of the current epic. When off, they're hidden and a count is shown in the header."
+                    tooltip="Include issues that aren't part of the current epic but are connected to it through dependencies."
                     settingKey="showNonEpicIssues"
                     settings={s}
                     onChange={updateAppSettings}
