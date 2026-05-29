@@ -1,9 +1,15 @@
 /**
  * External dependencies
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Box,
   Button,
   Container,
@@ -13,11 +19,13 @@ import {
   Input,
   Menu,
   MenuButton,
+  MenuDivider,
   MenuItem,
   MenuList,
   Switch,
   Text,
   useColorModeValue,
+  useDisclosure,
   useToast,
   VStack,
   Wrap,
@@ -40,6 +48,7 @@ import {
   APIKeyAtom,
   appSettingsAtom,
   baselineGraphDataAtom,
+  coordinateOverridesAtom,
   currentGraphDataAtom,
   epicAtom,
   graphRenderNonceAtom,
@@ -114,8 +123,19 @@ export default function Header({
   const setBaselineGraphData = useSetAtom(baselineGraphDataAtom);
   const bumpGraphRenderNonce = useSetAtom(graphRenderNonceAtom);
 
+  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
+    coordinateOverridesAtom,
+  );
+
   const toast = useToast();
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
+
+  const {
+    isOpen: isResetLayoutOpen,
+    onOpen: onResetLayoutOpen,
+    onClose: onResetLayoutClose,
+  } = useDisclosure();
+  const resetLayoutCancelRef = useRef();
 
   let baseline;
   if (appSettings.showAncestorDependencies) {
@@ -512,6 +532,12 @@ export default function Header({
                       <AuthenticationMenuItem authentication={authentication} />
                     )}
                     <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
+                    {Object.keys(coordinateOverrides || {}).length > 0 && (
+                      <MenuItem onClick={onResetLayoutOpen}>
+                        Reset layout
+                      </MenuItem>
+                    )}
+                    <MenuDivider />
                     <MenuItem
                       onClick={() =>
                         downloadSVG(chosenEpic.label, {
@@ -539,6 +565,37 @@ export default function Header({
           </Container>
         </Box>
       </Box>
+
+      <AlertDialog
+        isOpen={isResetLayoutOpen}
+        leastDestructiveRef={resetLayoutCancelRef}
+        onClose={onResetLayoutClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Reset layout</AlertDialogHeader>
+            <AlertDialogBody>
+              This will reset the epic layout to its default positions. Any
+              manual positioning will be lost.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={resetLayoutCancelRef} onClick={onResetLayoutClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                ml={3}
+                onClick={() => {
+                  saveCoordinateOverrides(null);
+                  onResetLayoutClose();
+                }}
+              >
+                Reset
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 }

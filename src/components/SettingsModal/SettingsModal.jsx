@@ -34,7 +34,6 @@ import {
   APIKeyAtom,
   appSettingsAtom,
   colorModePreferenceAtom,
-  coordinateOverridesAtom,
 } from "../../store/atoms";
 import { clearGraphCache } from "../../data/graph-data";
 
@@ -61,9 +60,6 @@ function SectionHeading({ children }) {
 export default function SettingsModal({ isOpen, onClose }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
   const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
-  const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
-    coordinateOverridesAtom,
-  );
   const [colorModePreference, setColorModePreference] = useAtom(
     colorModePreferenceAtom,
   );
@@ -251,22 +247,6 @@ export default function SettingsModal({ isOpen, onClose }) {
 
               {/* Maintenance */}
               <TabPanel>
-                {Object.keys(coordinateOverrides || {}).length > 0 && (
-                  <FormControl pt="4">
-                    <FormLabel>
-                      Reset epic layout (takes effect immediately)
-                    </FormLabel>
-                    <Button
-                      colorScheme="blue"
-                      mr={1}
-                      onClick={() => {
-                        saveCoordinateOverrides(null);
-                      }}
-                    >
-                      Reset layout
-                    </Button>
-                  </FormControl>
-                )}
 
 
                 <FormControl pt="4" pb="4">
