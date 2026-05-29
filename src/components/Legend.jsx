@@ -132,6 +132,13 @@ export function Legend() {
   } = useDisclosure();
   const resetCancelRef = useRef();
 
+  const {
+    isOpen: isUnhideOpen,
+    onOpen: onUnhideOpen,
+    onClose: onUnhideClose,
+  } = useDisclosure();
+  const unhideCancelRef = useRef();
+
   const pipelineColorItems = Object.entries(pipelineColors);
 
   const colorsAreCustomised = !(
@@ -204,6 +211,14 @@ export function Legend() {
           );
         })
       }
+      {Object.keys(pipelineHidden).length > 0 && (
+        <>
+          <hr />
+          <Button mt={2} size="sm" colorScheme="blue" onClick={onUnhideOpen}>
+            Unhide all pipelines
+          </Button>
+        </>
+      )}
       {colorsAreCustomised && (
         <>
           <hr />
@@ -212,6 +227,36 @@ export function Legend() {
           </Button>
         </>
       )}
+
+      <AlertDialog
+        isOpen={isUnhideOpen}
+        leastDestructiveRef={unhideCancelRef}
+        onClose={onUnhideClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Unhide all pipelines</AlertDialogHeader>
+            <AlertDialogBody>
+              This will make all hidden pipelines visible again.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={unhideCancelRef} onClick={onUnhideClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="blue"
+                ml={3}
+                onClick={() => {
+                  savePipelineHidden({});
+                  onUnhideClose();
+                }}
+              >
+                Unhide all
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
 
       <AlertDialog
         isOpen={isResetOpen}

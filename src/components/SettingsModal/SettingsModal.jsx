@@ -35,7 +35,6 @@ import {
   appSettingsAtom,
   colorModePreferenceAtom,
   coordinateOverridesAtom,
-  pipelineHiddenAtom,
 } from "../../store/atoms";
 import { clearGraphCache } from "../../data/graph-data";
 
@@ -62,7 +61,6 @@ function SectionHeading({ children }) {
 export default function SettingsModal({ isOpen, onClose }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
   const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
-  const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
     coordinateOverridesAtom,
   );
@@ -270,22 +268,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                   </FormControl>
                 )}
 
-                {Object.keys(pipelineHidden).length > 0 && (
-                  <FormControl pt="4">
-                    <FormLabel>
-                      Unhide all pipelines (takes effect immediately)
-                    </FormLabel>
-                    <Button
-                      colorScheme="blue"
-                      mr={1}
-                      onClick={() => {
-                        savePipelineHidden({});
-                      }}
-                    >
-                      Unhide pipelines
-                    </Button>
-                  </FormControl>
-                )}
+
                 <FormControl pt="4" pb="4">
                   <FormLabel>
                     Flush request cache (takes effect immediately)
