@@ -300,6 +300,12 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <SectionHeading first>Canvas &amp; interaction</SectionHeading>
                 <SettingsCard>
                   <SwitchSetting
+                    label="Show grid"
+                    settingKey="showGrid"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
                     label="Snap to grid"
                     settingKey="snapToGrid"
                     settings={s}
@@ -327,12 +333,6 @@ export default function SettingsModal({ isOpen, onClose }) {
               {/* Advanced */}
               <TabPanel>
                 <SettingsCard>
-                  <SwitchSetting
-                    label="Show grid"
-                    settingKey="showGrid"
-                    settings={s}
-                    onChange={updateAppSettings}
-                  />
                   <SwitchSetting
                     label="Show non-epic blocked issues"
                     description="Recommended to leave this off"
