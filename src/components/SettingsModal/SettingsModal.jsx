@@ -29,18 +29,12 @@ import {
   Tabs,
 } from "@chakra-ui/react";
 import { deepEquals } from "../../utils/common";
-import {
-  additionalColorDefaults,
-  pipelineColorDefaults,
-} from "../../d3/constants";
 import { appSettingDefaults } from "../../constants";
 import {
-  additionalColorsAtom,
   APIKeyAtom,
   appSettingsAtom,
   colorModePreferenceAtom,
   coordinateOverridesAtom,
-  pipelineColorsAtom,
   pipelineHiddenAtom,
 } from "../../store/atoms";
 import { clearGraphCache } from "../../data/graph-data";
@@ -68,9 +62,6 @@ function SectionHeading({ children }) {
 export default function SettingsModal({ isOpen, onClose }) {
   const [APIKey, saveAPIKey] = useAtom(APIKeyAtom);
   const [appSettings, saveAppSettings] = useAtom(appSettingsAtom);
-  const [pipelineColors, savePipelineColors] = useAtom(pipelineColorsAtom);
-  const [additionalColors, saveAdditionalColors] =
-    useAtom(additionalColorsAtom);
   const [pipelineHidden, savePipelineHidden] = useAtom(pipelineHiddenAtom);
   const [coordinateOverrides, saveCoordinateOverrides] = useAtom(
     coordinateOverridesAtom,
@@ -278,26 +269,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     </Button>
                   </FormControl>
                 )}
-                {!(
-                  deepEquals(pipelineColors, pipelineColorDefaults) &&
-                  deepEquals(additionalColors, additionalColorDefaults)
-                ) && (
-                  <FormControl pt="4">
-                    <FormLabel>
-                      Reset issue colours (takes effect immediately)
-                    </FormLabel>
-                    <Button
-                      colorScheme="blue"
-                      mr={1}
-                      onClick={() => {
-                        savePipelineColors(pipelineColorDefaults);
-                        saveAdditionalColors(additionalColorDefaults);
-                      }}
-                    >
-                      Reset colours
-                    </Button>
-                  </FormControl>
-                )}
+
                 {Object.keys(pipelineHidden).length > 0 && (
                   <FormControl pt="4">
                     <FormLabel>

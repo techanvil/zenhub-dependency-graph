@@ -17,7 +17,8 @@ import {
 
 import { useState } from "react";
 import Sketch from "@uiw/react-color-sketch";
-import { additionalColorDefaults } from "../d3/constants";
+import { additionalColorDefaults, pipelineColorDefaults } from "../d3/constants";
+import { deepEquals } from "../utils/common";
 import {
   additionalColorsAtom,
   pipelineColorsAtom,
@@ -185,6 +186,25 @@ export function Legend() {
           );
         })
       }
+      {!(
+        deepEquals(pipelineColors, pipelineColorDefaults) &&
+        deepEquals(additionalColors, additionalColorDefaults)
+      ) && (
+        <>
+          <hr />
+          <Button
+            mt={2}
+            size="sm"
+            colorScheme="blue"
+            onClick={() => {
+              savePipelineColors(pipelineColorDefaults);
+              saveAdditionalColors(additionalColorDefaults);
+            }}
+          >
+            Reset colours
+          </Button>
+        </>
+      )}
     </Flex>
   );
 }
