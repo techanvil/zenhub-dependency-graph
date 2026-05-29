@@ -50,7 +50,14 @@ function SwitchSetting({ label, settingKey, settings, onChange }) {
 
 function SectionHeading({ children }) {
   return (
-    <Heading size="xs" textTransform="uppercase" letterSpacing="wide" mb="2" mt="4" opacity="0.6">
+    <Heading
+      size="xs"
+      textTransform="uppercase"
+      letterSpacing="wide"
+      mb="2"
+      mt="4"
+      opacity="0.6"
+    >
       {children}
     </Heading>
   );
@@ -121,16 +128,15 @@ export default function SettingsModal({ isOpen, onClose }) {
         <ModalBody px="0" pb="0">
           <Tabs colorScheme="blue" isLazy>
             <TabList px="6">
-              <Tab>General</Tab>
+              <Tab>Connection</Tab>
               <Tab>Display</Tab>
               <Tab>Canvas &amp; Export</Tab>
               <Tab>Advanced</Tab>
             </TabList>
 
             <TabPanels>
-              {/* General */}
+              {/* Connection */}
               <TabPanel>
-                <SectionHeading>Connection</SectionHeading>
                 <FormControl>
                   <FormLabel>Zenhub API key</FormLabel>
                   <Input
@@ -152,7 +158,10 @@ export default function SettingsModal({ isOpen, onClose }) {
                     .
                   </FormHelperText>
                 </FormControl>
+              </TabPanel>
 
+              {/* Display */}
+              <TabPanel>
                 <SectionHeading>Appearance</SectionHeading>
                 <FormControl pt="2">
                   <FormLabel>Theme (takes effect immediately)</FormLabel>
@@ -167,10 +176,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     </HStack>
                   </RadioGroup>
                 </FormControl>
-              </TabPanel>
 
-              {/* Display */}
-              <TabPanel>
                 <SectionHeading>Graph contents</SectionHeading>
                 <SwitchSetting
                   label="Show non-epic issues"
