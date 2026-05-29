@@ -35,7 +35,6 @@ import {
   appSettingsAtom,
   colorModePreferenceAtom,
 } from "../../store/atoms";
-import { clearGraphCache } from "../../data/graph-data";
 
 function SwitchSetting({ label, settingKey, settings, onChange }) {
   return (
@@ -125,7 +124,6 @@ export default function SettingsModal({ isOpen, onClose }) {
               <Tab>General</Tab>
               <Tab>Display</Tab>
               <Tab>Canvas &amp; Export</Tab>
-              <Tab>Maintenance</Tab>
               <Tab>Advanced</Tab>
             </TabList>
 
@@ -243,26 +241,6 @@ export default function SettingsModal({ isOpen, onClose }) {
                   settings={s}
                   onChange={updateAppSettings}
                 />
-              </TabPanel>
-
-              {/* Maintenance */}
-              <TabPanel>
-
-
-                <FormControl pt="4" pb="4">
-                  <FormLabel>
-                    Flush request cache (takes effect immediately)
-                  </FormLabel>
-                  <Button
-                    colorScheme="blue"
-                    mr={1}
-                    onClick={() => {
-                      clearGraphCache();
-                    }}
-                  >
-                    Flush cache
-                  </Button>
-                </FormControl>
               </TabPanel>
 
               {/* Advanced */}

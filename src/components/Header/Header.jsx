@@ -37,6 +37,7 @@ import { AsyncSelect, Select } from "chakra-react-select";
  * Internal dependencies
  */
 import {
+  clearGraphCache,
   getAllOrganizations,
   getAllEpics,
   getWorkspaces,
@@ -136,6 +137,13 @@ export default function Header({
     onClose: onResetLayoutClose,
   } = useDisclosure();
   const resetLayoutCancelRef = useRef();
+
+  const {
+    isOpen: isFlushCacheOpen,
+    onOpen: onFlushCacheOpen,
+    onClose: onFlushCacheClose,
+  } = useDisclosure();
+  const flushCacheCancelRef = useRef();
 
   let baseline;
   if (appSettings.showAncestorDependencies) {
@@ -532,11 +540,6 @@ export default function Header({
                       <AuthenticationMenuItem authentication={authentication} />
                     )}
                     <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
-                    {Object.keys(coordinateOverrides || {}).length > 0 && (
-                      <MenuItem onClick={onResetLayoutOpen}>
-                        Reset layout
-                      </MenuItem>
-                    )}
                     <MenuDivider />
                     <MenuItem
                       onClick={() =>
@@ -558,6 +561,13 @@ export default function Header({
                     >
                       Copy to clipboard (PNG)
                     </MenuItem>
+                    <MenuDivider />
+                    {Object.keys(coordinateOverrides || {}).length > 0 && (
+                      <MenuItem onClick={onResetLayoutOpen}>
+                        Reset layout
+                      </MenuItem>
+                    )}
+                    <MenuItem onClick={onFlushCacheOpen}>Flush cache</MenuItem>
                   </MenuList>
                 </Menu>
               </WrapItem>
@@ -591,6 +601,37 @@ export default function Header({
                 }}
               >
                 Reset
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      <AlertDialog
+        isOpen={isFlushCacheOpen}
+        leastDestructiveRef={flushCacheCancelRef}
+        onClose={onFlushCacheClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>Flush cache</AlertDialogHeader>
+            <AlertDialogBody>
+              This will clear all cached graph data. The next graph load will
+              make fresh requests to the Zenhub API.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={flushCacheCancelRef} onClick={onFlushCacheClose}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="blue"
+                ml={3}
+                onClick={() => {
+                  clearGraphCache();
+                  onFlushCacheClose();
+                }}
+              >
+                Flush cache
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
