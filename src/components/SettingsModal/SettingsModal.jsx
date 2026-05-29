@@ -245,10 +245,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 <SettingsCard>
                   <Box px="4" py="3">
                     <FormControl>
-                      <FormLabel fontWeight="normal">
-                        Zenhub API key
-                        <InfoTooltip label="Your personal Zenhub API key, stored locally in your browser and used to fetch workspace and issue data." />
-                      </FormLabel>
+                      <FormLabel fontWeight="normal">Zenhub API key</FormLabel>
                       <Input
                         placeholder="API Key"
                         value={settingsState.APIKey}
@@ -279,7 +276,6 @@ export default function SettingsModal({ isOpen, onClose }) {
                   <SettingRow
                     label="Theme"
                     description="Takes effect immediately"
-                    tooltip="Switch between light and dark color schemes, or follow your operating system setting."
                     control={
                       <RadioGroup
                         value={colorModePreference}
