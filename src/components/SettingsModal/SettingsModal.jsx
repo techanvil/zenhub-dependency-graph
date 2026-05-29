@@ -195,27 +195,31 @@ export default function SettingsModal({ isOpen, onClose }) {
             <TabPanels>
               {/* Connection */}
               <TabPanel>
-                <FormControl>
-                  <FormLabel>Zenhub API key</FormLabel>
-                  <Input
-                    placeholder="API Key"
-                    value={settingsState.APIKey}
-                    onChange={(e) => {
-                      updateSettings({ APIKey: e.target.value });
-                    }}
-                  />
-                  <FormHelperText>
-                    To generate your Personal API Key, go to the{" "}
-                    <Link
-                      href="https://app.zenhub.com/settings/tokens"
-                      isExternal
-                      color="teal.500"
-                    >
-                      API section of your Zenhub Dashboard
-                    </Link>
-                    .
-                  </FormHelperText>
-                </FormControl>
+                <SettingsCard>
+                  <Box px="4" py="3">
+                    <FormControl>
+                      <FormLabel fontWeight="normal">Zenhub API key</FormLabel>
+                      <Input
+                        placeholder="API Key"
+                        value={settingsState.APIKey}
+                        onChange={(e) => {
+                          updateSettings({ APIKey: e.target.value });
+                        }}
+                      />
+                      <FormHelperText>
+                        To generate your Personal API Key, go to the{" "}
+                        <Link
+                          href="https://app.zenhub.com/settings/tokens"
+                          isExternal
+                          color="teal.500"
+                        >
+                          API section of your Zenhub Dashboard
+                        </Link>
+                        .
+                      </FormHelperText>
+                    </FormControl>
+                  </Box>
+                </SettingsCard>
               </TabPanel>
 
               {/* Display */}
