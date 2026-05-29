@@ -36,26 +36,58 @@ import {
   colorModePreferenceAtom,
 } from "../../store/atoms";
 
-function SwitchSetting({ label, settingKey, settings, onChange }) {
+function SwitchSetting({ label, description, settingKey, settings, onChange }) {
+  const id = `switch-${settingKey}`;
   return (
-    <FormControl pt="4">
-      <FormLabel mb="1">{label}</FormLabel>
+    <FormControl
+      display="flex"
+      alignItems="center"
+      justifyContent="space-between"
+      py="3"
+      borderBottomWidth="1px"
+      borderColor="inherit"
+      _last={{ borderBottomWidth: 0 }}
+    >
+      <FormLabel
+        htmlFor={id}
+        mb="0"
+        flex="1"
+        fontWeight="normal"
+        cursor="pointer"
+      >
+        {label}
+        {description && (
+          <FormHelperText mt="0.5" fontSize="xs">
+            {description}
+          </FormHelperText>
+        )}
+      </FormLabel>
       <Switch
+        id={id}
         isChecked={settings[settingKey]}
         onChange={(e) => onChange({ [settingKey]: e.target.checked })}
+        flexShrink={0}
       />
     </FormControl>
   );
 }
 
-function SectionHeading({ children }) {
+function SwitchGroup({ children }) {
+  return (
+    <div>
+      {children}
+    </div>
+  );
+}
+
+function SectionHeading({ children, first }) {
   return (
     <Heading
       size="xs"
       textTransform="uppercase"
       letterSpacing="wide"
-      mb="2"
-      mt="4"
+      mb="1"
+      mt={first ? "2" : "6"}
       opacity="0.6"
     >
       {children}
@@ -162,14 +194,21 @@ export default function SettingsModal({ isOpen, onClose }) {
 
               {/* Display */}
               <TabPanel>
-                <SectionHeading>Appearance</SectionHeading>
-                <FormControl pt="2">
-                  <FormLabel>Theme (takes effect immediately)</FormLabel>
+                <SectionHeading first>Appearance</SectionHeading>
+                <FormControl
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  py="3"
+                >
+                  <FormLabel mb="0" fontWeight="normal">
+                    Theme (takes effect immediately)
+                  </FormLabel>
                   <RadioGroup
                     value={colorModePreference}
                     onChange={setColorModePreference}
                   >
-                    <HStack spacing="24px">
+                    <HStack spacing="4">
                       <Radio value="light">Light</Radio>
                       <Radio value="dark">Dark</Radio>
                       <Radio value="system">System</Radio>
@@ -178,97 +217,107 @@ export default function SettingsModal({ isOpen, onClose }) {
                 </FormControl>
 
                 <SectionHeading>Graph contents</SectionHeading>
-                <SwitchSetting
-                  label="Show non-epic issues"
-                  settingKey="showNonEpicIssues"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show self-contained issues"
-                  settingKey="showSelfContainedIssues"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show closed epics"
-                  settingKey="showClosedEpics"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
+                <SwitchGroup>
+                  <SwitchSetting
+                    label="Show non-epic issues"
+                    settingKey="showNonEpicIssues"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show self-contained issues"
+                    settingKey="showSelfContainedIssues"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show closed epics"
+                    settingKey="showClosedEpics"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                </SwitchGroup>
 
                 <SectionHeading>Issue card details</SectionHeading>
-                <SwitchSetting
-                  label="Show issue details"
-                  settingKey="showIssueDetails"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show issue estimates"
-                  settingKey="showIssueEstimates"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show issue sprints"
-                  settingKey="showIssueSprints"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show issue previews"
-                  settingKey="showIssuePreviews"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
+                <SwitchGroup>
+                  <SwitchSetting
+                    label="Show issue details"
+                    settingKey="showIssueDetails"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show issue estimates"
+                    settingKey="showIssueEstimates"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show issue sprints"
+                    settingKey="showIssueSprints"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show issue previews"
+                    settingKey="showIssuePreviews"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                </SwitchGroup>
               </TabPanel>
 
               {/* Canvas & Export */}
               <TabPanel>
-                <SectionHeading>Canvas &amp; interaction</SectionHeading>
-                <SwitchSetting
-                  label="Snap to grid"
-                  settingKey="snapToGrid"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Highlight blocked &amp; blocking issues"
-                  settingKey="highlightRelatedIssues"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
+                <SectionHeading first>Canvas &amp; interaction</SectionHeading>
+                <SwitchGroup>
+                  <SwitchSetting
+                    label="Snap to grid"
+                    settingKey="snapToGrid"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Highlight blocked &amp; blocking issues"
+                    settingKey="highlightRelatedIssues"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                </SwitchGroup>
 
                 <SectionHeading>Export</SectionHeading>
-                <SwitchSetting
-                  label="Include background when exporting graph"
-                  settingKey="includeBackgroundWhenExporting"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
+                <SwitchGroup>
+                  <SwitchSetting
+                    label="Include background when exporting graph"
+                    settingKey="includeBackgroundWhenExporting"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                </SwitchGroup>
               </TabPanel>
 
               {/* Advanced */}
               <TabPanel>
-                <SwitchSetting
-                  label="Show grid"
-                  settingKey="showGrid"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show non-epic blocked issues (it's recommended to leave this off)"
-                  settingKey="showNonEpicBlockedIssues"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
-                <SwitchSetting
-                  label="Show ancestor dependencies (it's recommended to leave this off)"
-                  settingKey="showAncestorDependencies"
-                  settings={s}
-                  onChange={updateAppSettings}
-                />
+                <SwitchGroup>
+                  <SwitchSetting
+                    label="Show grid"
+                    settingKey="showGrid"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show non-epic blocked issues (it's recommended to leave this off)"
+                    settingKey="showNonEpicBlockedIssues"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                  <SwitchSetting
+                    label="Show ancestor dependencies (it's recommended to leave this off)"
+                    settingKey="showAncestorDependencies"
+                    settings={s}
+                    onChange={updateAppSettings}
+                  />
+                </SwitchGroup>
               </TabPanel>
             </TabPanels>
           </Tabs>
