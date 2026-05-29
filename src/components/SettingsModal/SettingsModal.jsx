@@ -10,6 +10,7 @@ import {
   FormHelperText,
   HStack,
   Heading,
+  Icon,
   Link,
   Input,
   Modal,
@@ -28,6 +29,7 @@ import {
   TabPanel,
   TabPanels,
   Tabs,
+  Tooltip,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { deepEquals } from "../../utils/common";
@@ -38,7 +40,7 @@ import {
   colorModePreferenceAtom,
 } from "../../store/atoms";
 
-function SettingRow({ htmlFor, label, description, control }) {
+function SettingRow({ htmlFor, label, description, tooltip, control }) {
   const hoverBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
   return (
     <FormControl
@@ -61,7 +63,40 @@ function SettingRow({ htmlFor, label, description, control }) {
         fontWeight="normal"
         cursor={htmlFor ? "pointer" : "default"}
       >
-        {label}
+        <HStack spacing="0" display="inline-flex" alignItems="center">
+          <span>{label}</span>
+          {tooltip && (
+            <Tooltip label={tooltip} placement="top" hasArrow>
+              <Icon
+                viewBox="0 0 24 24"
+                boxSize="3.5"
+                ml="1.5"
+                mb="-0.5"
+                opacity="0.5"
+                cursor="help"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <line
+                  x1="12"
+                  y1="11"
+                  x2="12"
+                  y2="17"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <circle cx="12" cy="7.5" r="1" fill="currentColor" />
+              </Icon>
+            </Tooltip>
+          )}
+        </HStack>
         {description && (
           <FormHelperText mt="0.5" fontSize="xs">
             {description}
@@ -73,13 +108,21 @@ function SettingRow({ htmlFor, label, description, control }) {
   );
 }
 
-function SwitchSetting({ label, description, settingKey, settings, onChange }) {
+function SwitchSetting({
+  label,
+  description,
+  tooltip,
+  settingKey,
+  settings,
+  onChange,
+}) {
   const id = `switch-${settingKey}`;
   return (
     <SettingRow
       htmlFor={id}
       label={label}
       description={description}
+      tooltip={tooltip}
       control={
         <Switch
           id={id}
@@ -254,6 +297,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                   />
                   <SwitchSetting
                     label="Show self-contained issues"
+                    tooltip="Issues that neither block nor are blocked by any other issues — they appear as isolated nodes with no connections in the graph."
                     settingKey="showSelfContainedIssues"
                     settings={s}
                     onChange={updateAppSettings}
