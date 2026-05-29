@@ -322,7 +322,6 @@ export default function SettingsModal({ isOpen, onClose }) {
 
               {/* Advanced */}
               <TabPanel>
-                <SectionHeading first>Advanced</SectionHeading>
                 <SettingsCard>
                   <SwitchSetting
                     label="Show grid"
