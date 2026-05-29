@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import {
+  Box,
   Button,
   FormControl,
   FormHelperText,
@@ -27,6 +28,7 @@ import {
   TabPanel,
   TabPanels,
   Tabs,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { deepEquals } from "../../utils/common";
 import { appSettingDefaults } from "../../constants";
@@ -36,24 +38,28 @@ import {
   colorModePreferenceAtom,
 } from "../../store/atoms";
 
-function SwitchSetting({ label, description, settingKey, settings, onChange }) {
-  const id = `switch-${settingKey}`;
+function SettingRow({ htmlFor, label, description, control }) {
+  const hoverBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
   return (
     <FormControl
       display="flex"
       alignItems="center"
       justifyContent="space-between"
+      gap="4"
+      px="4"
       py="3"
       borderBottomWidth="1px"
       borderColor="inherit"
       _last={{ borderBottomWidth: 0 }}
+      _hover={{ bg: hoverBg }}
+      transition="background-color 0.15s ease"
     >
       <FormLabel
-        htmlFor={id}
-        mb="0"
+        htmlFor={htmlFor}
+        m="0"
         flex="1"
         fontWeight="normal"
-        cursor="pointer"
+        cursor={htmlFor ? "pointer" : "default"}
       >
         {label}
         {description && (
@@ -62,21 +68,41 @@ function SwitchSetting({ label, description, settingKey, settings, onChange }) {
           </FormHelperText>
         )}
       </FormLabel>
-      <Switch
-        id={id}
-        isChecked={settings[settingKey]}
-        onChange={(e) => onChange({ [settingKey]: e.target.checked })}
-        flexShrink={0}
-      />
+      <Box flexShrink={0}>{control}</Box>
     </FormControl>
   );
 }
 
-function SwitchGroup({ children }) {
+function SwitchSetting({ label, description, settingKey, settings, onChange }) {
+  const id = `switch-${settingKey}`;
   return (
-    <div>
+    <SettingRow
+      htmlFor={id}
+      label={label}
+      description={description}
+      control={
+        <Switch
+          id={id}
+          isChecked={settings[settingKey]}
+          onChange={(e) => onChange({ [settingKey]: e.target.checked })}
+        />
+      }
+    />
+  );
+}
+
+function SettingsCard({ children }) {
+  const cardBg = useColorModeValue("white", "whiteAlpha.50");
+  return (
+    <Box
+      bg={cardBg}
+      borderWidth="1px"
+      borderColor="inherit"
+      borderRadius="md"
+      overflow="hidden"
+    >
       {children}
-    </div>
+    </Box>
   );
 }
 
@@ -86,8 +112,8 @@ function SectionHeading({ children, first }) {
       size="xs"
       textTransform="uppercase"
       letterSpacing="wide"
-      mb="1"
-      mt={first ? "2" : "6"}
+      mb="2"
+      mt={first ? "0" : "6"}
       opacity="0.6"
     >
       {children}
@@ -145,7 +171,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   return (
     <Modal
       isOpen={isOpen}
-      size="xl"
+      size="lg"
       scrollBehavior="inside"
       onClose={() => {
         if (APIKey !== "") {
@@ -195,29 +221,27 @@ export default function SettingsModal({ isOpen, onClose }) {
               {/* Display */}
               <TabPanel>
                 <SectionHeading first>Appearance</SectionHeading>
-                <FormControl
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  py="3"
-                >
-                  <FormLabel mb="0" fontWeight="normal">
-                    Theme (takes effect immediately)
-                  </FormLabel>
-                  <RadioGroup
-                    value={colorModePreference}
-                    onChange={setColorModePreference}
-                  >
-                    <HStack spacing="4">
-                      <Radio value="light">Light</Radio>
-                      <Radio value="dark">Dark</Radio>
-                      <Radio value="system">System</Radio>
-                    </HStack>
-                  </RadioGroup>
-                </FormControl>
+                <SettingsCard>
+                  <SettingRow
+                    label="Theme"
+                    description="Takes effect immediately"
+                    control={
+                      <RadioGroup
+                        value={colorModePreference}
+                        onChange={setColorModePreference}
+                      >
+                        <HStack spacing="4">
+                          <Radio value="light">Light</Radio>
+                          <Radio value="dark">Dark</Radio>
+                          <Radio value="system">System</Radio>
+                        </HStack>
+                      </RadioGroup>
+                    }
+                  />
+                </SettingsCard>
 
                 <SectionHeading>Graph contents</SectionHeading>
-                <SwitchGroup>
+                <SettingsCard>
                   <SwitchSetting
                     label="Show non-epic issues"
                     settingKey="showNonEpicIssues"
@@ -236,10 +260,10 @@ export default function SettingsModal({ isOpen, onClose }) {
                     settings={s}
                     onChange={updateAppSettings}
                   />
-                </SwitchGroup>
+                </SettingsCard>
 
                 <SectionHeading>Issue card details</SectionHeading>
-                <SwitchGroup>
+                <SettingsCard>
                   <SwitchSetting
                     label="Show issue details"
                     settingKey="showIssueDetails"
@@ -264,13 +288,13 @@ export default function SettingsModal({ isOpen, onClose }) {
                     settings={s}
                     onChange={updateAppSettings}
                   />
-                </SwitchGroup>
+                </SettingsCard>
               </TabPanel>
 
               {/* Canvas & Export */}
               <TabPanel>
                 <SectionHeading first>Canvas &amp; interaction</SectionHeading>
-                <SwitchGroup>
+                <SettingsCard>
                   <SwitchSetting
                     label="Snap to grid"
                     settingKey="snapToGrid"
@@ -283,22 +307,23 @@ export default function SettingsModal({ isOpen, onClose }) {
                     settings={s}
                     onChange={updateAppSettings}
                   />
-                </SwitchGroup>
+                </SettingsCard>
 
                 <SectionHeading>Export</SectionHeading>
-                <SwitchGroup>
+                <SettingsCard>
                   <SwitchSetting
                     label="Include background when exporting graph"
                     settingKey="includeBackgroundWhenExporting"
                     settings={s}
                     onChange={updateAppSettings}
                   />
-                </SwitchGroup>
+                </SettingsCard>
               </TabPanel>
 
               {/* Advanced */}
               <TabPanel>
-                <SwitchGroup>
+                <SectionHeading first>Advanced</SectionHeading>
+                <SettingsCard>
                   <SwitchSetting
                     label="Show grid"
                     settingKey="showGrid"
@@ -306,18 +331,20 @@ export default function SettingsModal({ isOpen, onClose }) {
                     onChange={updateAppSettings}
                   />
                   <SwitchSetting
-                    label="Show non-epic blocked issues (it's recommended to leave this off)"
+                    label="Show non-epic blocked issues"
+                    description="Recommended to leave this off"
                     settingKey="showNonEpicBlockedIssues"
                     settings={s}
                     onChange={updateAppSettings}
                   />
                   <SwitchSetting
-                    label="Show ancestor dependencies (it's recommended to leave this off)"
+                    label="Show ancestor dependencies"
+                    description="Recommended to leave this off"
                     settingKey="showAncestorDependencies"
                     settings={s}
                     onChange={updateAppSettings}
                   />
-                </SwitchGroup>
+                </SettingsCard>
               </TabPanel>
             </TabPanels>
           </Tabs>
