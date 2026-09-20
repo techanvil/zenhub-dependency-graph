@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   AlertDialog,
@@ -52,6 +52,7 @@ import {
   coordinateOverridesAtom,
   currentGraphDataAtom,
   epicAtom,
+  focusedIssueIdAtom,
   graphRenderNonceAtom,
   hiddenIssuesAtom,
   isManualEpicAtom,
@@ -450,6 +451,11 @@ export default function Header({
                   setChosenEpic={setChosenEpic}
                 />
               </HStack>
+              {currentGraphData?.length > 0 && (
+                <WrapItem>
+                  <SearchIssueControl />
+                </WrapItem>
+              )}
               <WrapItem>
                 {isManualEpic && chosenEpic && (
                   <Text fontSize="smaller" alignSelf="center">
@@ -668,6 +674,35 @@ function AuthenticationMenuItem({ authentication }) {
     <MenuItem onClick={authentication.signIn}>
       {authentication.signInLabel || "Sign in"}
     </MenuItem>
+  );
+}
+
+function SearchIssueControl() {
+  const currentGraphData = useAtomValue(currentGraphDataAtom);
+  const [focusedIssueId, setFocusedIssueId] = useAtom(focusedIssueIdAtom);
+
+  const options = useMemo(
+    () =>
+      (currentGraphData || []).map(({ id, title }) => ({
+        value: id,
+        label: `${id} ${title}`,
+      })),
+    [currentGraphData],
+  );
+
+  const chosenOption =
+    options.find(({ value }) => value === focusedIssueId) || null;
+
+  return (
+    <Box w="220px">
+      <Select
+        isClearable
+        options={options}
+        value={chosenOption}
+        placeholder="Find issue..."
+        onChange={(option) => setFocusedIssueId(option ? option.value : null)}
+      />
+    </Box>
   );
 }
 
