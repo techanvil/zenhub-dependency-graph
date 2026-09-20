@@ -244,6 +244,34 @@ function IssuePreviewPopup() {
                 margin: "0.5rem 0",
               },
               "& ul, & ol": { paddingLeft: "1rem" },
+              "& a": { color: "blue.500", textDecoration: "underline" },
+              "& img": { maxWidth: "100%", height: "auto" },
+              "& hr": { borderColor: popupBorderColor, my: 2 },
+              "& blockquote": {
+                borderLeft: "3px solid",
+                borderColor: popupBorderColor,
+                paddingLeft: "0.75rem",
+                margin: "0.5rem 0",
+                color: mutedTextColor,
+              },
+              // GFM tables, which issue templates use heavily.
+              "& table": {
+                borderCollapse: "collapse",
+                margin: "0.5rem 0",
+                fontSize: "xs",
+              },
+              "& th, & td": {
+                border: "1px solid",
+                borderColor: popupBorderColor,
+                px: 2,
+                py: 1,
+                textAlign: "left",
+              },
+              "& th": { bg: codeBg, fontWeight: "bold" },
+              // GFM task lists, as used by acceptance criteria and briefs.
+              "& ul.contains-task-list": { paddingLeft: 0 },
+              "& li.task-list-item": { listStyleType: "none" },
+              "& li.task-list-item > input": { marginRight: 2 },
               "& code": {
                 bg: codeBg,
                 px: 1,
