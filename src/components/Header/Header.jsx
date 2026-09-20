@@ -220,14 +220,24 @@ export default function Header({
       const workspaces = await getWorkspaces(workspaceName, signal);
 
       let options = workspaces
-        .map(({ name, id, zenhubOrganizationName, sprints, activeSprint }) => ({
-          label: `${name} (${zenhubOrganizationName})`,
-          value: id,
-          name,
-          zenhubOrganizationName,
-          sprints,
-          activeSprint,
-        }))
+        .map(
+          ({
+            name,
+            id,
+            zenhubOrganizationId,
+            zenhubOrganizationName,
+            sprints,
+            activeSprint,
+          }) => ({
+            label: `${name} (${zenhubOrganizationName})`,
+            value: id,
+            name,
+            zenhubOrganizationId,
+            zenhubOrganizationName,
+            sprints,
+            activeSprint,
+          }),
+        )
         .sort(sortOptions);
 
       if (chosenOrganization) {
@@ -281,14 +291,22 @@ export default function Header({
   ]);
 
   useEffect(() => {
-    if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
+    if (
+      isEmpty(APIKey) ||
+      isEmpty(chosenWorkspace) ||
+      isEmpty(chosenWorkspace.zenhubOrganizationId)
+    ) {
       return;
     }
 
     const controller = new AbortController();
     const { signal } = controller;
 
-    getAllEpics(chosenWorkspace.value, signal)
+    getAllEpics(
+      chosenWorkspace.value,
+      chosenWorkspace.zenhubOrganizationId,
+      signal,
+    )
       .then((epics) => {
         const visibleEpics = appSettings.showClosedEpics
           ? epics
