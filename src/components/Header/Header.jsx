@@ -57,6 +57,7 @@ import {
   isManualEpicAtom,
   nonEpicIssuesAtom,
   PANES,
+  selectedIssueCountAtom,
   selfContainedIssuesAtom,
   sprintAtom,
   workspaceAtom,
@@ -112,6 +113,7 @@ export default function Header({
   const nonEpicIssues = useAtomValue(nonEpicIssuesAtom);
   const selfContainedIssues = useAtomValue(selfContainedIssuesAtom);
   const hiddenIssues = useAtomValue(hiddenIssuesAtom);
+  const selectedIssueCount = useAtomValue(selectedIssueCountAtom);
   const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   const APIKey = useAtomValue(APIKeyAtom);
@@ -220,14 +222,24 @@ export default function Header({
       const workspaces = await getWorkspaces(workspaceName, signal);
 
       let options = workspaces
-        .map(({ name, id, zenhubOrganizationName, sprints, activeSprint }) => ({
-          label: `${name} (${zenhubOrganizationName})`,
-          value: id,
-          name,
-          zenhubOrganizationName,
-          sprints,
-          activeSprint,
-        }))
+        .map(
+          ({
+            name,
+            id,
+            zenhubOrganizationId,
+            zenhubOrganizationName,
+            sprints,
+            activeSprint,
+          }) => ({
+            label: `${name} (${zenhubOrganizationName})`,
+            value: id,
+            name,
+            zenhubOrganizationId,
+            zenhubOrganizationName,
+            sprints,
+            activeSprint,
+          }),
+        )
         .sort(sortOptions);
 
       if (chosenOrganization) {
@@ -281,14 +293,22 @@ export default function Header({
   ]);
 
   useEffect(() => {
-    if (isEmpty(APIKey) || isEmpty(chosenWorkspace)) {
+    if (
+      isEmpty(APIKey) ||
+      isEmpty(chosenWorkspace) ||
+      isEmpty(chosenWorkspace.zenhubOrganizationId)
+    ) {
       return;
     }
 
     const controller = new AbortController();
     const { signal } = controller;
 
-    getAllEpics(chosenWorkspace.value, signal)
+    getAllEpics(
+      chosenWorkspace.value,
+      chosenWorkspace.zenhubOrganizationId,
+      signal,
+    )
       .then((epics) => {
         const visibleEpics = appSettings.showClosedEpics
           ? epics
@@ -494,6 +514,14 @@ export default function Header({
                   )}
                 </VStack>
               </WrapItem>
+              {selectedIssueCount > 0 && (
+                <WrapItem alignItems="center" maxH="36px" overflow="visible">
+                  <Text fontSize="small">
+                    <b>{selectedIssueCount}</b>{" "}
+                    {pluralise(selectedIssueCount, "issue", "issues")} selected
+                  </Text>
+                </WrapItem>
+              )}
               <WrapItem spacing="3">
                 {/* <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>
                   Settings

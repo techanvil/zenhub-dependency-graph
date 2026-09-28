@@ -14,7 +14,7 @@ import {
   getWorkspaceQueryDocument,
   getRepoAndPipelinesQueryDocument,
   getIssueByNumberQueryDocument,
-  getAllEpicsQueryDocument,
+  getAllEpicsBySearchQueryDocument,
   getAllOrganizationsQueryDocument,
   getEpicChildIssuesQueryDocument,
   getSimpleIssueByNumberQueryDocument,
@@ -379,12 +379,16 @@ export async function getWorkspaces(
     ({
       id,
       name,
-      zenhubOrganization: { name: zenhubOrganizationName },
+      zenhubOrganization: {
+        id: zenhubOrganizationId,
+        name: zenhubOrganizationName,
+      },
       sprints,
       activeSprint,
     }) => ({
       id,
       name,
+      zenhubOrganizationId,
       zenhubOrganizationName,
       sprints: sprints.nodes,
       activeSprint,
@@ -392,29 +396,62 @@ export async function getWorkspaces(
   );
 }
 
-export async function getAllEpics(workspaceId: string, signal: AbortSignal) {
-  // const result = await client.query(getAllEpicsQueryDocument, {
-  //   workspaceId,
-  // });
-
+async function getEpicsPage(
+  {
+    zenhubOrganizationId,
+    workspaceId,
+    after,
+  }: {
+    zenhubOrganizationId: string;
+    workspaceId: string;
+    after: string | null;
+  },
+  signal: AbortSignal,
+) {
   const result = await executeQuery(
-    getAllEpicsQueryDocument,
-    { workspaceId },
+    getAllEpicsBySearchQueryDocument,
+    { zenhubOrganizationId, workspaceId, after },
     signal,
   );
 
-  if (!result.data?.workspace?.epics?.nodes) {
+  const node = result.data?.node;
+
+  if (!node || !("searchStrategicIssues" in node)) {
     console.warn("No epics", { result });
-    return [];
+    return null;
   }
 
-  const {
-    workspace: {
-      epics: { nodes: epics },
-    },
-  } = result.data;
+  return node.searchStrategicIssues;
+}
 
-  return epics.map((epic) => epic.issue);
+export async function getAllEpics(
+  workspaceId: string,
+  zenhubOrganizationId: string,
+  signal: AbortSignal,
+) {
+  const epics = [];
+  let after: string | null = null;
+
+  // Epics are strategic issues belonging to the Zenhub organization, so page
+  // through them rather than reading the workspace's own `epics` connection,
+  // which omits recently created epics.
+  do {
+    const strategicIssues = await getEpicsPage(
+      { zenhubOrganizationId, workspaceId, after },
+      signal,
+    );
+
+    if (!strategicIssues) {
+      break;
+    }
+
+    epics.push(...strategicIssues.nodes.map(({ issue }) => issue));
+
+    const { hasNextPage, endCursor } = strategicIssues.pageInfo;
+    after = hasNextPage ? (endCursor ?? null) : null;
+  } while (after);
+
+  return epics;
 }
 
 // TODO: Check caching/efficiency of this function and how it's used.

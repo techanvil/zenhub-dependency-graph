@@ -293,18 +293,34 @@ export const getAllOrganizationsQueryDocument = graphql(`
   }
 `);
 
-export const getAllEpicsQueryDocument = graphql(`
-  query GetAllEpics($workspaceId: ID!) {
-    workspace(id: $workspaceId) {
+export const getAllEpicsBySearchQueryDocument = graphql(`
+  query GetAllEpicsBySearch(
+    $zenhubOrganizationId: ID!
+    $workspaceId: ID!
+    $after: String
+  ) {
+    node(id: $zenhubOrganizationId) {
       id
-      epics {
-        nodes {
-          id
-          issue {
+      ... on ZenhubOrganization {
+        searchStrategicIssues(
+          workspaceId: $workspaceId
+          states: [OPEN, CLOSED]
+          order: { field: CREATED_AT, direction: DESC }
+          first: 100
+          after: $after
+        ) {
+          nodes {
             id
-            number
-            title
-            closedAt
+            issue {
+              id
+              number
+              title
+              closedAt
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
           }
         }
       }

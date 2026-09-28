@@ -15,7 +15,11 @@ import {
   toFixedDecimalPlaces,
 } from "./utils";
 import { getSvgRatio, getContainerAndViewportRects } from "./coordinate-utils";
-import { issuePreviewPopupAtom, store } from "../store/atoms";
+import {
+  issuePreviewPopupAtom,
+  selectedIssueCountAtom,
+  store,
+} from "../store/atoms";
 
 export const selectAndDragState = {
   isLassooing: false,
@@ -90,6 +94,7 @@ export function setupSelectAndDrag(
   appSettings,
 ) {
   selectAndDragState.isLassooing = false;
+  store.set(selectedIssueCountAtom, 0);
 
   const { snapToGrid } = appSettings;
 
@@ -435,6 +440,7 @@ export function setupSelectAndDrag(
         if (lassooedNodes) {
           lassooedNodes.classed("zdg-lassooed", false);
           lassooedNodes = null;
+          store.set(selectedIssueCountAtom, 0);
         }
 
         // Get pan and zoom for the calculations
@@ -499,6 +505,7 @@ export function setupSelectAndDrag(
 
             lassooedNodes = getLassooedNodes(newX, newY, width, height);
             lassooedNodes.classed("zdg-lassooed", true);
+            store.set(selectedIssueCountAtom, lassooedNodes.size());
           })
           .on("end", (endEvent) => {
             if (!lassooedNodes) {
