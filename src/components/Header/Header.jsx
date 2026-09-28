@@ -497,7 +497,7 @@ export default function Header({
                 </VStack>
               </WrapItem>
               {selectedIssueCount > 0 && (
-                <WrapItem>
+                <WrapItem alignItems="center" maxH="36px" overflow="visible">
                   <Text fontSize="small">
                     <b>{selectedIssueCount}</b>{" "}
                     {pluralise(selectedIssueCount, "issue", "issues")} selected
