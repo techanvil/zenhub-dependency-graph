@@ -272,6 +272,14 @@ function IssuePreviewPopup() {
               "& ul.contains-task-list": { paddingLeft: 0 },
               "& li.task-list-item": { listStyleType: "none" },
               "& li.task-list-item > input": { marginRight: 2 },
+              // Indent sub-points so they sit under the task text rather than
+              // the checkbox. Bullets render outside the content box, hence the
+              // extra padding compared to nested task lists.
+              "& li.task-list-item > ul:not(.contains-task-list), & li.task-list-item > ol":
+                { paddingLeft: "2.25rem" },
+              "& li.task-list-item > ul.contains-task-list": {
+                paddingLeft: "1.25rem",
+              },
               "& code": {
                 bg: codeBg,
                 px: 1,
