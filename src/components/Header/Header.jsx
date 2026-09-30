@@ -22,7 +22,15 @@ import {
   MenuDivider,
   MenuItem,
   MenuList,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
   Switch,
+  Tag,
+  TagCloseButton,
+  TagLabel,
   Text,
   useColorModeValue,
   useDisclosure,
@@ -147,6 +155,56 @@ export default function Header({
     onClose: onFlushCacheClose,
   } = useDisclosure();
   const flushCacheCancelRef = useRef();
+
+  const {
+    isOpen: isFindIssueOpen,
+    onOpen: onFindIssueOpen,
+    onClose: onFindIssueClose,
+  } = useDisclosure();
+
+  const hasGraphData = currentGraphData?.length > 0;
+  const [focusedIssueId, setFocusedIssueId] = useAtom(focusedIssueIdAtom);
+
+  // Ctrl-F opens the issue search in place of the browser's find, as the graph
+  // is an SVG that the browser's find can't navigate. Escape closes the search,
+  // or clears the found issue's highlight when the search isn't open.
+  useEffect(() => {
+    if (!hasGraphData) {
+      return;
+    }
+
+    function onKeyDown(e) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        !e.altKey &&
+        !e.shiftKey &&
+        e.key.toLowerCase() === "f"
+      ) {
+        e.preventDefault();
+        onFindIssueOpen();
+        return;
+      }
+
+      // Other dialogs stop Escape propagating, so this won't also clear the
+      // highlight when Escape is used to close them.
+      if (e.key === "Escape") {
+        if (isFindIssueOpen) {
+          onFindIssueClose();
+        } else {
+          setFocusedIssueId(null);
+        }
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [
+    hasGraphData,
+    isFindIssueOpen,
+    onFindIssueOpen,
+    onFindIssueClose,
+    setFocusedIssueId,
+  ]);
 
   let baseline;
   if (appSettings.showAncestorDependencies) {
@@ -471,11 +529,6 @@ export default function Header({
                   setChosenEpic={setChosenEpic}
                 />
               </HStack>
-              {currentGraphData?.length > 0 && (
-                <WrapItem>
-                  <SearchIssueControl />
-                </WrapItem>
-              )}
               <WrapItem>
                 {isManualEpic && chosenEpic && (
                   <Text fontSize="smaller" alignSelf="center">
@@ -520,6 +573,12 @@ export default function Header({
                   )}
                 </VStack>
               </WrapItem>
+              {focusedIssueId && (
+                <FoundIssueTag
+                  issueId={focusedIssueId}
+                  onClear={() => setFocusedIssueId(null)}
+                />
+              )}
               {selectedIssueCount > 0 && (
                 <WrapItem alignItems="center" maxH="36px" overflow="visible">
                   <Text fontSize="small">
@@ -575,6 +634,14 @@ export default function Header({
                     )}
                     <MenuItem onClick={onAPIKeyModalOpen}>Settings</MenuItem>
                     <MenuDivider />
+                    {hasGraphData && (
+                      <>
+                        <MenuItem onClick={onFindIssueOpen} command="Ctrl+F">
+                          Find issue
+                        </MenuItem>
+                        <MenuDivider />
+                      </>
+                    )}
                     <MenuItem
                       onClick={() =>
                         downloadSVG(chosenEpic.label, {
@@ -609,6 +676,8 @@ export default function Header({
           </Container>
         </Box>
       </Box>
+
+      <FindIssueModal isOpen={isFindIssueOpen} onClose={onFindIssueClose} />
 
       <AlertDialog
         isOpen={isResetLayoutOpen}
@@ -705,9 +774,26 @@ function AuthenticationMenuItem({ authentication }) {
   );
 }
 
-function SearchIssueControl() {
+function FoundIssueTag({ issueId, onClear }) {
+  const currentGraphData = useAtomValue(currentGraphDataAtom);
+  const issue = currentGraphData?.find(({ id }) => id === issueId);
+  const label = issue ? `${issue.id} ${issue.title}` : issueId;
+
+  return (
+    <WrapItem alignItems="center">
+      <Tag colorScheme="orange" borderRadius="full" maxW="260px" title={label}>
+        <TagLabel>Found: {label}</TagLabel>
+        <TagCloseButton title="Clear highlight (Esc)" onClick={onClear} />
+      </Tag>
+    </WrapItem>
+  );
+}
+
+function FindIssueModal({ isOpen, onClose }) {
   const currentGraphData = useAtomValue(currentGraphDataAtom);
   const [focusedIssueId, setFocusedIssueId] = useAtom(focusedIssueIdAtom);
+  const selectRef = useRef();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const options = useMemo(
     () =>
@@ -722,15 +808,37 @@ function SearchIssueControl() {
     options.find(({ value }) => value === focusedIssueId) || null;
 
   return (
-    <Box w="220px">
-      <Select
-        isClearable
-        options={options}
-        value={chosenOption}
-        placeholder="Find issue..."
-        onChange={(option) => setFocusedIssueId(option ? option.value : null)}
-      />
-    </Box>
+    <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={selectRef}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Find issue</ModalHeader>
+        <ModalBody pb={6}>
+          <Select
+            ref={selectRef}
+            isClearable
+            openMenuOnFocus
+            onMenuOpen={() => setIsMenuOpen(true)}
+            onMenuClose={() => setIsMenuOpen(false)}
+            onKeyDown={(e) => {
+              // Let Escape close only the dropdown while it's open, rather than
+              // also bubbling up and closing the popup.
+              if (e.key === "Escape" && isMenuOpen) {
+                e.stopPropagation();
+              }
+            }}
+            options={options}
+            value={chosenOption}
+            placeholder="Find issue..."
+            onChange={(option) => {
+              setFocusedIssueId(option ? option.value : null);
+              if (option) {
+                onClose();
+              }
+            }}
+          />
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }
 
