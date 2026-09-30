@@ -72,8 +72,6 @@ export const epicAtom = atomWithQueryParameter("epic", "", {
   parse: (v) => parseInt(v, 10),
 });
 
-export const isManualEpicAtom = atomWithQueryParameter("isManualEpic", false);
-
 export const sprintAtom = atomWithQueryParameter("sprint", "");
 
 export const pipelineColorsAtom = atomWithParameterPersistence(
