@@ -20,6 +20,7 @@
   --zdg-delete-hover-bg: #fff5f5;
   --zdg-edge-preview-stroke: #2378ae;
   --zdg-drop-hover-stroke: #2378ae;
+  --zdg-search-match-glow: #dd6b20;
 }
 
 .chakra-ui-dark {
@@ -31,6 +32,7 @@
   --zdg-grid-stroke: #4a5568;
   --zdg-bg-transparent: rgba(0, 0, 0, 0);
   --zdg-handle-fill: #2d3748;
+  --zdg-search-match-glow: #f6ad55;
   --zdg-handle-stroke: #63b3ed;
   --zdg-delete-bg: #2d3748;
   --zdg-delete-stroke: #fc8181;
@@ -62,6 +64,12 @@ code {
 
 .zdg-lassooed > .zdg-issue {
   opacity: 0.5;
+}
+
+/* Issue matched by the header search */
+.zdg-search-match {
+  filter: drop-shadow(0 0 5px var(--zdg-search-match-glow))
+    drop-shadow(0 0 10px var(--zdg-search-match-glow));
 }
 
 /* Fade transition for highlighting issues */

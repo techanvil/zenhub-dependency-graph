@@ -24,9 +24,15 @@ export const activePaneAtom = atom(PANES.NONE);
 export const nonEpicIssuesAtom = atom();
 export const selfContainedIssuesAtom = atom();
 export const hiddenIssuesAtom = atom();
+
+// Issue the user has searched for. Setting it pans the graph to that issue and
+// highlights it; null clears the highlight.
+export const focusedIssueIdAtom = atom(null);
+
 // Number of issues currently lassooed on the graph. In-memory only, as the
 // selection is cleared whenever the graph is re-rendered.
 export const selectedIssueCountAtom = atom(0);
+
 export const currentGraphDataAtom = atom();
 // Last-known persisted dependency state for the currently loaded graph.
 // In-memory only (not persisted to localStorage).
