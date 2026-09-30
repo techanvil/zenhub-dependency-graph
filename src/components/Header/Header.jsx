@@ -63,7 +63,6 @@ import {
   hiddenIssuesAtom,
   nonEpicIssuesAtom,
   PANES,
-  selectedIssueCountAtom,
   selfContainedIssuesAtom,
   sprintAtom,
   workspaceAtom,
@@ -118,7 +117,6 @@ export default function Header({
   const nonEpicIssues = useAtomValue(nonEpicIssuesAtom);
   const selfContainedIssues = useAtomValue(selfContainedIssuesAtom);
   const hiddenIssues = useAtomValue(hiddenIssuesAtom);
-  const selectedIssueCount = useAtomValue(selectedIssueCountAtom);
   const [activePane, setActivePane] = useAtom(activePaneAtom);
 
   const APIKey = useAtomValue(APIKeyAtom);
@@ -585,14 +583,6 @@ export default function Header({
                   issueId={focusedIssueId}
                   onClear={() => setFocusedIssueId(null)}
                 />
-              )}
-              {selectedIssueCount > 0 && (
-                <WrapItem alignItems="center" maxH="36px" overflow="visible">
-                  <Text fontSize="small">
-                    <b>{selectedIssueCount}</b>{" "}
-                    {pluralise(selectedIssueCount, "issue", "issues")} selected
-                  </Text>
-                </WrapItem>
               )}
               <WrapItem spacing="3">
                 {/* <Button colorScheme="blue" mr={3} onClick={onAPIKeyModalOpen}>

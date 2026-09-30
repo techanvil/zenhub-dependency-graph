@@ -35,6 +35,7 @@ import {
   workspaceAtom,
 } from "../../store/atoms";
 import IssuePreviewPopup from "../IssuePreviewPopup/IssuePreviewPopup";
+import SelectionCountPill from "../SelectionCountPill/SelectionCountPill";
 import { cloneGraphData } from "../../utils/clone-graph-data";
 
 export default function SVG() {
@@ -170,6 +171,7 @@ export default function SVG() {
     <Box h="var(--main-height)" position="relative">
       <svg id="zdg-graph" style={{ width: "100%", height: "100%" }} ref={ref} />
       <IssuePreviewPopup />
+      <SelectionCountPill />
     </Box>
   );
 }
