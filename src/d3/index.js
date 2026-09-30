@@ -19,7 +19,8 @@ import { renderSimpleIssues } from "./simple-issues";
 import { selectAndDragState, setupSelectAndDrag } from "./select-and-drag";
 import { setupDependencyEdit } from "./dependency-edit";
 import { store } from "../store/atoms";
-import { issuePreviewPopupAtom } from "../store/atoms";
+import { focusedIssueIdAtom, issuePreviewPopupAtom } from "../store/atoms";
+import { getContainerAndViewportRects, getSvgRatio } from "./coordinate-utils";
 
 function isAncestorOfNode(nodeId, ancestorId, graphData) {
   const node = graphData.find(({ id }) => id === nodeId);
@@ -189,6 +190,35 @@ const panZoom = {
 };
 
 let unsubscribePreviewPopup = null;
+let unsubscribeIssueSearch = null;
+
+// Pans the graph so that the given node sits in the middle of the viewport.
+// This is the inverse of `convertSvgToDocumentCoordinates`, solved for the pan
+// that places the node at the container's centre.
+function centreNodeInView({ x, y }, dagWidth, dagHeight) {
+  if (!panZoom.instance) {
+    return;
+  }
+
+  const { containerRect, panZoomViewportRect } = getContainerAndViewportRects();
+
+  if (!containerRect || !panZoomViewportRect) {
+    return;
+  }
+
+  const svgRatio = getSvgRatio(
+    containerRect,
+    panZoomViewportRect,
+    dagWidth,
+    dagHeight,
+  );
+  const zoom = panZoom.instance.getZoom();
+
+  panZoom.instance.pan({
+    x: containerRect.width / 2 - x * svgRatio * zoom,
+    y: containerRect.height / 2 - y * svgRatio * zoom,
+  });
+}
 
 // Grace period before hiding a node's info icon once the pointer leaves it, so
 // that briefly straying off the node on the way to the icon doesn't hide it.
@@ -281,6 +311,15 @@ export const generateGraph = (
     unsubscribePreviewPopup();
     unsubscribePreviewPopup = null;
   }
+
+  if (unsubscribeIssueSearch) {
+    unsubscribeIssueSearch();
+    unsubscribeIssueSearch = null;
+  }
+
+  // Drop any previous search once the graph is rebuilt, as the matched issue
+  // may not exist in the new graph. Set after unsubscribing so it's a no-op.
+  store.set(focusedIssueIdAtom, null);
 
   clearPendingInfoIconHide();
 
@@ -840,6 +879,28 @@ export const generateGraph = (
       }
     });
   }
+
+  // Pan to and highlight the issue the user has searched for.
+  unsubscribeIssueSearch = store.sub(focusedIssueIdAtom, () => {
+    const focusedIssueId = store.get(focusedIssueIdAtom);
+
+    nodes.classed("zdg-search-match", false);
+
+    if (!focusedIssueId) {
+      return;
+    }
+
+    const match = nodes.filter(
+      (d) => String(d.data.id) === String(focusedIssueId),
+    );
+
+    if (match.empty()) {
+      return;
+    }
+
+    match.classed("zdg-search-match", true);
+    centreNodeInView(match.datum(), dagWidth, dagHeight);
+  });
 
   setupSelectAndDrag(
     {
