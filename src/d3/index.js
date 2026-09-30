@@ -220,6 +220,34 @@ function centreNodeInView({ x, y }, dagWidth, dagHeight) {
   });
 }
 
+// Grace period before hiding a node's info icon once the pointer leaves it, so
+// that briefly straying off the node on the way to the icon doesn't hide it.
+const INFO_ICON_HIDE_DELAY = 300;
+let pendingInfoIconHide = null;
+
+function hideInfoIcon(nodeEl) {
+  d3.select(nodeEl)
+    .select(".zdg-info-icon")
+    .attr("opacity", 0)
+    .attr("pointer-events", "none");
+}
+
+// Drops any pending hide. Pass `flush` to apply it immediately instead, which
+// is what we want when the pointer has moved on to a different node.
+function clearPendingInfoIconHide({ flush = false } = {}) {
+  if (!pendingInfoIconHide) {
+    return;
+  }
+
+  const { nodeEl, timeoutId } = pendingInfoIconHide;
+  clearTimeout(timeoutId);
+  pendingInfoIconHide = null;
+
+  if (flush) {
+    hideInfoIcon(nodeEl);
+  }
+}
+
 export const generateGraph = (
   graphData,
   svgElement,
@@ -292,6 +320,8 @@ export const generateGraph = (
   // Drop any previous search once the graph is rebuilt, as the matched issue
   // may not exist in the new graph. Set after unsubscribing so it's a no-op.
   store.set(focusedIssueIdAtom, null);
+
+  clearPendingInfoIconHide();
 
   d3.selectAll("svg > *").remove();
 
@@ -667,6 +697,9 @@ export const generateGraph = (
         }
 
         if (showIssuePreviews) {
+          clearPendingInfoIconHide({
+            flush: pendingInfoIconHide?.nodeEl !== e.currentTarget,
+          });
           hoveredNodeEl = e.currentTarget;
 
           if (!e.ctrlKey) {
@@ -691,16 +724,25 @@ export const generateGraph = (
         if (showIssuePreviews) {
           hoveredNodeEl = null;
 
-          const popupState = store.get(issuePreviewPopupAtom);
-          const isPopupOpenForThisIssue =
-            popupState.isOpen && popupState.issueData?.id === d.data.id;
+          const nodeEl = e.currentTarget;
 
-          if (!isPopupOpenForThisIssue) {
-            d3.select(e.currentTarget)
-              .select(".zdg-info-icon")
-              .attr("opacity", 0)
-              .attr("pointer-events", "none");
-          }
+          clearPendingInfoIconHide();
+
+          const timeoutId = setTimeout(() => {
+            pendingInfoIconHide = null;
+
+            // Re-check on firing, as the popup may have been opened for this
+            // issue during the grace period.
+            const popupState = store.get(issuePreviewPopupAtom);
+            const isPopupOpenForThisIssue =
+              popupState.isOpen && popupState.issueData?.id === d.data.id;
+
+            if (!isPopupOpenForThisIssue) {
+              hideInfoIcon(nodeEl);
+            }
+          }, INFO_ICON_HIDE_DELAY);
+
+          pendingInfoIconHide = { nodeEl, timeoutId };
         }
       });
 
