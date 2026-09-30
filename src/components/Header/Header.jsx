@@ -16,7 +16,6 @@ import {
   FormControl,
   Heading,
   HStack,
-  Input,
   Menu,
   MenuButton,
   MenuDivider,
@@ -27,7 +26,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalOverlay,
-  Switch,
   Tag,
   TagCloseButton,
   TagLabel,
@@ -39,7 +37,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { AsyncSelect, Select } from "chakra-react-select";
+import { AsyncSelect, CreatableSelect, Select } from "chakra-react-select";
 
 /**
  * Internal dependencies
@@ -63,7 +61,6 @@ import {
   focusedIssueIdAtom,
   graphRenderNonceAtom,
   hiddenIssuesAtom,
-  isManualEpicAtom,
   nonEpicIssuesAtom,
   PANES,
   selectedIssueCountAtom,
@@ -115,7 +112,6 @@ export default function Header({
   const [workspaceOptions, setWorkspaceOptions] = useState(false);
   const [epicOptions, setEpicOptions] = useState([]);
   const [chosenEpic, setChosenEpic] = useState(false);
-  const isManualEpic = useAtomValue(isManualEpicAtom);
   const [sprintOptions, setSprintOptions] = useState([]);
   const [chosenSprint, setChosenSprint] = useState(false);
 
@@ -380,12 +376,30 @@ export default function Header({
           }))
           .sort(sortOptions);
 
+        setEpicOptions(options);
+
         const currentEpic = options.find(({ value }) => value === epic);
         if (currentEpic) {
           setChosenEpic(currentEpic);
+          return;
         }
 
-        setEpicOptions(options);
+        if (!epic) {
+          return;
+        }
+
+        // The epic isn't in the list (e.g. it was entered by issue number, or
+        // is closed and closed epics are hidden), so look it up directly.
+        getEpicInfo(workspace, epic, signal)
+          .then((epicInfo) => {
+            setChosenEpic({
+              label: epicInfo?.title ?? `#${epic}`,
+              value: epic,
+            });
+          })
+          .catch((err) => {
+            console.log("getEpicInfo error", err);
+          });
       })
       .catch((err) => {
         console.log("getGraphData error", err);
@@ -393,7 +407,7 @@ export default function Header({
       });
 
     return () => controller.abort("getAllEpics");
-  }, [APIKey, appSettings.showClosedEpics, chosenWorkspace, epic]);
+  }, [APIKey, appSettings.showClosedEpics, chosenWorkspace, epic, workspace]);
 
   const extraWorkspaceProps = chosenOrganization
     ? {
@@ -529,13 +543,6 @@ export default function Header({
                   setChosenEpic={setChosenEpic}
                 />
               </HStack>
-              <WrapItem>
-                {isManualEpic && chosenEpic && (
-                  <Text fontSize="smaller" alignSelf="center">
-                    {chosenEpic.label}
-                  </Text>
-                )}
-              </WrapItem>
               <WrapItem
                 alignItems="center"
                 maxH="36px" // Hack to avoid expanding the header height
@@ -842,103 +849,51 @@ function FindIssueModal({ isOpen, onClose }) {
   );
 }
 
+function parseIssueNumber(input) {
+  const trimmed = input.trim().replace(/^#/, "");
+  return /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : null;
+}
+
 function SelectEpicControl({ epicOptions, chosenEpic, setChosenEpic }) {
-  const workspace = useAtomValue(workspaceAtom);
-  const [isManualEpic, setIsManualEpic] = useAtom(isManualEpicAtom);
-  const [epic, saveEpic] = useAtom(epicAtom);
-  const [epicNumber, setEpicNumber] = useState(chosenEpic?.value || epic);
-  const [isSaving, setIsSaving] = useState(false);
+  const saveEpic = useSetAtom(epicAtom);
 
-  const updateChosenEpic = useCallback(
-    async (epicNum) => {
-      if (!epicNum || epicNum === chosenEpic?.value) {
-        return;
-      }
+  function selectEpic(epicNumber) {
+    // Clear the coordinate overrides from the query string when changing epics,
+    // so the coords for the new epic can be loaded from localStorage.
+    // TODO, a big refactor is needed to handle params and state better.
+    const url = new URL(window.location);
+    url.searchParams.delete("coordinateOverrides");
+    window.history.pushState({}, undefined, url);
 
-      setIsSaving(true);
-
-      // TODO: Can we use the URQL React hook to do this?
-      const issueByNumberResult = await getEpicInfo(
-        workspace,
-        // TODO: Improve the string/number handling.
-        Number(epicNum),
-      );
-      const newChosenEpic = {
-        label: issueByNumberResult.title,
-        value: epicNum,
-      };
-      setChosenEpic(newChosenEpic);
-
-      setIsSaving(false);
-    },
-    [chosenEpic?.value, workspace, setChosenEpic],
-  );
-
-  async function saveManuallySelectedEpic(epicNumber) {
-    setIsSaving(true);
-
-    // TODO: Improve the string/number handling.
-    saveEpic(Number(epicNumber));
-    setIsSaving(false);
-
-    updateChosenEpic(epicNumber);
+    saveEpic(epicNumber);
   }
 
-  useEffect(() => {
-    if (isManualEpic && workspace && epic && !chosenEpic) {
-      updateChosenEpic(epic);
-    }
-  }, [chosenEpic, epic, isManualEpic, updateChosenEpic, workspace]);
-
   return (
-    <Box display="flex" alignItems="center" gap={2}>
-      <FormControl>
-        {isManualEpic ? (
-          <Input
-            placeholder="Epic issue #, then Enter"
-            type="number"
-            w="180px"
-            disabled={isSaving}
-            value={epicNumber}
-            onChange={(e) => setEpicNumber(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                saveManuallySelectedEpic(epicNumber);
-              }
-            }}
-          />
-        ) : (
-          <Box w="200px">
-            <Select
-              options={epicOptions}
-              value={chosenEpic}
-              onChange={(chosenEpic) => {
-                // Clear the coordinate overrides from the query string when changing epics,
-                // so the coords for the new epic can be loaded from localStorage.
-                // TODO, a big refactor is needed to handle params and state better.
-
-                const url = new URL(window.location);
-                url.searchParams.delete("coordinateOverrides");
-                window.history.pushState({}, undefined, url);
-
-                saveEpic(chosenEpic.value);
-              }}
-            />
-          </Box>
-        )}
-      </FormControl>
-      <Switch
-        title="Enable manual epic input"
-        isChecked={
-          // FIXME: Fix this string/boolean handling.
-          typeof isManualEpic === "boolean"
-            ? isManualEpic
-            : isManualEpic === "true"
-        }
-        onChange={(e) => {
-          setIsManualEpic(e.target.checked);
-        }}
-      />
-    </Box>
+    <FormControl>
+      <Box w="200px">
+        <CreatableSelect
+          options={epicOptions}
+          value={chosenEpic}
+          placeholder="Epic, or issue #..."
+          isValidNewOption={(input) => {
+            const issueNumber = parseIssueNumber(input);
+            return (
+              issueNumber !== null &&
+              !epicOptions.some(({ value }) => value === issueNumber)
+            );
+          }}
+          formatCreateLabel={(input) => `Use issue #${parseIssueNumber(input)}`}
+          onCreateOption={(input) => {
+            const issueNumber = parseIssueNumber(input);
+            // Show the number until the issue title has been fetched.
+            setChosenEpic({ label: `#${issueNumber}`, value: issueNumber });
+            selectEpic(issueNumber);
+          }}
+          onChange={(chosenEpic) => {
+            selectEpic(chosenEpic.value);
+          }}
+        />
+      </Box>
+    </FormControl>
   );
 }
